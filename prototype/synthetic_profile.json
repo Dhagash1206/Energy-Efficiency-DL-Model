@@ -1,0 +1,12 @@
+{
+  "source": "SYNTHETIC_DEMO_ONLY",
+  "description": "Hand-authored fictional costs. Not measured on any GPU. Margins are illustrative, not calibrated confidence intervals.",
+  "hardware": "fictional demo device",
+  "precision": "fixed fictional precision for the whole run; no quantization is executed",
+  "actions": [
+    {"name": "ordinary", "exit_depth": 0, "draft_length": 0, "energy_j": 1.0, "latency_ms": 8.0, "relative_margin": 0.04, "context_cost": 0.0008, "acceptance_prior": 1.0},
+    {"name": "draft4x2", "exit_depth": 4, "draft_length": 2, "energy_j": 1.25, "latency_ms": 9.0, "relative_margin": 0.08, "context_cost": 0.0016, "acceptance_prior": 0.8},
+    {"name": "draft4x5", "exit_depth": 4, "draft_length": 5, "energy_j": 1.8, "latency_ms": 17.0, "relative_margin": 0.10, "context_cost": 0.0020, "acceptance_prior": 0.8},
+    {"name": "draft8x3", "exit_depth": 8, "draft_length": 3, "energy_j": 2.0, "latency_ms": 11.0, "relative_margin": 0.08, "context_cost": 0.0012, "acceptance_prior": 0.93}
+  ]
+}

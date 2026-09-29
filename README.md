@@ -1,5 +1,11 @@
 # Hardware-Aware Energy-Efficient LLM Inference through Model Compression and Adaptive Early Exit
 
+> **Current prototype:** The research direction is being refined toward
+> energy-aware adaptive self-speculative decoding. Run `python -m prototype.demo`
+> for a dependency-free controller demonstration; see [prototype/README.md](prototype/README.md).
+> Its energy and latency values are synthetic, not GPU measurements. The original
+> research plan below is retained for context.
+
 A learning-focused, systematic experimental study of how model compression, hardware-aware quantization, and adaptive early-exit inference jointly affect LLM performance on consumer edge hardware (laptops).
 
 ## Research Question
@@ -81,11 +87,29 @@ Token generation  ->  Evaluation
    # macOS/Linux: source .venv/bin/activate
    # Windows:     .venv\Scripts\activate
    ```
-3. Install pinned dependencies
+3. Install the base dependencies
    ```
    pip install -r requirements.txt
    ```
 4. Install llama.cpp (build from source or use a prebuilt release) for INT8/INT4 quantization and inference.
+
+### NVIDIA RTX 3050 setup
+
+For the real CUDA path, use the Windows setup script in this repo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup_cuda_3050.ps1
+```
+
+This installs the CUDA-enabled PyTorch build for NVIDIA GPUs, then checks whether the 3050 is visible to CUDA.
+
+After installation, validate the GPU path with:
+
+```powershell
+python -m prototype.doctor
+```
+
+Expected output should report `CUDA available: True` and the RTX 3050 device name.
 
 
 Energy measurement tools:

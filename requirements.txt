@@ -1,0 +1,9 @@
+# Core project dependencies used by the prototype and experiment scaffolding.
+# Install real-model CUDA dependencies using the GPU-specific script in scripts/setup_cuda_3050.ps1.
+
+numpy>=1.26
+psutil>=5.9
+pynvml>=11.5
+
+# Optional, but used by public dataset fetches and real-model inference.
+# See requirements-hf.txt for the full CUDA-enabled stack.
