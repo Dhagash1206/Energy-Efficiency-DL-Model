@@ -1,0 +1,5 @@
+# LayerSkip checkpoint download: weights, tokenizers, locks and the
+# Hugging Face token. Multi-gigabyte or secret; never commit.
+cache/
+*.incomplete
+*.part

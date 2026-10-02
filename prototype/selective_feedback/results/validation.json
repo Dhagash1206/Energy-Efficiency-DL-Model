@@ -1,0 +1,53 @@
+{
+  "stage": "layerskip_cpu_smoke_validation_complete",
+  "unit_tests_passed": 5,
+  "unit_tests_seconds": 4.237,
+  "pretrained_pilot": {
+    "model": "HuggingFaceTB/SmolLM2-135M",
+    "revision": "93efa2f097d58c2a74874c7e644dbc9b0cee75a2",
+    "precision": "fp32",
+    "device": "cpu",
+    "prompts": 2,
+    "max_new_tokens": 8,
+    "repeats": 3,
+    "configurations_and_observation_modes": 17,
+    "runs": 102,
+    "all_outputs_match_native_greedy": true,
+    "valid_one_step_observations": 402,
+    "excluded_observations": 576,
+    "energy_available": false
+  },
+  "not_validated": [
+    "quantized execution",
+    "real energy savings",
+    "adaptive selector",
+    "research novelty",
+    "generalization across workloads and devices",
+    "CUDA execution"
+  ],
+  "next_step": "Repeated hardware measurements on larger held-out workloads; distinguish selected/all observation with justified candidate exits before designing the adaptive selector.",
+  "note": "Two candidate exits make selected/all identical during drafting after excluding the active exit; terminal ordinary steps may differ.",
+  "latest_unit_test_run": {
+    "date": "2026-10-02",
+    "passed": 5,
+    "seconds": 2.01,
+    "runtime": "prototype/selective_feedback/.runtime/python/python.exe"
+  },
+  "layerskip_pilot": {
+    "model": "facebook/layerskip-llama3.2-1B",
+    "revision": "81deb0f88734409cca506bcefcfb5c6bd2667565",
+    "precision": "fp32",
+    "device": "cpu",
+    "prompts": 2,
+    "max_new_tokens": 8,
+    "repeats": 1,
+    "configurations_and_observation_modes": 17,
+    "runs": 34,
+    "all_outputs_match_native_greedy": true,
+    "valid_one_step_observations": 142,
+    "excluded_observations": 62,
+    "weights_sha256_verified": true,
+    "energy_available": false,
+    "report": "layerskip-fp32-pilot.md"
+  }
+}

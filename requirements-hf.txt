@@ -1,0 +1,12 @@
+# CUDA-enabled Python stack for a real RTX 3050 run.
+# Install with the project script so the correct PyTorch CUDA build is selected.
+
+accelerate>=0.31
+bitsandbytes>=0.45
+datasets>=2.18
+huggingface_hub>=0.23
+sentencepiece>=0.2
+transformers>=4.43
+
+# Keep the project lightweight and explicit so the controller can run on the GPU.
+# These packages are optional for the toy simulation, but required for live model execution.
