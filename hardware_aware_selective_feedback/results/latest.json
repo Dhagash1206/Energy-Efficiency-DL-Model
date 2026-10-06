@@ -1,0 +1,1158 @@
+{
+  "calibration_runs": 13,
+  "observer_pair_prompt_ids": [
+    "HumanEval/139"
+  ],
+  "observer_pair_unique_prompts": 1,
+  "calibration_total_objective": 811.7016850008,
+  "paired_observer_deltas": [
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "mode": "selected_observe",
+      "latency_delta_s": -0.13558439999906113,
+      "energy_delta_j": 1.3246149996000014
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "mode": "always_observe",
+      "latency_delta_s": 0.46822460000112187,
+      "energy_delta_j": 8.065847001599991
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "mode": "selected_observe",
+      "latency_delta_s": -0.2763349999986531,
+      "energy_delta_j": -4.003002997199999
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "mode": "always_observe",
+      "latency_delta_s": 0.010090600000694394,
+      "energy_delta_j": -3.5616070008000023
+    }
+  ],
+  "paired_vs_ordinary": [
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "fixed",
+      "latency_delta_s": 0.11028660000010859,
+      "energy_delta_j": -2.4349369967999976
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "never_observe",
+      "latency_delta_s": 0.6310315999980958,
+      "energy_delta_j": 6.225477001200005
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "selected_observe",
+      "latency_delta_s": 0.49544719999903464,
+      "energy_delta_j": 7.5500920008000065
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "always_observe",
+      "latency_delta_s": 1.0992561999992176,
+      "energy_delta_j": 14.291324002799996
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "bandit",
+      "latency_delta_s": 1.7365822000028857,
+      "energy_delta_j": 35.674142004000004
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "adaptive",
+      "latency_delta_s": 0.8402289000005112,
+      "energy_delta_j": 16.164939002400004
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "fixed",
+      "latency_delta_s": 0.24072130000058678,
+      "energy_delta_j": 2.435241999599995
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "never_observe",
+      "latency_delta_s": 0.23249109999960638,
+      "energy_delta_j": 1.239092999999997
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "selected_observe",
+      "latency_delta_s": -0.0438438999990467,
+      "energy_delta_j": -2.7639099972000025
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "always_observe",
+      "latency_delta_s": 0.24258170000030077,
+      "energy_delta_j": -2.3225140008000054
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "bandit",
+      "latency_delta_s": -0.12020760000086739,
+      "energy_delta_j": -3.3262080012000013
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "adaptive",
+      "latency_delta_s": 0.5034683999983827,
+      "energy_delta_j": 8.274222997199999
+    }
+  ],
+  "feasibility": {
+    "best_executed_fixed_by_prompt": {
+      "HumanEval/97": "fixed",
+      "gsm8k-test-208": "ordinary"
+    },
+    "best_fixed_varies_across_prompts": true,
+    "observation_overhead": {
+      "selected_observe": {
+        "mean_delta_per_request": -1.339193998799999,
+        "median_delta_per_request": -1.339193998799999,
+        "n": 2
+      },
+      "always_observe": {
+        "mean_delta_per_request": 2.2521200003999944,
+        "median_delta_per_request": 2.2521200003999944,
+        "n": 2
+      }
+    },
+    "warning": "Descriptive short-run comparisons; repeat on more prompts and hardware."
+  },
+  "model": "facebook/layerskip-llama3.2-1B",
+  "revision": "81deb0f88734409cca506bcefcfb5c6bd2667565",
+  "precision": "fp32",
+  "device": "cpu",
+  "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+  "measurement": {
+    "device": "cpu",
+    "energy_available": true,
+    "energy_boundary": "cpu_packages",
+    "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+    "energy_reason": null,
+    "rapl_zones": [],
+    "emi_channels": []
+  },
+  "platform": "Windows-11-10.0.26100-SP0",
+  "cpu_threads": 4,
+  "accelerator_name": null,
+  "torch": "2.6.0+cpu",
+  "transformers": "4.50.0",
+  "objective": "energy",
+  "energy_available": true,
+  "energy_boundary": "cpu_packages",
+  "energy_limitation": null,
+  "dataset": {
+    "gsm8k_train": {
+      "source": "https://raw.githubusercontent.com/openai/grade-school-math/3101c7d5072418e28b9008a6636bde82a006892c/grade_school_math/data/train.jsonl",
+      "sha256": "17f347dc51477c50d4efb83959dbb7c56297aba886e5544ee2aaed3024813465",
+      "revision": "3101c7d5072418e28b9008a6636bde82a006892c",
+      "license": "MIT"
+    },
+    "gsm8k_test": {
+      "source": "https://raw.githubusercontent.com/openai/grade-school-math/3101c7d5072418e28b9008a6636bde82a006892c/grade_school_math/data/test.jsonl",
+      "sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
+      "revision": "3101c7d5072418e28b9008a6636bde82a006892c",
+      "license": "MIT"
+    },
+    "humaneval": {
+      "source": "https://raw.githubusercontent.com/openai/human-eval/6d43fb980f9fee3c892a914eda09951f772ad10d/data/HumanEval.jsonl.gz",
+      "sha256": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef",
+      "revision": "6d43fb980f9fee3c892a914eda09951f772ad10d",
+      "license": "MIT"
+    },
+    "seed": 42,
+    "split": "disjoint GSM8K train/test; disjoint shuffled HumanEval IDs",
+    "use": "prompt workloads only; no answer or executable-code quality scoring"
+  },
+  "arguments": {
+    "calibration": 1,
+    "test": 1,
+    "tokens": 4,
+    "seed": 42,
+    "device": "cpu",
+    "energy_source": "auto",
+    "counter_file": null,
+    "counter_unit": "joules",
+    "energy_scope": null,
+    "probe": false,
+    "threads": 4,
+    "repeats": 1,
+    "objective": "energy",
+    "observer_pairs": 1
+  },
+  "selector": {
+    "objective": "energy",
+    "decisions": 3,
+    "executed_costs_per_token": {
+      "(0, 0)": {
+        "mean": 13.8849267492,
+        "n": 1
+      },
+      "(4, 1)": {
+        "mean": 14.5869910002,
+        "n": 1
+      },
+      "(4, 3)": {
+        "mean": 13.29893787465,
+        "n": 2
+      },
+      "(8, 1)": {
+        "mean": 15.0278990004,
+        "n": 3
+      },
+      "(8, 3)": {
+        "mean": 16.464393083399997,
+        "n": 3
+      },
+      "(12, 1)": {
+        "mean": 14.3408864997,
+        "n": 1
+      },
+      "(12, 3)": {
+        "mean": 15.8714680005,
+        "n": 1
+      }
+    },
+    "observed_request_costs_per_token": {
+      "(8, 3)": {
+        "mean": 17.8200977499,
+        "n": 2
+      }
+    },
+    "valid_one_step": {
+      "4": {
+        "matches": 1,
+        "observations": 12,
+        "rate": 0.08333333333333333
+      },
+      "8": {
+        "matches": 7,
+        "observations": 16,
+        "rate": 0.4375
+      },
+      "12": {
+        "matches": 5,
+        "observations": 6,
+        "rate": 0.8333333333333334
+      }
+    },
+    "measured_observer_deltas_per_token": {
+      "selected": {
+        "mean": 0.06862500000000082,
+        "n": 1
+      },
+      "all": {
+        "mean": 2.6024124996000015,
+        "n": 1
+      }
+    },
+    "decision_rule": "heuristic measured base cost plus uncertainty; paid exits only at calibrated depth 8 length 3 after three overhead pairs; no safety guarantee"
+  },
+  "bandit": {
+    "(0, 0)": {
+      "mean": 11.8992166245,
+      "n": 2
+    },
+    "(4, 1)": {
+      "mean": 14.5869910002,
+      "n": 1
+    },
+    "(4, 3)": {
+      "mean": 18.7420288752,
+      "n": 2
+    },
+    "(8, 1)": {
+      "mean": 16.292551000049997,
+      "n": 2
+    },
+    "(8, 3)": {
+      "mean": 16.42402125,
+      "n": 1
+    },
+    "(12, 1)": {
+      "mean": 14.3408864997,
+      "n": 1
+    },
+    "(12, 3)": {
+      "mean": 15.8714680005,
+      "n": 1
+    }
+  },
+  "aggregates": {
+    "ordinary": {
+      "runs": 2,
+      "median_latency_s": 3.0088470999999117,
+      "total_latency_s": 6.0176941999998235,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.7522117749999779,
+      "energy_j": 102.1052769984,
+      "energy_j_per_token": 12.7631596248,
+      "all_greedy_match": true
+    },
+    "fixed": {
+      "runs": 2,
+      "median_latency_s": 3.1843510500002594,
+      "total_latency_s": 6.368702100000519,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.7960877625000649,
+      "energy_j": 102.10558200119999,
+      "energy_j_per_token": 12.763197750149999,
+      "all_greedy_match": true
+    },
+    "never_observe": {
+      "runs": 2,
+      "median_latency_s": 3.440608449998763,
+      "total_latency_s": 6.881216899997526,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.8601521124996907,
+      "energy_j": 109.5698469996,
+      "energy_j_per_token": 13.69623087495,
+      "all_greedy_match": true
+    },
+    "selected_observe": {
+      "runs": 2,
+      "median_latency_s": 3.2346487499999057,
+      "total_latency_s": 6.469297499999811,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.8086621874999764,
+      "energy_j": 106.891459002,
+      "energy_j_per_token": 13.36143237525,
+      "all_greedy_match": true
+    },
+    "always_observe": {
+      "runs": 2,
+      "median_latency_s": 3.679766049999671,
+      "total_latency_s": 7.359532099999342,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.9199415124999177,
+      "energy_j": 114.0740870004,
+      "energy_j_per_token": 14.25926087505,
+      "all_greedy_match": true
+    },
+    "bandit": {
+      "runs": 2,
+      "median_latency_s": 3.817034400000921,
+      "total_latency_s": 7.634068800001842,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.9542586000002302,
+      "energy_j": 134.4532110012,
+      "energy_j_per_token": 16.80665137515,
+      "all_greedy_match": true
+    },
+    "adaptive": {
+      "runs": 2,
+      "median_latency_s": 3.6806957499993587,
+      "total_latency_s": 7.361391499998717,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.9201739374998397,
+      "energy_j": 126.544438998,
+      "energy_j_per_token": 15.81805487475,
+      "all_greedy_match": true
+    }
+  },
+  "rows": [
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.447570699998323,
+      "energy_j": 55.5397069968,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.899727800002438,
+      "energy_j": 58.3479640008,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.9906196999982058,
+      "energy_j": 55.1370459996,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.75527730000249,
+      "energy_j": 53.691163001999996,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.021560100001807,
+      "energy_j": 65.696085,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 12,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.7817739999991318,
+      "energy_j": 57.3635459988,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 1,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 12,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.4752756000016234,
+      "energy_j": 63.485872002,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_selected_observed",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.8663899000021047,
+      "energy_j": 70.857783,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 2,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_selected_base",
+      "repeat": 0,
+      "order": 1,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.94950450000033,
+      "energy_j": 70.583283,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_all_observed",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.8921192999987397,
+      "energy_j": 71.7029989992,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 4,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_all_base",
+      "repeat": 0,
+      "order": 1,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.2142597000020032,
+      "energy_j": 61.2933490008,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-train-1458",
+      "dataset": "gsm8k",
+      "split": "calibration",
+      "policy": "adaptive_calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        50002,
+        5900,
+        311,
+        264
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.919483300000138,
+      "energy_j": 51.3536430024,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-train-1458",
+      "dataset": "gsm8k",
+      "split": "calibration",
+      "policy": "bandit_calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        50002,
+        5900,
+        311,
+        264
+      ],
+      "generated_tokens": 4,
+      "latency_s": 4.02321959999972,
+      "energy_j": 76.6492449984,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "bandit",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 5.191309200003161,
+      "energy_j": 94.799185002,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "adaptive",
+      "repeat": 0,
+      "order": 1,
+      "depth": 8,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 4.294955900000787,
+      "energy_j": 75.2899820004,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "always_observe",
+      "repeat": 0,
+      "order": 2,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 4.553983199999493,
+      "energy_j": 73.4163670008,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 6,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "selected_observe",
+      "repeat": 0,
+      "order": 3,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.95017419999931,
+      "energy_j": 66.6751349988,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 3,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "fixed",
+      "repeat": 0,
+      "order": 4,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.565013600000384,
+      "energy_j": 56.6901060012,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "never_observe",
+      "repeat": 0,
+      "order": 5,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 4.085758599998371,
+      "energy_j": 65.3505199992,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "ordinary",
+      "repeat": 0,
+      "order": 6,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.4547270000002754,
+      "energy_j": 59.125042998,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "bandit",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.4427595999986806,
+      "energy_j": 39.6540259992,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "fixed",
+      "repeat": 0,
+      "order": 1,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.803688500000135,
+      "energy_j": 45.415476,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "never_observe",
+      "repeat": 0,
+      "order": 2,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.7954582999991544,
+      "energy_j": 44.2193270004,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "ordinary",
+      "repeat": 0,
+      "order": 3,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.562967199999548,
+      "energy_j": 42.9802340004,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "adaptive",
+      "repeat": 0,
+      "order": 4,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 3.0664355999979307,
+      "energy_j": 51.2544569976,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "always_observe",
+      "repeat": 0,
+      "order": 5,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.805548899999849,
+      "energy_j": 40.6577199996,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "selected_observe",
+      "repeat": 0,
+      "order": 6,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 2.5191233000005013,
+      "energy_j": 40.2163240032,
+      "energy_boundary": "cpu_packages",
+      "energy_source": "Windows EMI CPU package cumulative energy (pWh)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    }
+  ],
+  "interpretation": "Measured implementation check; small samples do not establish energy savings, superiority, or novelty.",
+  "limits": [
+    "The implementation uses an attributed LayerSkip inference helper copied into research.",
+    "Request-level adaptation, not token-level adaptation.",
+    "Observer overhead uses repeated paired calibration; thermal/order effects remain.",
+    "Fixed depth 4 and no-observation depth 8 are separate predetermined baselines.",
+    "No optimized serving backend; counter scope may omit other hardware components.",
+    "HumanEval supplies prompt diversity; generated code is not executed or scored."
+  ]
+}
