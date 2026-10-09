@@ -64,10 +64,14 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
     tokens, cycles, state = [], [], LearningState()
     if not limit:
         return dict(tokens=tokens, cycles=cycles, feedback_statistics={})
-    result = forward(model, torch.tensor([prompt], device=model.device), None)
+    # Prompt positions populate the KV cache, but only the final position's
+    # vocabulary scores are needed to choose the first generated token.
+    result = forward(model, torch.tensor([prompt], device=model.device), None,
+                     logits_to_keep=1)
     cache = result.past_key_values
     pending = result.logits[:, -1].argmax(-1).reshape(1, 1)
     tokens.append(pending.item())
+    del result
     while len(tokens) < limit and tokens[-1] not in eos:
         context = prompt + tokens
         check_cache(cache, layers, len(context)-1)
@@ -91,6 +95,9 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
                     token = draft_input.item()
                     proposed.append(token)
                     proposed_tensors.append(draft_input)
+                    # Do not retain obsolete logits/cache containers while the
+                    # next draft or verifier allocates its working tensors.
+                    del early
                     if token in eos:
                         break
                 block = torch.cat([pending, *proposed_tensors], dim=1)
@@ -110,6 +117,7 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
         state.update(feedback)
         tokens.extend(committed)
         cache = crop_past_key_values(result.past_key_values, len(prompt)+len(tokens)-1)
+        del result
         check_cache(cache, layers, len(prompt)+len(tokens)-1)
         pending = target_ids[:, len(committed)-1:len(committed)]
         cycles.append(dict(context_ids=context, draft=proposed, target=target,

@@ -3,6 +3,7 @@ import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import generate, native_greedy
 from hardware_aware_selective_feedback.feedback import validate_feedback, LearningState
+from hardware_aware_selective_feedback.llama_model_utils import forward
 
 
 class EngineTests(unittest.TestCase):
@@ -41,6 +42,17 @@ class EngineTests(unittest.TestCase):
         for eos in baseline[:4]:
             result = generate(self.model, prompt, 12, 2, 3, (1, 3), "all", eos=[eos])
             self.assertEqual(result["tokens"], native_greedy(self.model, prompt, 12, [eos]))
+
+    def test_last_prompt_logits_preserve_cache_and_prediction(self):
+        prompt = torch.tensor([[1, 3, 5, 7]])
+        with torch.inference_mode():
+            full = forward(self.model, prompt, None)
+            compact = forward(self.model, prompt, None, logits_to_keep=1)
+        self.assertEqual(compact.logits.shape, (1, 1, 32))
+        torch.testing.assert_close(compact.logits, full.logits[:, -1:])
+        for original_layer, compact_layer in zip(full.past_key_values, compact.past_key_values):
+            for original_tensor, compact_tensor in zip(original_layer, compact_layer):
+                torch.testing.assert_close(original_tensor, compact_tensor, rtol=0, atol=0)
 
     def test_rejected_branch_not_failure(self):
         rows = validate_feedback([10], [1, 2, 3], [1, 9, 3, 4], {2: [1, 9, 8, 5]}, 1, 2)

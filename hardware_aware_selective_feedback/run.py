@@ -431,9 +431,9 @@ def main():
                   ("J" if objective == "energy" else "s")
                   for name, value in observation_overhead.items()) + ".",
         "Observer overhead is measured by same-prompt paired executions. "
-        "Raw runs, order, token IDs, valid feedback, and paired deltas are in latest.json.",
+        f"Raw runs, order, token IDs, valid feedback, and paired deltas are in {output_file.name}.",
         "Calibration work is reported separately and is not allocated to any single baseline.",
-        "This is a correctness and feasibility run. Small samples and CPU timing noise "
+        "This is a correctness and feasibility run. Small samples and hardware measurement variability "
         "do not establish a speed or energy advantage, and there is no novelty claim.",
     ]
     output_file.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")

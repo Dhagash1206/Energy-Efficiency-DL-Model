@@ -60,6 +60,32 @@ ordinary decoding. Use `--depths` and `--lengths` to narrow the grid, and a
 different `--seed` for a fresh prompt split. A setting with any greedy mismatch
 is unsuitable for an exact-output energy comparison even if its energy is low.
 
+The module boundaries are: `engine.py` owns token generation and cache rollback;
+`llama_model_utils.py` owns split model execution; `feedback.py` validates
+observations; `selector.py` chooses actions; `measurement.py` owns hardware
+counters; and `run.py` / `sweep.py` coordinate experiments and reporting.
+The sweep CLI delegates execution to `run_sweep`, and `summarize` independently
+validates complete, unique baseline/candidate pairs. A failed ordinary baseline
+invalidates comparisons for every setting. `Meter` supports context management
+so initialization and execution errors still release counter resources.
+
+The decoding helper reuses rotary position embeddings across layers and creates
+only causal masks for these unpadded inputs. The engine keeps selected token
+tensors on the device for subsequent steps; host reads still support EOS and
+acceptance decisions. These changes reduce repeated work, but energy savings
+must be established by measurements. FP16 speculative output mismatches were
+observed on `gsm8k-test-245` with depth/length `(4, 2)`, `(8, 1)` and `(8, 2)`;
+those settings require further diagnosis before exact-output claims.
+
+Prompt prefill now projects vocabulary scores only for the final prompt token;
+all prompt positions still populate the KV cache. Temporary forward results are
+released before later draft/verification steps. The 32-token CUDA comparison in
+`results/rtx3050-memory-optimization.md` measured about 41 MiB lower total peak
+allocated memory for depth 4 / draft length 1. Model weights remain resident;
+this does not establish a reduction in GPU power or utilization. Changing the
+projection shape can affect floating-point rounding, so keep checking native
+greedy agreement on new workloads.
+
 Energy is **measured only when a working cumulative counter exists**:
 
 - NVIDIA CUDA GPU: `--energy-source auto` uses NVML GPU joules. Its boundary is
