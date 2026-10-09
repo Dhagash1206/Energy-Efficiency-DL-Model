@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import generate, native_greedy
@@ -81,6 +81,36 @@ class EngineTests(unittest.TestCase):
             generate(self.model, [1], depth=4, drafts=1)
         with self.assertRaises(ValueError):
             generate(self.model, [1], exits=(0,))
+
+    def test_forward_remainder_position_ids_deep_model(self):
+        """Regression: forward_remainder used full_past_key_values_length=0 for upper
+        layers on their first call, anchoring position IDs at 0 instead of the actual
+        sequence position.  This caused argmax flips on prompts where early-layer
+        draft acceptance pushed the sequence position well past 0.
+
+        Requires a model deeper than the exit depth (16 layers, exit at depth 4)
+        and a prompt long enough that the wrong positional anchor produces a
+        different argmax (prompt length 20, 25 generated tokens).
+        """
+        torch.manual_seed(42)
+        deep_model = LlamaForCausalLM(LlamaConfig(
+            vocab_size=64, hidden_size=64,
+            intermediate_size=128, num_hidden_layers=16,
+            num_attention_heads=4, num_key_value_heads=2,
+            max_position_embeddings=256, attn_implementation="eager",
+        )).eval()
+        prompt = list(range(1, 21))  # 20 tokens — long enough to trigger wrong positions
+        limit = 25
+        reference = native_greedy(deep_model, prompt, limit)
+        for depth, length in ((4, 1), (4, 2), (8, 1)):
+            with self.subTest(depth=depth, length=length):
+                result = generate(deep_model, prompt, limit, depth, length)
+                self.assertEqual(
+                    result["tokens"], reference,
+                    msg=(f"depth={depth} length={length}: token mismatch at index "
+                         f"{next((i for i,(a,b) in enumerate(zip(result['tokens'],reference)) if a!=b), len(reference))}"),
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

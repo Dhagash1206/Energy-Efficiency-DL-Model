@@ -84,7 +84,7 @@ def run_sweep(args, meter):
     actions = [Action()] + [Action(d, k) for d in args.depths for k in args.lengths]
     torch.set_num_threads(4)
     _, heldout, dataset_info = load_prompts(1, args.test, args.seed)
-    model, tokenizer, revision = load_model(args.device, args.precision)
+    model, tokenizer, revision = load_model(args.device, args.precision, attn="auto")
     if any(a.depth >= len(model.model.layers) for a in actions):
         raise ValueError("Draft depth must be below the model's layer count")
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()

@@ -217,7 +217,10 @@ def forward(
     past_key_values = past_key_values.to_legacy_cache()
     if logits_to_keep:
         hidden_states = hidden_states[:, -logits_to_keep:]
-    hidden_states = model.model.norm(hidden_states)
+    # Cast to FP32 before norm+lm_head so logits are numerically identical
+    # across the full-path and split-path (forward_early+forward_remainder).
+    # This eliminates near-tie argmax flips caused by FP16 rounding differences.
+    hidden_states = model.model.norm(hidden_states.float())
     logits = model.lm_head(hidden_states)
 
     return ForwardResult(
@@ -280,9 +283,8 @@ def forward_early(
     else:
         exit_query_cache = torch.cat([exit_query_cache, hidden_states], dim=1)
 
-    hidden_states = model.model.norm(hidden_states)
-
-    logits = model.lm_head(hidden_states)
+    # FP32 cast before norm+lm_head — matches forward() and forward_remainder().
+    logits = model.lm_head(model.model.norm(hidden_states.float()))
     return ForwardResult(
         logits=logits, past_key_values=past_key_values, exit_query_cache=exit_query_cache
     )
@@ -313,8 +315,16 @@ def forward_remainder(
         if len(past_key_values) == len(model.model.layers):
             full_past_key_values_length = past_key_values[-1][0].shape[2]
         else:
-            # we have not done a full pass yet so the history is 0
-            full_past_key_values_length = 0
+            # Upper layers have not seen a full pass yet; their KV cache is
+            # empty.  Position IDs for the remainder block must still be
+            # anchored at the correct absolute sequence positions, which are
+            # the positions occupied by the pending token and the draft
+            # tokens.  draft_past_key_values_length already includes the
+            # prompt plus all previously committed tokens, so the remainder
+            # block starts at (draft_past_key_values_length - seq_length + 1)
+            # for the pending token.  We set full_past_key_values_length to
+            # that value so that torch.arange produces the right positions.
+            full_past_key_values_length = draft_past_key_values_length - seq_length + num_tokens_to_generate
 
         seq_length_with_past = num_tokens_to_generate + draft_past_key_values_length
     past_key_values = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
@@ -389,8 +399,8 @@ def forward_remainder(
             )
 
     past_key_values = past_key_values.to_legacy_cache()
-    hidden_states = model.model.norm(hidden_states)
-    logits = model.lm_head(hidden_states)
+    # FP32 cast before norm+lm_head — same as forward() and forward_early().
+    logits = model.lm_head(model.model.norm(hidden_states.float()))
 
     return ForwardResult(
         logits=logits, past_key_values=past_key_values, exit_query_cache=exit_query_cache

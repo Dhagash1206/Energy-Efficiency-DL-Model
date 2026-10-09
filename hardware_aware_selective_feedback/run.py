@@ -116,7 +116,23 @@ def load_prompts(calibration, test, seed):
     }
 
 
-def load_model(device, precision="fp32"):
+def load_model(device, precision="fp32", quantize=None, attn="auto", compile_model=False):
+    """Load the pinned LayerSkip model with optional quantization and compile.
+
+    quantize: None | 'int8' | 'int4'  — bitsandbytes precision (CUDA only)
+    attn:     'auto' | 'sdpa' | 'eager' | 'flash_attention_2'
+              'auto' selects sdpa on CUDA, eager elsewhere.
+    compile_model: wrap with torch.compile(mode='reduce-overhead') after load.
+    """
+    if quantize and device != "cuda":
+        raise ValueError("Quantization (int4/int8) requires CUDA")
+    if quantize:
+        try:
+            import bitsandbytes  # noqa: F401  — presence check
+        except ImportError:
+            raise RuntimeError(
+                "bitsandbytes is not installed. Run: pip install bitsandbytes"
+            )
     dtype = resolve_dtype(precision, device)
     snapshot = CACHE / "hub" / "models--facebook--layerskip-llama3.2-1B" / "snapshots" / REVISION
     if not (snapshot / "model.safetensors").exists():
@@ -129,9 +145,37 @@ def load_model(device, precision="fp32"):
             raise RuntimeError("Pinned LayerSkip download failed; use a Hugging Face account "
                                "with checkpoint access and run hf auth login") from error
     tokenizer = AutoTokenizer.from_pretrained(str(snapshot), local_files_only=True, trust_remote_code=False)
+    # Attention backend: sdpa uses fused kernels on CUDA (~5-10% latency),
+    # but requires re-verifying token matches after switching.
+    if attn == "auto":
+        attn_impl = "sdpa" if device == "cuda" else "eager"
+    else:
+        attn_impl = attn
+    # Build keyword args for quantization.
+    quant_kwargs = {}
+    if quantize == "int8":
+        quant_kwargs["load_in_8bit"] = True
+    elif quantize == "int4":
+        quant_kwargs["load_in_4bit"] = True
+        quant_kwargs["bnb_4bit_compute_dtype"] = dtype
+        quant_kwargs["bnb_4bit_quant_type"] = "nf4"
+        quant_kwargs["bnb_4bit_use_double_quant"] = True
     model = LlamaForCausalLM.from_pretrained(
         str(snapshot), local_files_only=True, trust_remote_code=False,
-        torch_dtype=dtype, attn_implementation="eager").eval().to(device)
+        torch_dtype=dtype, attn_implementation=attn_impl,
+        **quant_kwargs)
+    if not quantize:
+        # bitsandbytes places the model on the target device during load;
+        # for unquantized models we move it explicitly.
+        model = model.eval().to(device)
+    else:
+        model = model.eval()
+    if compile_model:
+        if not hasattr(torch, "compile"):
+            raise RuntimeError("torch.compile requires PyTorch >= 2.0")
+        # reduce-overhead removes per-step kernel-launch cost (~5-10% latency).
+        # fullgraph=False because the speculative path has dynamic control flow.
+        model = torch.compile(model, mode="reduce-overhead", fullgraph=False)
     return model, tokenizer, REVISION
 
 
@@ -183,6 +227,20 @@ def main():
     parser.add_argument("--objective", choices=("auto", "latency", "energy"), default="auto")
     parser.add_argument("--observer-pairs", type=int, default=3,
                         help="paired base/observed calibration repetitions")
+    # --- Efficiency levers ---
+    parser.add_argument("--quantize", choices=("int4", "int8"), default=None,
+                        help="bitsandbytes weight quantization (CUDA only). "
+                             "int4 uses NF4 double-quant (~25%% energy reduction); "
+                             "int8 uses LLM.int8 (~10-15%%). "
+                             "Re-verify token matches after enabling.")
+    parser.add_argument("--compile", action="store_true", dest="compile_model",
+                        help="torch.compile the model with mode=reduce-overhead "
+                             "(PyTorch >= 2.0, CUDA recommended, ~5-10%% latency).")
+    parser.add_argument("--attn", choices=("auto", "sdpa", "eager", "flash_attention_2"),
+                        default="auto",
+                        help="Attention backend. 'auto' selects sdpa on CUDA, "
+                             "eager on CPU/MPS. Re-verify token matches after "
+                             "switching from eager.")
     args = parser.parse_args()
     if min(args.calibration, args.test, args.tokens, args.threads,
            args.observer_pairs, args.repeats) < 1:
@@ -211,7 +269,12 @@ def main():
     objective = ("energy" if meter.available else "latency") if args.objective == "auto" else args.objective
     torch.set_num_threads(args.threads)
     calibration, heldout, dataset_info = load_prompts(args.calibration, args.test, args.seed)
-    model, tokenizer, revision = load_model(device, args.precision)
+    model, tokenizer, revision = load_model(
+        device, args.precision,
+        quantize=args.quantize,
+        attn=args.attn,
+        compile_model=args.compile_model,
+    )
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     for prompt in calibration + heldout:
         prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:192]
