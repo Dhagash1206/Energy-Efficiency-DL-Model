@@ -36,6 +36,19 @@ loading the 1B model or datasets. A backend being available does not prove
 this custom LayerSkip kernel runs on it; run the focused tests and a small
 experiment on each new device first.
 
+The runner defaults to FP32. Use `--precision fp16` for CUDA inference on
+lower-memory GPUs; FP16 is currently restricted to CUDA, and output correctness
+is checked against ordinary greedy decoding using the same precision. A 4 GB
+GPU may still run out of memory, depending on available VRAM and runtime use.
+Start with a small smoke run and save it separately to avoid replacing
+`results/latest.json`:
+
+    python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 1 --test 1 --tokens 4 --repeats 1 --observer-pairs 1 --output hardware_aware_selective_feedback/results/rtx3050-fp16-smoke.json
+
+The Markdown report is written beside the JSON report with a `.md` extension.
+Only increase prompts, tokens, repeats, or calibration after the smoke run
+completes and all greedy comparisons pass.
+
 Energy is **measured only when a working cumulative counter exists**:
 
 - NVIDIA CUDA GPU: `--energy-source auto` uses NVML GPU joules. Its boundary is

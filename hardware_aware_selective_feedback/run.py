@@ -44,6 +44,16 @@ DATASETS = {
 }
 
 
+def resolve_dtype(precision, device):
+    if precision == "fp32":
+        return torch.float32
+    if precision == "fp16":
+        if device != "cuda":
+            raise ValueError("FP16 is currently supported only on CUDA")
+        return torch.float16
+    raise ValueError(f"Unsupported precision: {precision}")
+
+
 def source_file(name, split=""):
     repo, path_pattern, revision, license_name = DATASETS[name]
     directory = CACHE / "research_datasets" / name
@@ -106,7 +116,8 @@ def load_prompts(calibration, test, seed):
     }
 
 
-def load_model(device):
+def load_model(device, precision="fp32"):
+    dtype = resolve_dtype(precision, device)
     snapshot = CACHE / "hub" / "models--facebook--layerskip-llama3.2-1B" / "snapshots" / REVISION
     if not (snapshot / "model.safetensors").exists():
         try:
@@ -120,7 +131,7 @@ def load_model(device):
     tokenizer = AutoTokenizer.from_pretrained(str(snapshot), local_files_only=True, trust_remote_code=False)
     model = LlamaForCausalLM.from_pretrained(
         str(snapshot), local_files_only=True, trust_remote_code=False,
-        torch_dtype=torch.float32, attn_implementation="eager").eval().to(device)
+        torch_dtype=dtype, attn_implementation="eager").eval().to(device)
     return model, tokenizer, REVISION
 
 
@@ -159,6 +170,9 @@ def main():
     parser.add_argument("--tokens", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "xpu", "mps"), default="auto")
+    parser.add_argument("--precision", choices=("fp32", "fp16"), default="fp32")
+    parser.add_argument("--output", type=Path,
+                        help="JSON report path (Markdown report uses the same name with .md)")
     parser.add_argument("--energy-source", choices=("auto", "none", "nvml", "rapl", "emi", "file"), default="auto")
     parser.add_argument("--counter-file", help="external cumulative energy counter text file")
     parser.add_argument("--counter-unit", choices=("joules", "millijoules", "microjoules"), default="joules")
@@ -182,6 +196,10 @@ def main():
         device = args.device
     if (device == "cuda" and not torch.cuda.is_available()) or (device == "xpu" and not xpu_available) or (device == "mps" and not mps_available):
         parser.error(f"{device} is unavailable in this PyTorch installation or on this machine")
+    try:
+        resolve_dtype(args.precision, device)
+    except ValueError as error:
+        parser.error(str(error))
     meter = Meter(device, args.energy_source, args.counter_file,
                   args.counter_unit, args.energy_scope)
     if args.probe:
@@ -193,7 +211,7 @@ def main():
     objective = ("energy" if meter.available else "latency") if args.objective == "auto" else args.objective
     torch.set_num_threads(args.threads)
     calibration, heldout, dataset_info = load_prompts(args.calibration, args.test, args.seed)
-    model, tokenizer, revision = load_model(device)
+    model, tokenizer, revision = load_model(device, args.precision)
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     for prompt in calibration + heldout:
         prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:192]
@@ -359,7 +377,7 @@ def main():
         "paired_observer_deltas": paired_observer_deltas,
         "paired_vs_ordinary": paired_vs_ordinary,
         "feasibility": feasibility,
-        "model": MODEL, "revision": revision, "precision": "fp32",
+        "model": MODEL, "revision": revision, "precision": args.precision,
         "device": str(model.device), "processor": platform.processor(),
         "measurement": meter.describe(),
         "platform": platform.platform(), "cpu_threads": torch.get_num_threads(),
@@ -370,7 +388,8 @@ def main():
         "transformers": transformers.__version__, "objective": objective,
         "energy_available": meter.available, "energy_boundary": meter.scope,
         "energy_limitation": meter.reason,
-        "dataset": dataset_info, "arguments": vars(args),
+        "dataset": dataset_info,
+        "arguments": {**vars(args), "output": str(args.output) if args.output else None},
         "selector": selector.summary(), "bandit": bandit.summary(),
         "aggregates": aggregates, "rows": rows,
         "interpretation": "Measured implementation check; small samples do not establish energy savings, superiority, or novelty.",
@@ -383,14 +402,14 @@ def main():
             "HumanEval supplies prompt diversity; generated code is not executed or scored.",
         ],
     }
-    destination = ROOT / "hardware_aware_selective_feedback" / "results"
-    destination.mkdir(parents=True, exist_ok=True)
-    output_file = destination / "latest.json"
+    output_file = (args.output if args.output is not None else
+                   ROOT / "hardware_aware_selective_feedback" / "results" / "latest.json")
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
     lines = [
         "# LayerSkip selective-feedback experiment",
         "",
-        f"Model: {MODEL} at {revision}; fp32 on {model.device}.",
+        f"Model: {MODEL} at {revision}; {args.precision} on {model.device}.",
         f"Objective: {objective}. Energy boundary: {report['energy_boundary'] or 'unavailable'}.",
         f"Counter: {meter.source or meter.reason}.",
         f"Observer pairs: {len(pair_prompt_ids)} across {len(set(pair_prompt_ids))} calibration prompts.",
@@ -417,7 +436,7 @@ def main():
         "This is a correctness and feasibility run. Small samples and CPU timing noise "
         "do not establish a speed or energy advantage, and there is no novelty claim.",
     ]
-    (destination / "latest.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    output_file.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps({"result": str(output_file), "runs": len(rows), "objective": objective,
                       "greedy_matches": sum(r["greedy_match"] for r in rows)}), flush=True)
 
