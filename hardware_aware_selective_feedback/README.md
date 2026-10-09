@@ -49,6 +49,17 @@ The Markdown report is written beside the JSON report with a `.md` extension.
 Only increase prompts, tokens, repeats, or calibration after the smoke run
 completes and all greedy comparisons pass.
 
+To measure fixed speculative settings without feedback observers, run a paired
+energy sweep. It randomizes setting order for each prompt and repeat, checks
+every output against native greedy tokens, and records mismatches explicitly:
+
+    python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp16 --test 4 --tokens 16 --repeats 2 --output hardware_aware_selective_feedback/results/fixed-sweep.json
+
+The default grid is depths 4, 8, 12 and draft lengths 1, 2, 3, 4, plus
+ordinary decoding. Use `--depths` and `--lengths` to narrow the grid, and a
+different `--seed` for a fresh prompt split. A setting with any greedy mismatch
+is unsuitable for an exact-output energy comparison even if its energy is low.
+
 Energy is **measured only when a working cumulative counter exists**:
 
 - NVIDIA CUDA GPU: `--energy-source auto` uses NVML GPU joules. Its boundary is

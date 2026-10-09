@@ -42,11 +42,11 @@ def native_greedy(model, prompt, limit, eos=()):
     for _ in range(limit):
         result = model(ids, past_key_values=cache, use_cache=True)
         cache = result.past_key_values
-        token = result.logits[:, -1].argmax(-1).item()
+        ids = result.logits[:, -1].argmax(-1).reshape(1, 1)
+        token = ids.item()
         tokens.append(token)
         if token in eos:
             break
-        ids = torch.tensor([[token]], device=model.device)
     return tokens
 
 
@@ -78,6 +78,7 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
         elif mode == 'selected':
             requested = requested[:1]
         proposed = []
+        proposed_tensors = []
         with observe(model, requested) as collected:
             if k == 0:
                 result = forward(model, pending, cache)
@@ -86,14 +87,16 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
                 for _ in range(k):
                     early = forward_early(model, draft_input, cache, depth, query)
                     cache, query = early.past_key_values, early.exit_query_cache
-                    token = early.logits[:, -1].argmax(-1).item()
+                    draft_input = early.logits[:, -1].argmax(-1).reshape(1, 1)
+                    token = draft_input.item()
                     proposed.append(token)
-                    draft_input = torch.tensor([[token]], device=model.device)
+                    proposed_tensors.append(draft_input)
                     if token in eos:
                         break
-                block = torch.cat([pending, torch.tensor([proposed], device=model.device)], dim=1)
+                block = torch.cat([pending, *proposed_tensors], dim=1)
                 result = forward_remainder(model, block, cache, depth, query)
-        target = result.logits.argmax(-1)[0].tolist()
+        target_ids = result.logits.argmax(-1)
+        target = target_ids[0].tolist()
         matched = 0
         while matched < len(proposed) and proposed[matched] == target[matched]:
             matched += 1
@@ -108,7 +111,7 @@ def generate(model, prompt, limit=32, depth=0, drafts=0, exits=(), mode='none', 
         tokens.extend(committed)
         cache = crop_past_key_values(result.past_key_values, len(prompt)+len(tokens)-1)
         check_cache(cache, layers, len(prompt)+len(tokens)-1)
-        pending = torch.tensor([[tokens[-1]]], device=model.device)
+        pending = target_ids[:, len(committed)-1:len(committed)]
         cycles.append(dict(context_ids=context, draft=proposed, target=target,
                            accepted=matched, committed=committed, observations=feedback,
                            shorter_prefix_acceptance={str(n): min(n, matched) for n in range(1, len(proposed)+1)}))

@@ -16,7 +16,8 @@ def _run_decoder(model, layer, hidden_states, **kwargs):
     cache = kwargs["past_key_value"]
     kwargs.pop("padding_mask", None)
     positions = kwargs["position_ids"]
-    kwargs["position_embeddings"] = model.model.rotary_emb(hidden_states, positions)
+    if "position_embeddings" not in kwargs:
+        kwargs["position_embeddings"] = model.model.rotary_emb(hidden_states, positions)
     kwargs["cache_position"] = positions[0]
     outputs = layer(hidden_states, **kwargs)
     return outputs[0], cache
@@ -200,11 +201,13 @@ def forward(
     )
 
     hidden_states = inputs_embeds
+    position_embeddings = model.model.rotary_emb(hidden_states, position_ids)
     for decoder_layer in model.model.layers:
         hidden_states, past_key_values = _run_decoder(model, decoder_layer,
             hidden_states,
             attention_mask=attention_mask,
             position_ids=position_ids,
+            position_embeddings=position_embeddings,
             past_key_value=past_key_values,
             output_attentions=False,
             use_cache=True,
@@ -260,11 +263,13 @@ def forward_early(
     )
 
     hidden_states = inputs_embeds
+    position_embeddings = model.model.rotary_emb(hidden_states, position_ids)
     for decoder_layer in model.model.layers[:exit_layer]:
         hidden_states, past_key_values = _run_decoder(model, decoder_layer,
             hidden_states,
             attention_mask=attention_mask,
             position_ids=position_ids,
+            position_embeddings=position_embeddings,
             past_key_value=past_key_values,
             output_attentions=False,
             use_cache=True,
@@ -347,17 +352,13 @@ def forward_remainder(
         full_past_key_values_length,  # we have no past for the full model
     )
 
-    next_decoder_cache = []
     hidden_states = inputs_embeds
-    # TODO simplify
+    position_embeddings = model.model.rotary_emb(hidden_states, position_ids)
+    early_position_embeddings = tuple(part[:, -num_tokens_to_generate:]
+                                      for part in position_embeddings)
     full_hidden_states: Optional[torch.FloatTensor] = None
     for idx, decoder_layer in enumerate(model.model.layers):
         is_early_exit = idx < exit_layer
-        past_key_value = (
-            past_key_values[idx]
-            if (past_key_values is not None and idx < len(past_key_values))
-            else None
-        )
         if is_early_exit:
             # early hidden states: B x num_gen x C
             early_hidden_states = hidden_states[:, -num_tokens_to_generate:]
@@ -366,6 +367,7 @@ def forward_remainder(
                 early_hidden_states,
                 attention_mask=early_attention_mask,
                 position_ids=early_position_ids,
+                position_embeddings=early_position_embeddings,
                 past_key_value=past_key_values,
                 output_attentions=False,
                 use_cache=True,
@@ -387,6 +389,7 @@ def forward_remainder(
                 full_hidden_states,
                 attention_mask=full_attention_mask,
                 position_ids=position_ids,
+                position_embeddings=position_embeddings,
                 past_key_value=past_key_values,
                 output_attentions=False,
                 use_cache=True,
