@@ -1,9 +1,40 @@
+# Python
 .venv/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 
-# Local AI models
+# Secrets
+.env
+*.token
+**/cache/token
+
+# Models and downloads
 models/
+layerskip/cache/
+*.incomplete
+*.part
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.onnx
 
-# Generated synthetic demonstration reports
+# Local runtime and caches
+prototype/selective_feedback/.runtime/
+prototype/selective_feedback/cache/
+prototype/selective_feedback/data/
+.cache/
+
+# Generated outputs
 prototype/results/
+*.log
+codecarbon*.csv
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
