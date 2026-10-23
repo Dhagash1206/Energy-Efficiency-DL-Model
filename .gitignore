@@ -7,3 +7,13 @@ models/
 
 # Generated synthetic demonstration reports
 prototype/results/
+
+# Editor settings
+.vscode/
+
+# LayerSkip checkpoint cache: multi-GB weights and the HF token (was layerskip/.gitignore)
+layerskip/
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/

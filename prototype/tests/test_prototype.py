@@ -2,13 +2,13 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from .controller import Controller, State, expected_committed_tokens
-from .demo import ToyModel, load_actions, run_policy
+from ..controller import Controller, State, expected_committed_tokens
+from ..demo import ToyModel, load_actions, run_policy
 
 
 class PrototypeTests(unittest.TestCase):
     def setUp(self):
-        self.actions = load_actions(Path(__file__).with_name("synthetic_profile.json"))
+        self.actions = load_actions(Path(__file__).parents[1] / "synthetic_profile.json")
 
     def test_expected_yield_includes_correction_or_bonus(self):
         self.assertEqual(expected_committed_tokens(0, 5), 1)

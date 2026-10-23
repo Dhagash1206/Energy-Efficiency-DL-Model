@@ -27,7 +27,7 @@ device = "mps" if torch.backends.mps.is_available() else "cpu"
 torch.manual_seed(SEED)
 print(f"Device: {device}")
 
-# ---------- 1. Data ----------
+#  1. Data 
 print("Loading dataset...")
 raw = load_dataset("tatsu-lab/alpaca", split=f"train[:{NUM_EXAMPLES}]")
 
@@ -55,7 +55,7 @@ tokenized = raw.map(tokenize, remove_columns=raw.column_names)
 tokenized.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 loader = DataLoader(tokenized, batch_size=BATCH_SIZE, shuffle=True)
 
-# ---------- 2. Models ----------
+#  2. Models 
 print("Loading teacher...")
 teacher = AutoModelForCausalLM.from_pretrained(TEACHER_PATH, dtype=torch.float32).to(device)
 teacher.eval()
@@ -70,7 +70,7 @@ student.train()
 
 optimizer = torch.optim.AdamW(student.parameters(), lr=LR)
 
-# ---------- 3. Distillation loss ----------
+#  3. Distillation loss 
 def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha):
     # Soft loss: student matches teacher's softened distribution (KL divergence)
     student_log_probs = F.log_softmax(student_logits / temperature, dim=-1)
@@ -86,7 +86,7 @@ def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha
     return alpha * soft_loss + (1 - alpha) * hard_loss
 
 
-# ---------- 4. Training loop ----------
+#  4. Training loop 
 print("Starting training...")
 for epoch in range(EPOCHS):
     total_loss = 0.0
@@ -118,7 +118,7 @@ for epoch in range(EPOCHS):
 
     print(f"Epoch {epoch+1} finished. Avg loss: {total_loss / len(loader):.4f}")
 
-# ---------- 5. Save ----------
+#  5. Save 
 print(f"Saving distilled student to {OUTPUT_DIR}")
 student.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)

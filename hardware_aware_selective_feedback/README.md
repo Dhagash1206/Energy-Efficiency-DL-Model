@@ -15,18 +15,18 @@ observations, with an independent-arm bandit comparison. `measurement.py`
 selects a real cumulative energy counter or reports why none is available.
 `run.py` loads pinned GSM8K and HumanEval prompt workloads, checks every
 output against ordinary greedy token IDs, and writes `results/latest.json`
-and `results/latest.md`. `llama_model_utils.py` is the attributed LayerSkip
-helper under `LICENSE.LayerSkip` (CC BY-NC); retain the license and follow the
-gated checkpoint's terms. `test_*.py` are focused correctness tests.
+and `results/latest.md`. `vendor/self_speculation/llama_model_utils.py` is the attributed LayerSkip
+helper under `vendor/LICENSE.LayerSkip` (CC BY-NC); retain the license and follow the
+gated checkpoint's terms. `tests/test_*.py` are focused correctness tests.
 
 Install Python, then install a PyTorch build for the hardware you intend to
-run (CPU, CUDA, Intel XPU, or macOS MPS). Install `hardware_aware_selective_feedback/requirements.txt`
+run (CPU, CUDA, Intel XPU, or macOS MPS). Install the root `requirements.txt`
 in the same environment. The repository's existing Windows CPU runtime can be
 used for local checks:
 
-    .\prototype\selective_feedback\.runtime\python\python.exe -B -m unittest hardware_aware_selective_feedback.test_engine hardware_aware_selective_feedback.test_selector hardware_aware_selective_feedback.test_measurement -v
-    .\prototype\selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --probe --device auto
-    .\prototype\selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --device cpu --calibration 2 --test 2 --tokens 8 --repeats 1
+    .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m unittest hardware_aware_selective_feedback.tests.test_engine hardware_aware_selective_feedback.tests.test_selector hardware_aware_selective_feedback.tests.test_measurement -v
+    .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --probe --device auto
+    .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --device cpu --calibration 2 --test 2 --tokens 8 --repeats 1
 
 With a suitable Python on another machine, replace that interpreter path with
 `python`. `--device auto` chooses CUDA, then Intel XPU, then Mac MPS, then CPU
@@ -43,7 +43,7 @@ GPU may still run out of memory, depending on available VRAM and runtime use.
 Start with a small smoke run and save it separately to avoid replacing
 `results/latest.json`:
 
-    python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 1 --test 1 --tokens 4 --repeats 1 --observer-pairs 1 --output hardware_aware_selective_feedback/results/rtx3050-fp16-smoke.json
+    python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 1 --test 1 --tokens 4 --repeats 1 --observer-pairs 1 --output hardware_aware_selective_feedback/results/smoke/rtx3050-fp16-smoke.json
 
 The Markdown report is written beside the JSON report with a `.md` extension.
 Only increase prompts, tokens, repeats, or calibration after the smoke run
@@ -53,7 +53,7 @@ To measure fixed speculative settings without feedback observers, run a paired
 energy sweep. It randomizes setting order for each prompt and repeat, checks
 every output against native greedy tokens, and records mismatches explicitly:
 
-    python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp16 --test 4 --tokens 16 --repeats 2 --output hardware_aware_selective_feedback/results/fixed-sweep.json
+    python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp16 --test 4 --tokens 16 --repeats 2 --output hardware_aware_selective_feedback/results/fixed-sweep/fixed-sweep.json
 
 The default grid is depths 4, 8, 12 and draft lengths 1, 2, 3, 4, plus
 ordinary decoding. Use `--depths` and `--lengths` to narrow the grid, and a
@@ -61,7 +61,7 @@ different `--seed` for a fresh prompt split. A setting with any greedy mismatch
 is unsuitable for an exact-output energy comparison even if its energy is low.
 
 The module boundaries are: `engine.py` owns token generation and cache rollback;
-`llama_model_utils.py` owns split model execution; `feedback.py` validates
+`vendor/self_speculation/llama_model_utils.py` owns split model execution; `feedback.py` validates
 observations; `selector.py` chooses actions; `measurement.py` owns hardware
 counters; and `run.py` / `sweep.py` coordinate experiments and reporting.
 The sweep CLI delegates execution to `run_sweep`, and `summarize` independently
@@ -80,7 +80,7 @@ those settings require further diagnosis before exact-output claims.
 Prompt prefill now projects vocabulary scores only for the final prompt token;
 all prompt positions still populate the KV cache. Temporary forward results are
 released before later draft/verification steps. The 32-token CUDA comparison in
-`results/rtx3050-memory-optimization.md` measured about 41 MiB lower total peak
+`results/memory-optimization/rtx3050-memory-optimization.md` measured about 41 MiB lower total peak
 allocated memory for depth 4 / draft length 1. Model weights remain resident;
 this does not establish a reduction in GPU power or utilization. Changing the
 projection shape can affect floating-point rounding, so keep checking native
@@ -133,3 +133,22 @@ The selector is a heuristic with no formal safety or optimality guarantee.
 Short CPU runs establish correctness and feasibility only. Energy savings or
 research novelty require repeated energy runs, consistent sensor boundaries,
 more varied prompts, and comparison to the baselines.
+
+## Selective-feedback pilot
+
+`pilot.py` is the earlier feasibility matrix (merged from the former
+`prototype/selective_feedback` package); it now runs on this package's engine.
+`paths.py` places the Hugging Face cache in the git-ignored repository-root
+`layerskip/cache`, and `download_layerskip.py` fetches the checkpoint with
+SHA-256 verification. Pilot reports are written to `results/pilot/`.
+
+    python -B -m unittest hardware_aware_selective_feedback.tests.test_pilot -v
+    python -B -m hardware_aware_selective_feedback.pilot --model tiny
+    python -B -m hardware_aware_selective_feedback.pilot --model smollm --prompts 2 --tokens 12 --repeats 3
+    python -B -m hardware_aware_selective_feedback.download_layerskip
+
+## Results layout
+
+`results/latest.*` is the default `run.py` output. Earlier runs are grouped by
+experiment: `smoke/`, `fp16-run/`, `fp16-100tokens/`, `fp16-200tokens/`,
+`fixed-sweep/`, `engine-optimization/`, `memory-optimization/` and `pilot/`.

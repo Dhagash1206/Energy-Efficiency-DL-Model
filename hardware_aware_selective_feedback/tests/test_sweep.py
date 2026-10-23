@@ -2,9 +2,9 @@
 import unittest
 from unittest.mock import Mock
 
-from .measurement import Meter
-from .selector import Action
-from .sweep import summarize
+from ..measurement import Meter
+from ..selector import Action
+from ..sweep import summarize
 
 
 def request(depth=0, length=0, energy=10.0, matched=True):

@@ -21,7 +21,7 @@ from typing import Generator, Optional
 import torch
 
 from .feedback import LearningState, validate_feedback
-from .llama_model_utils import (
+from .vendor.self_speculation.llama_model_utils import (
     ForwardResult,
     crop_past_key_values,
     forward,

@@ -10,8 +10,8 @@ try:
     from .paths import CACHE, HUB, TOKEN, ensure
 except ImportError:  # executed directly as a script, not via -m
     import sys
-    sys.path.insert(0, str(ROOT.parent.parent))
-    from prototype.selective_feedback.paths import CACHE, HUB, TOKEN, ensure
+    sys.path.insert(0, str(ROOT.parent))
+    from hardware_aware_selective_feedback.paths import CACHE, HUB, TOKEN, ensure
 os.environ.pop('HF_TOKEN', None)
 ensure()
 os.environ['HF_HOME'] = str(CACHE)

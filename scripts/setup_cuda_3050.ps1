@@ -21,9 +21,8 @@ Write-Host "Activating virtual environment..."
 
 Write-Host "Upgrading pip and installing the RTX 3050 CUDA stack..."
 pip install --upgrade pip
-pip install --index-url https://download.pytorch.org/whl/cu121 --extra-index-url https://pypi.org/simple torch torchvision torchaudio
+pip install --index-url https://download.pytorch.org/whl/cu124 --extra-index-url https://pypi.org/simple torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 pip install -r requirements.txt
-pip install -r requirements-hf.txt
 
 Write-Host "" 
 Write-Host "Validation: checking CUDA capability..."

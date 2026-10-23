@@ -3,7 +3,7 @@ import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import generate, native_greedy
 from hardware_aware_selective_feedback.feedback import validate_feedback, LearningState
-from hardware_aware_selective_feedback.llama_model_utils import forward
+from hardware_aware_selective_feedback.vendor.self_speculation.llama_model_utils import forward
 
 
 class EngineTests(unittest.TestCase):

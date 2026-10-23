@@ -102,7 +102,7 @@ class TransformersBackend:
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
         except ImportError as exc:
-            raise RuntimeError("Install optional requirements-hf.txt with standard CPython first") from exc
+            raise RuntimeError("Install requirements.txt with standard CPython first") from exc
         if precision in ("int4", "int8") and device != "cuda":
             raise ValueError("This prototype enables bitsandbytes int4/int8 only on CUDA; use fp32/fp16 elsewhere")
         if precision == "fp16" and device == "cpu":
