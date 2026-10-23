@@ -5,6 +5,9 @@ Public API
 native_greedy(model, prompt, limit, eos)
     Plain autoregressive greedy decoding. Used as the exact-output reference.
 
+batched_greedy(model, prompts, limit, eos, pad_id)
+    Plain greedy decoding of several prompts in one batch (ordinary baseline).
+
 generate(model, prompt, limit, depth, drafts, exits, mode, period, eos,
          adaptive_drafts, log_margins)
     Greedy decoding with optional LayerSkip speculative decoding and observer
@@ -92,28 +95,39 @@ def _observe(
             h.remove()
 
 
+ADAPTIVE_WINDOW = 4        # cycles in the rolling acceptance window
+SHORTEN_BELOW = 0.5        # recent acceptance below this shortens drafts
+FALLBACK_BELOW = 0.3       # recent acceptance below this switches to ordinary decoding
+PROBE_EVERY = 4            # ordinary cycles between 1-token re-probes while in fallback
+
+
 def _adaptive_k(
     drafts: int,
     limit: int,
     tokens_so_far: int,
     accept_window: list[float],
+    ordinary_streak: int = 0,
 ) -> int:
     """Choose draft length for this cycle based on recent acceptance rate.
 
-    Returns a value in [1, drafts] (capped by remaining budget):
-      - >= 50% recent acceptance → use full draft length
-      - < 25%                    → fall back to 1
-      - otherwise                → drafts - 1  (conservative middle ground)
+    Returns a value in [0, drafts] (capped by remaining budget):
+      - >= SHORTEN_BELOW acceptance   → full draft length
+      - >= FALLBACK_BELOW acceptance  → drafts - 1 (at least 1)
+      - <  FALLBACK_BELOW acceptance  → 0 (ordinary step), except every
+        PROBE_EVERY ordinary cycles a 1-token probe refreshes the window
+        so drafting can resume if acceptance recovers.
     """
     budget = limit - tokens_so_far - 1
     if not accept_window:
         return min(drafts, budget)
     rate = sum(accept_window) / len(accept_window)
-    if rate >= 0.5:
+    if rate >= SHORTEN_BELOW:
         return min(drafts, budget)
-    if rate < 0.25:
+    if rate >= FALLBACK_BELOW:
+        return min(max(1, drafts - 1), budget)
+    if ordinary_streak >= PROBE_EVERY:
         return min(1, budget)
-    return min(max(1, drafts - 1), budget)
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -161,6 +175,63 @@ def native_greedy(
     return torch.cat(collected, dim=1)[0].tolist()
 
 
+@torch.inference_mode()
+def batched_greedy(
+    model: torch.nn.Module,
+    prompts: list[list[int]],
+    limit: int,
+    eos: tuple[int, ...] = (),
+    pad_id: int = 0,
+) -> list[list[int]]:
+    """Greedy-decode several prompts together in one batch (ordinary decoding).
+
+    Prompts are left-padded so every row's next token sits in the last column;
+    the attention mask hides the padding and position IDs restart at each
+    row's first real token, so each row should reproduce ``native_greedy``.
+    Batch shapes can change floating-point rounding, so callers should still
+    compare against ``native_greedy`` for exact-output claims.
+
+    Rows that hit EOS stop contributing tokens; the batch stops when every row
+    has finished or ``limit`` tokens were generated.
+
+    Returns:
+        One list of generated token IDs per prompt (EOS included when hit).
+    """
+    if not prompts or any(not p for p in prompts) or limit < 0:
+        raise ValueError("Require nonempty prompts and a nonnegative limit.")
+    if limit == 0:
+        return [[] for _ in prompts]
+
+    device = model.device
+    width = max(len(p) for p in prompts)
+    ids = torch.tensor([[pad_id] * (width - len(p)) + p for p in prompts], device=device)
+    mask = torch.tensor([[0] * (width - len(p)) + [1] * len(p) for p in prompts], device=device)
+    positions = (mask.cumsum(-1) - 1).clamp(min=0)
+    eos_t = torch.tensor(list(eos), dtype=torch.long, device=device) if eos else None
+    finished = torch.zeros(len(prompts), dtype=torch.bool, device=device)
+    collected, cache = [], None
+
+    for _ in range(limit):
+        out = model(ids, attention_mask=mask, position_ids=positions,
+                    past_key_values=cache, use_cache=True)
+        cache = out.past_key_values
+        # float() matches native_greedy's argmax precision on near-ties.
+        ids = out.logits[:, -1].float().argmax(-1, keepdim=True)
+        collected.append(ids)
+        if eos_t is not None:
+            finished |= torch.isin(ids[:, 0], eos_t)
+            if finished.all().item():
+                break
+        mask = torch.cat([mask, mask.new_ones(len(prompts), 1)], dim=1)
+        positions = positions[:, -1:] + 1
+
+    rows = torch.cat(collected, dim=1).tolist()
+    if eos:
+        rows = [row[: next((i + 1 for i, tok in enumerate(row) if tok in eos), len(row))]
+                for row in rows]
+    return rows
+
+
 # ---------------------------------------------------------------------------
 # Public: speculative generate
 # ---------------------------------------------------------------------------
@@ -178,6 +249,7 @@ def generate(
     eos: tuple[int, ...] = (),
     adaptive_drafts: bool = False,
     log_margins: bool = False,
+    graph_drafter=None,
 ) -> dict:
     """Generate tokens with optional LayerSkip speculative decoding.
 
@@ -204,9 +276,14 @@ def generate(
         period:          Observe every `period` cycles (mode='periodic' only).
         eos:             Stop-token IDs.
         adaptive_drafts: Scale draft length per cycle using a rolling acceptance
-                         rate window. Reduces wasted verification on hard prompts.
+                         rate window, falling back to ordinary steps when
+                         acceptance is very low. Reduces wasted draft passes.
         log_margins:     Store top-1 vs top-2 logit margin per cycle under
                          'top2_margin' for near-tie mismatch diagnosis.
+        graph_drafter:   Optional GraphDrafter (graph_drafter.py) for this
+                         depth; replaces the forward_early loop with a
+                         static-cache step (CUDA Graph on CUDA). Requires
+                         mode='none' because observer hooks do not fire.
 
     Returns:
         dict with keys:
@@ -224,6 +301,12 @@ def generate(
         raise ValueError("Ordinary=(depth=0, drafts=0); speculative depth must be < layers.")
     if len(set(exits)) != len(exits) or any(not 1 <= d < layers for d in exits):
         raise ValueError("exits must be unique layer indices in [1, layers).")
+    if graph_drafter is not None:
+        if graph_drafter.depth != depth:
+            raise ValueError("graph_drafter depth must equal the draft depth.")
+        if mode != "none":
+            raise ValueError("graph_drafter requires mode='none' (observer hooks do not fire).")
+        graph_drafter.reset()
 
     # ── State ─────────────────────────────────────────────────────────────
     tokens: list[int] = []
@@ -235,7 +318,7 @@ def generate(
 
     eos_t = torch.tensor(list(eos), dtype=torch.long, device=model.device) if eos else None
     accept_window: list[float] = []  # rolling acceptance rates for adaptive_drafts
-    WINDOW = 4
+    ordinary_streak = 0              # consecutive adaptive fallback cycles
 
     # ── Prompt prefill ────────────────────────────────────────────────────
     # Run all layers over the full prompt; keep only the last token's logits
@@ -254,10 +337,11 @@ def generate(
 
         # Number of draft tokens this cycle.
         k = (
-            _adaptive_k(drafts, limit, len(tokens), accept_window)
+            _adaptive_k(drafts, limit, len(tokens), accept_window, ordinary_streak)
             if adaptive_drafts and depth
             else min(drafts, limit - len(tokens) - 1)
         )
+        ordinary_streak = ordinary_streak + 1 if (adaptive_drafts and depth and k == 0) else 0
 
         # Observer exit depths for this cycle.
         requested = _resolve_exits(exits, k, depth, mode, len(cycles), period)
@@ -268,6 +352,10 @@ def generate(
             if k == 0:
                 # Ordinary step: single full-model pass.
                 result = forward(model, pending, cache)
+            elif graph_drafter is not None:
+                proposed_tensors, cache, query = graph_drafter.draft(cache, pending, k, eos_t)
+                block = torch.cat([pending, *proposed_tensors], dim=1)
+                result = forward_remainder(model, block, cache, depth, query)
             else:
                 # Speculative step: k cheap draft passes + 1 verification pass.
                 query, draft_input = None, pending
@@ -323,6 +411,8 @@ def generate(
         cache = crop_past_key_values(result.past_key_values, len(prompt) + len(tokens) - 1)
         del result
         _check_cache(cache, layers, len(prompt) + len(tokens) - 1)
+        if graph_drafter is not None and k:
+            graph_drafter.commit(len(prompt) + len(tokens) - 1)
 
         # Next pending token = last committed token.
         pending = target_ids[:, len(committed) - 1 : len(committed)]
@@ -330,7 +420,7 @@ def generate(
         # Update acceptance window for adaptive draft length.
         if depth and proposed:
             accept_window.append(matched / len(proposed))
-            if len(accept_window) > WINDOW:
+            if len(accept_window) > ADAPTIVE_WINDOW:
                 accept_window.pop(0)
 
         cycles.append({

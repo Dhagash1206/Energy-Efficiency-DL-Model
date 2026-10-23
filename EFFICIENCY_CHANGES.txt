@@ -1,0 +1,124 @@
+EFFICIENCY CHANGES - hardware_aware_selective_feedback
+Branch: Dhagash_patch4
+Date: 2026-10-24
+
+All new behaviour is opt-in. Without the new flags, run.py and sweep.py
+behave exactly as before. Every speculative output is still checked against
+ordinary greedy decoding.
+
+Summary
+  | # | Change                         | Status              | Flag                  |
+  | 1 | Adaptive draft-length fallback | Implemented, tested | --adaptive-drafts     |
+  | 2 | Per-prompt selector settings   | Implemented, tested | --context-selector    |
+  | 3 | GPU clock / power pinning      | Implemented, tested | --gpu-clock-mhz,      |
+  |   |                                | (fake nvidia-smi)   | --gpu-power-limit-w   |
+  | 4 | CUDA Graphs for draft loop     | Prototype; maths    | --cuda-graph-drafts   |
+  |   |                                | tested on CPU only  |                       |
+  | 5 | Prompt batching                | Baseline in sweep,  | --batch-sizes 2 4     |
+  |   |                                | tested              |                       |
+
+
+1. ADAPTIVE DRAFT-LENGTH FALLBACK
+--------------------------------
+What: Each request tracks its acceptance rate over the last 4 cycles.
+  - acceptance >= 50%  -> full draft length
+  - 30% to 50%         -> draft length - 1 (at least 1)
+  - below 30%          -> ordinary decoding (no draft passes)
+  - while in fallback, a 1-token probe runs every 4 cycles, so drafting
+    resumes if acceptance recovers
+Files:  engine.py (_adaptive_k; SHORTEN_BELOW, FALLBACK_BELOW, PROBE_EVERY,
+        ADAPTIVE_WINDOW)
+Usage:  run.py / sweep.py --adaptive-drafts
+Measured (SmolLM2-135M, CPU fp32, 4 prompts x 32 tokens, median of 3):
+  | Setting            | Fixed s | Adaptive s | Change | Greedy match |
+  | ordinary           | 1.308   | -          | -      | -            |
+  | depth 7, 3 drafts  | 3.293   | 1.651      | -50%   | True         |
+  | depth 15, 1 draft  | 2.494   | 1.696      | -32%   | True         |
+  | depth 15, 3 drafts | 3.737   | 1.770      | -53%   | True         |
+  SmolLM is not exit-trained, so speculation is still slower than ordinary
+  decoding here; the fallback limits the loss.
+
+
+2. PER-PROMPT SELECTOR SETTINGS
+-------------------------------
+What: The selector keeps separate cost tables per prompt context
+  (dataset + short/long prompt, boundary 64 tokens, e.g. "humaneval:long").
+  Once a context has 2+ samples for an arm, those costs are used; until
+  then the global costs act as the starting prior.
+Files:  selector.py (context_aware, _context_costs), run.py (prompt_context)
+Usage:  run.py --context-selector
+Report: selector.context_costs_per_token in the JSON output.
+
+
+3. GPU CLOCK / POWER PINNING
+----------------------------
+What: Locks the graphics clock (nvidia-smi -lgc) and/or caps board power
+  (nvidia-smi -pl) for the whole run, then restores both, even on error.
+Files:  gpu_clocks.py (pinned_gpu)
+Usage:  run.py / sweep.py --device cuda --gpu-clock-mhz 1500 --gpu-power-limit-w 50
+Needs:  Administrator (Windows) or root (Linux). Many laptop GPUs reject -pl;
+        the run then stops with a clear error before any measurement.
+        Applied values are stored under "gpu_pinning" in the run.py report.
+Tip:    Sweep a few clock values to find the best energy-per-token setting.
+
+
+4. CUDA GRAPHS FOR THE DRAFT LOOP  (prototype)
+----------------------------------------------
+Problem: forward_early grows the KV cache by one position per draft step, so
+  shapes change every call and cannot be replayed as a CUDA Graph.
+What: GraphDrafter keeps pre-allocated key/value buffers (fixed max length)
+  for the draft layers. A one-token draft step then has identical shapes
+  every time. It writes its key/value at a position held in a device
+  tensor, masks attention beyond it, and is captured once and replayed on
+  CUDA. The engine's tuple cache stays the source of truth: the drafter
+  copies in only positions it does not already hold (prefill, ordinary
+  steps), and returns the same cache and hidden states as forward_early.
+Files:  graph_drafter.py (GraphDrafter), engine.py (graph_drafter argument),
+        run.py (build_graph_drafters)
+Usage:  run.py / sweep.py --device cuda --cuda-graph-drafts
+Limits:
+  - CUDA only; not combined with --compile or --quantize.
+  - Requests with observer exits keep the normal draft path (layer hooks do
+    not fire inside the graph).
+  - The static-cache maths is verified on CPU: draft tokens, hidden states
+    and KV cache equal forward_early, and generated tokens equal greedy.
+    Graph capture and the speed gain are NOT yet measured. Run on the
+    RTX 3050 first:
+      python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp16 --test 2 --tokens 32 --repeats 2 --cuda-graph-drafts --output hardware_aware_selective_feedback/results/fixed-sweep/graph-check.json
+    Then compare against the same command without --cuda-graph-drafts. All
+    greedy matches must be True.
+
+
+5. PROMPT BATCHING  (ordinary-decoding baseline)
+------------------------------------------------
+What: batched_greedy decodes several prompts in one batch (left padding,
+  attention mask, per-row positions, per-row EOS stop). sweep.py measures
+  it as an extra baseline and reports energy and latency per token for
+  each batch size, with per-prompt greedy-match checks.
+Files:  engine.py (batched_greedy), sweep.py (measure_batched, --batch-sizes)
+Usage:  sweep.py --batch-sizes 2 4 8
+Report: "batched_baseline" in the JSON, plus a table in the Markdown report.
+Measured (SmolLM2-135M, CPU fp32, 8 prompts x 32 tokens, median of 3):
+  | Batch size      | Total s | ms/token | Change | Greedy match |
+  | 1 (per request) | 2.689   | 10.5     | -      | True         |
+  | 2               | 2.396   | 9.4      | -11%   | True         |
+  | 4               | 1.327   | 5.2      | -51%   | True         |
+  | 8               | 0.790   | 3.1      | -71%   | True         |
+Not done: batched SPECULATIVE decoding. Each prompt accepts a different
+  number of drafts per cycle, so it needs per-row cache lengths and rollback
+  (an engine rewrite). Use the batched baseline first to see whether
+  batching alone beats speculation on the RTX 3050.
+
+
+TESTS
+-----
+  python -m pytest -q hardware_aware_selective_feedback prototype
+Result: 58 passed, 0 failed.
+New / changed:
+  tests/test_engine.py         adaptive thresholds and fallback; batched_greedy
+  tests/test_selector.py       ContextSelectorTests (3); the 5 old tests were
+                               fixed to use the renamed attributes (_costs,
+                               _matches, _observer_cost, _arm_score)
+  tests/test_gpu_clocks.py     apply/restore with a fake nvidia-smi (5)
+  tests/test_graph_drafter.py  static-cache draft step vs forward_early (3)
+  tests/test_sweep.py          batched baseline grouping and mismatches (2)

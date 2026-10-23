@@ -66,6 +66,7 @@ class Selector:
         depths: tuple[int, ...] = (4, 8, 12),
         lengths: tuple[int, ...] = (1, 3),
         objective: str = "latency",
+        context_aware: bool = False,
     ) -> None:
         if objective not in ("latency", "energy"):
             raise ValueError("Objective must be 'latency' or 'energy'.")
@@ -74,9 +75,16 @@ class Selector:
             Action(d, k) for d in depths for k in lengths
         )
         self.objective = objective
+        # When True, arms are scored with costs from the same prompt context
+        # (e.g. dataset and prompt length) once that context has enough samples.
+        self.context_aware = context_aware
 
         # Per-arm executed costs (J or s) per token, without observers.
         self._costs: dict[tuple, list[float]] = defaultdict(list)
+        # Same costs split by prompt context; used only when context_aware.
+        self._context_costs: dict[str, dict[tuple, list[float]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         # Same, but runs that included paid observers.
         self._observed_costs: dict[tuple, list[float]] = defaultdict(list)
         # One-step acceptance evidence: [successes, total] per depth.
@@ -87,7 +95,13 @@ class Selector:
 
     # ── Public interface ────────────────────────────────────────────────
 
-    def update(self, action: Action, measured: dict, output: dict) -> None:
+    def update(
+        self,
+        action: Action,
+        measured: dict,
+        output: dict,
+        context: Optional[str] = None,
+    ) -> None:
         """Record the cost and feedback from an executed request."""
         key = "energy_j" if self.objective == "energy" else "latency_s"
         value = measured[key]
@@ -101,6 +115,8 @@ class Selector:
         (self._observed_costs if action.observations else self._costs)[action.key].append(
             cost_per_token
         )
+        if self.context_aware and context is not None and not action.observations:
+            self._context_costs[context][action.key].append(cost_per_token)
 
         # Update one-step acceptance statistics from cycle observations.
         for cycle in output["cycles"]:
@@ -139,9 +155,9 @@ class Selector:
                 - base_cost / len(base[0]["tokens"])
             )
 
-    def choose(self, remaining_requests: int = 1) -> Action:
+    def choose(self, remaining_requests: int = 1, context: Optional[str] = None) -> Action:
         """Select the action (and optional paid exits) for the next request."""
-        arm = min(self.arms, key=self._arm_score)
+        arm = min(self.arms, key=lambda candidate: self._arm_score(candidate, context))
         self.decisions += 1
 
         # Observer exits are only offered when running depth=8, length=3 and
@@ -175,6 +191,11 @@ class Selector:
         return {
             "objective":  self.objective,
             "decisions":  self.decisions,
+            "context_aware": self.context_aware,
+            "context_costs_per_token": {
+                context: {str(k): {"mean": mean(v), "n": len(v)} for k, v in costs.items() if v}
+                for context, costs in self._context_costs.items()
+            },
             "executed_costs_per_token": {
                 str(k): {"mean": mean(v), "n": len(v)}
                 for k, v in self._costs.items() if v
@@ -206,11 +227,17 @@ class Selector:
         p = (successes + 1) / (n + 2)
         return sqrt(p * (1 - p) / (n + 3))
 
-    def _arm_score(self, arm: Action) -> float:
+    def _arm_score(self, arm: Action, context: Optional[str] = None) -> float:
         """Lower score = preferred arm.  Returns -inf for unexecuted arms."""
         values = self._costs[arm.key]
         if not values:
             return float("-inf")  # force each arm to execute at least once
+        if self.context_aware and context is not None:
+            context_values = self._context_costs[context][arm.key]
+            # Two samples give a usable noise estimate; until then the
+            # global costs act as the prior for this context.
+            if len(context_values) >= 2:
+                values = context_values
         avg   = mean(values)
         noise = stdev(values) / sqrt(len(values)) if len(values) > 1 else avg * 0.10
         uncertainty_penalty = avg * self._uncertainty(arm.depth) * 0.10 if arm.depth else 0.0

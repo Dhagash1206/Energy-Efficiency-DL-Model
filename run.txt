@@ -1,0 +1,84 @@
+HOW TO RUN - Energy-Efficiency-DL-Model
+Run every command from the repository root.
+
+
+1. SETUP
+--------
+Windows + RTX 3050 (installs CUDA torch 2.6.0, then requirements.txt):
+  powershell -ExecutionPolicy Bypass -File .\scripts\setup_cuda_3050.ps1
+
+macOS / Linux / CPU:
+  python3.12 -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt pytest
+
+Note: transformers must be exactly 4.50.0 (pinned); newer versions break
+the vendored LayerSkip code.
+
+Check the GPU:
+  python -m prototype.doctor
+
+
+2. TESTS
+--------
+All tests:
+  python -m pytest -q hardware_aware_selective_feedback prototype
+
+One file:
+  python -m pytest -q hardware_aware_selective_feedback/tests/test_engine.py
+
+Expected: 58 passed.
+
+
+3. SYNTHETIC DEMO (no model, fictional numbers)
+-----------------------------------------------
+  python -m prototype.demo
+
+
+4. PILOT (mechanics check; writes results/pilot/)
+-------------------------------------------------
+Random tiny model, offline:
+  python -B -m hardware_aware_selective_feedback.pilot --model tiny
+
+SmolLM2-135M (downloads ~270 MB to layerskip/cache):
+  python -B -m hardware_aware_selective_feedback.pilot --model smollm --prompts 2 --tokens 12 --repeats 3
+
+
+5. MAIN EXPERIMENT (LayerSkip 1B; needs Hugging Face access)
+------------------------------------------------------------
+One-time login and download:
+  hf auth login
+  python -B -m hardware_aware_selective_feedback.download_layerskip
+
+Probe device and energy counter (no model load):
+  python -m hardware_aware_selective_feedback.run --probe --device auto
+
+Smoke run (saved separately so results/latest.json is kept):
+  python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 1 --test 1 --tokens 4 --repeats 1 --observer-pairs 1 --output hardware_aware_selective_feedback/results/smoke/my-smoke.json
+
+Full run with the efficiency options:
+  python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 4 --test 8 --tokens 64 --repeats 3 --adaptive-drafts --context-selector
+
+Fixed-setting energy sweep:
+  python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp16 --test 4 --tokens 16 --repeats 2 --adaptive-drafts --output hardware_aware_selective_feedback/results/fixed-sweep/my-sweep.json
+
+
+6. EFFICIENCY FLAGS (run.py / sweep.py)
+---------------------------------------
+  --adaptive-drafts        shorten drafts below 50% acceptance, ordinary below 30%
+  --context-selector       per prompt-type selector costs (run.py only)
+  --batch-sizes 2 4 8      batched ordinary-decoding baseline (sweep.py only)
+  --cuda-graph-drafts      PROTOTYPE static-cache CUDA Graph drafts (CUDA only)
+  --gpu-clock-mhz 1500     lock GPU clock (admin/root, CUDA only)
+  --gpu-power-limit-w 50   cap GPU power (admin/root, CUDA only)
+  --quantize int8|int4     bitsandbytes weights (run.py, CUDA only)
+  --compile                torch.compile reduce-overhead (run.py)
+Details: EFFICIENCY_CHANGES.txt
+
+
+7. DISTILLATION (Qwen3-1.7B -> Qwen3-0.6B)
+------------------------------------------
+Needs models/qwen3-1.7b and models/qwen3-0.6b in the working directory.
+  cd edge_llm_inference
+  python distill.py        # writes models/qwen3-0.6b-distilled
+  python test_models.py    # speed/memory comparison of student vs teacher

@@ -24,9 +24,10 @@ from pathlib import Path
 
 import torch
 
-from .engine import native_greedy
+from .engine import batched_greedy, native_greedy
+from .gpu_clocks import pinned_gpu
 from .measurement import Meter
-from .run import load_model, load_prompts, row, run_one
+from .run import MAX_PROMPT_TOKENS, build_graph_drafters, load_model, load_prompts, row, run_one
 from .selector import Action
 
 
@@ -88,6 +89,42 @@ def summarize(rows: list[dict], actions: list[Action]) -> list[dict]:
     return summary
 
 
+def measure_batched(model, meter, prompts: list[dict], references: dict, batch_size: int,
+                    token_limit: int, eos: tuple, repeats: int, pad_id: int = 0) -> dict:
+    """Measure batched ordinary decoding as a baseline against per-request decoding.
+
+    Prompts are processed in consecutive groups of ``batch_size`` (the last
+    group may be smaller). Energy and latency are per batch, so only totals
+    per generated token are comparable with the per-request sweep rows.
+    """
+    batches = []
+    for repeat in range(repeats):
+        for start in range(0, len(prompts), batch_size):
+            group = prompts[start:start + batch_size]
+            outputs, measured = meter.run(lambda group=group: batched_greedy(
+                model, [p["ids"] for p in group], token_limit, eos, pad_id))
+            mismatched = [p["id"] for p, out in zip(group, outputs, strict=True)
+                          if out != references[p["id"]]]
+            batches.append({
+                "repeat": repeat, "prompt_ids": [p["id"] for p in group],
+                "generated_tokens": sum(len(out) for out in outputs),
+                "latency_s": measured["latency_s"], "energy_j": measured["energy_j"],
+                "mismatched_prompt_ids": mismatched,
+            })
+    tokens = sum(b["generated_tokens"] for b in batches)
+    energy_known = all(b["energy_j"] is not None for b in batches)
+    return {
+        "batch_size": batch_size,
+        "batches": len(batches),
+        "generated_tokens": tokens,
+        "energy_j_per_token": (sum(b["energy_j"] for b in batches) / tokens
+                               if energy_known and tokens else None),
+        "latency_s_per_token": sum(b["latency_s"] for b in batches) / tokens if tokens else None,
+        "greedy_matches": not any(b["mismatched_prompt_ids"] for b in batches),
+        "records": batches,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Sweep execution
 # ---------------------------------------------------------------------------
@@ -108,14 +145,18 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
 
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     for prompt in heldout:
-        prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:192]
+        prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:MAX_PROMPT_TOKENS]
+    drafters = (build_graph_drafters(model, args.depths, args.tokens, max(args.lengths))
+                if args.cuda_graph_drafts else None)
 
     rng  = random.Random(args.seed + 1)
     rows: list[dict]  = []
     mismatches: list[dict] = []
+    references: dict[str, list[int]] = {}
 
     for index, prompt in enumerate(heldout):
         reference = native_greedy(model, prompt["ids"], args.tokens, eos)
+        references[prompt["id"]] = reference
 
         for repeat in range(args.repeats):
             order = actions.copy()
@@ -123,7 +164,8 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
 
             for position, action in enumerate(order):
                 output, measured = run_one(model, meter, prompt["ids"], args.tokens,
-                                           action, eos)
+                                           action, eos, adaptive_drafts=args.adaptive_drafts,
+                                           graph_drafters=drafters)
                 matched = output["tokens"] == reference
 
                 if not matched:
@@ -149,6 +191,11 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
 
         print(f"Completed prompt {index + 1}/{len(heldout)}", flush=True)
 
+    pad_id = next((t for t in (tokenizer.pad_token_id, tokenizer.eos_token_id) if t is not None), 0)
+    batched = [measure_batched(model, meter, heldout, references, size, args.tokens,
+                               eos, args.repeats, pad_id)
+               for size in args.batch_sizes]
+
     # ── Report ────────────────────────────────────────────────────────────
     summary = summarize(rows, actions)
     report  = {
@@ -161,6 +208,7 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
         "arguments":        {**vars(args), "output": str(args.output)},
         "summary":          summary,
         "mismatches":       mismatches,
+        "batched_baseline": batched,
         "rows":             rows,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -187,6 +235,17 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
             f"| {item['greedy_matches']} "
             f"| {item['valid_comparison']} |"
         )
+    if batched:
+        lines += [
+            "", "## Batched ordinary decoding baseline", "",
+            "| Batch size | Energy J/token | Latency s/token | Greedy matches |",
+            "|---:|---:|---:|---:|",
+        ]
+        for item in batched:
+            energy = (f"{item['energy_j_per_token']:.6f}"
+                      if item["energy_j_per_token"] is not None else "unavailable")
+            lines.append(f"| {item['batch_size']} | {energy} "
+                         f"| {item['latency_s_per_token']:.6f} | {item['greedy_matches']} |")
     lines += [
         "",
         "A comparison is valid only when both the greedy baseline and the candidate "
@@ -201,6 +260,7 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
         "runs":       len(rows),
         "mismatches": len(mismatches),
         "best_valid": best,
+        "batched": [{k: v for k, v in b.items() if k != "records"} for b in batched],
     }))
 
 
@@ -225,14 +285,30 @@ def main() -> None:
                         help="Draft token lengths to sweep.")
     parser.add_argument("--output",    type=Path, required=True,
                         help="Path for the JSON results file (.md report alongside).")
+    parser.add_argument("--batch-sizes", type=int, nargs="*", default=[],
+                        help="Also measure batched ordinary decoding at these batch sizes, "
+                             "e.g. --batch-sizes 2 4.")
+    parser.add_argument("--cuda-graph-drafts", action="store_true",
+                        help="PROTOTYPE: replay draft steps as CUDA Graphs (CUDA only).")
+    parser.add_argument("--adaptive-drafts", action="store_true",
+                        help="Shorten drafts below 50%% acceptance; decode ordinarily below 30%%.")
+    parser.add_argument("--gpu-clock-mhz", type=int, default=None,
+                        help="Lock the NVIDIA graphics clock during the sweep (admin/root).")
+    parser.add_argument("--gpu-power-limit-w", type=float, default=None,
+                        help="Cap NVIDIA board power during the sweep (admin/root).")
     args = parser.parse_args()
 
-    if min(args.test, args.tokens, args.repeats, *args.depths, *args.lengths) < 1:
+    if min(args.test, args.tokens, args.repeats, *args.depths, *args.lengths,
+           *args.batch_sizes) < 1:
         parser.error("All counts, depths, and lengths must be positive integers.")
     if args.precision == "fp16" and args.device != "cuda":
         parser.error("FP16 requires --device cuda.")
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("CUDA is unavailable on this machine.")
+    if (args.gpu_clock_mhz is not None or args.gpu_power_limit_w is not None) and args.device != "cuda":
+        parser.error("--gpu-clock-mhz and --gpu-power-limit-w require --device cuda.")
+    if args.cuda_graph_drafts and args.device != "cuda":
+        parser.error("--cuda-graph-drafts requires --device cuda.")
 
     actions = [Action()] + [Action(d, k) for d in args.depths for k in args.lengths]
     if len({a.key for a in actions}) != len(actions):
@@ -241,7 +317,8 @@ def main() -> None:
     with Meter(args.device) as meter:
         if not meter.available:
             parser.error("Energy counter unavailable: " + str(meter.reason))
-        run_sweep(args, meter)
+        with pinned_gpu(args.gpu_clock_mhz, args.gpu_power_limit_w):
+            run_sweep(args, meter)
 
 
 if __name__ == "__main__":

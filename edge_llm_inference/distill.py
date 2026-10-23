@@ -1,7 +1,7 @@
 """
 Stage 1a: Knowledge Distillation
 Teacher: Qwen3-1.7B  ->  Student: Qwen3-0.6B
-Dataset: tatsu-lab/alpaca (first 1000 examples, for a quick first run)
+Dataset: tatsu-lab/alpaca (first NUM_EXAMPLES examples, for a quick first run)
 """
 
 import torch
@@ -22,6 +22,7 @@ LR = 5e-6
 TEMPERATURE = 2.0        # softens teacher probabilities
 ALPHA = 0.5              # weight between distillation loss and normal LM loss
 SEED = 42
+IGNORE_INDEX = -100     # label value skipped by the loss
 
 device = "mps" if torch.backends.mps.is_available() else "cpu"
 torch.manual_seed(SEED)
@@ -45,9 +46,14 @@ def format_example(ex):
 
 
 def tokenize(ex):
-    text = format_example(ex)
+    # Append EOS so the student learns where a response ends
+    text = format_example(ex) + tokenizer.eos_token
     enc = tokenizer(text, truncation=True, max_length=MAX_LENGTH, padding="max_length")
-    enc["labels"] = enc["input_ids"].copy()
+    # Mask padding by attention_mask, not pad_token_id, since pad may equal EOS
+    enc["labels"] = [
+        token_id if is_real_token else IGNORE_INDEX
+        for token_id, is_real_token in zip(enc["input_ids"], enc["attention_mask"], strict=True)
+    ]
     return enc
 
 
@@ -57,13 +63,13 @@ loader = DataLoader(tokenized, batch_size=BATCH_SIZE, shuffle=True)
 
 #  2. Models 
 print("Loading teacher...")
-teacher = AutoModelForCausalLM.from_pretrained(TEACHER_PATH, dtype=torch.float32).to(device)
+teacher = AutoModelForCausalLM.from_pretrained(TEACHER_PATH, torch_dtype=torch.float32).to(device)
 teacher.eval()
 for p in teacher.parameters():
     p.requires_grad = False
 
 print("Loading student...")
-student = AutoModelForCausalLM.from_pretrained(STUDENT_PATH, dtype=torch.float32).to(device)
+student = AutoModelForCausalLM.from_pretrained(STUDENT_PATH, torch_dtype=torch.float32).to(device)
 student.gradient_checkpointing_enable()
 student.config.use_cache = False
 student.train()
@@ -72,16 +78,27 @@ optimizer = torch.optim.AdamW(student.parameters(), lr=LR)
 
 #  3. Distillation loss 
 def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha):
-    # Soft loss: student matches teacher's softened distribution (KL divergence)
+    # Logits at position t predict token t+1, so drop the last logit and the first label
+    student_logits = student_logits[:, :-1, :]
+    teacher_logits = teacher_logits[:, :-1, :]
+    target_labels = labels[:, 1:]
+    valid_token_mask = target_labels != IGNORE_INDEX
+    num_valid_tokens = valid_token_mask.sum().clamp(min=1)
+
+    # Soft loss: per-token KL to the teacher's softened distribution, averaged over
+    # real tokens only so it is on the same per-token scale as the hard loss
     student_log_probs = F.log_softmax(student_logits / temperature, dim=-1)
-    teacher_probs = F.softmax(teacher_logits / temperature, dim=-1)
-    soft_loss = F.kl_div(student_log_probs, teacher_probs, reduction="batchmean") * (temperature ** 2)
+    teacher_log_probs = F.log_softmax(teacher_logits / temperature, dim=-1)
+    per_token_kl = F.kl_div(
+        student_log_probs, teacher_log_probs, reduction="none", log_target=True
+    ).sum(dim=-1)
+    soft_loss = (per_token_kl * valid_token_mask).sum() / num_valid_tokens * (temperature ** 2)
 
     # Hard loss: normal next-token prediction against the real labels
     hard_loss = F.cross_entropy(
-        student_logits.view(-1, student_logits.size(-1)),
-        labels.view(-1),
-        ignore_index=tokenizer.pad_token_id,
+        student_logits.reshape(-1, student_logits.size(-1)),
+        target_labels.reshape(-1),
+        ignore_index=IGNORE_INDEX,
     )
     return alpha * soft_loss + (1 - alpha) * hard_loss
 

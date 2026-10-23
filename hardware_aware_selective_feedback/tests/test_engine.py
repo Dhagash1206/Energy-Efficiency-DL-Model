@@ -1,7 +1,10 @@
 import unittest
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
-from hardware_aware_selective_feedback.engine import generate, native_greedy
+from hardware_aware_selective_feedback.engine import (
+    FALLBACK_BELOW, PROBE_EVERY, SHORTEN_BELOW, _adaptive_k, batched_greedy, generate,
+    native_greedy,
+)
 from hardware_aware_selective_feedback.feedback import validate_feedback, LearningState
 from hardware_aware_selective_feedback.vendor.self_speculation.llama_model_utils import forward
 
@@ -75,6 +78,48 @@ class EngineTests(unittest.TestCase):
                 found_rejection = True
                 self.assertGreater(len(result["cycles"]), 1)
         self.assertTrue(found_rejection, "Tiny test model must exercise a rejected draft")
+
+    def test_adaptive_draft_length_thresholds(self):
+        drafts, limit = 3, 100
+        self.assertEqual(_adaptive_k(drafts, limit, 0, []), 3)
+        self.assertEqual(_adaptive_k(drafts, limit, 0, [SHORTEN_BELOW]), 3)
+        self.assertEqual(_adaptive_k(drafts, limit, 0, [FALLBACK_BELOW]), 2)
+        self.assertEqual(_adaptive_k(1, limit, 0, [FALLBACK_BELOW]), 1)
+        # Below the fallback threshold: ordinary steps, then a 1-token re-probe.
+        self.assertEqual(_adaptive_k(drafts, limit, 0, [0.0], ordinary_streak=0), 0)
+        self.assertEqual(_adaptive_k(drafts, limit, 0, [0.0], ordinary_streak=PROBE_EVERY), 1)
+        # Never drafts past the remaining token budget.
+        self.assertEqual(_adaptive_k(drafts, 5, 3, []), 1)
+
+    def test_adaptive_fallback_keeps_greedy_output(self):
+        found_fallback = False
+        for prompt in ([1, 3, 5], [2, 4, 6], [7, 8, 9]):
+            reference = native_greedy(self.model, prompt, 30)
+            for depth, length in ((1, 3), (2, 2), (3, 1)):
+                with self.subTest(prompt=prompt, depth=depth, length=length):
+                    result = generate(self.model, prompt, 30, depth, length, adaptive_drafts=True)
+                    self.assertEqual(result["tokens"], reference)
+                    drafts = [len(c["draft"]) for c in result["cycles"]]
+                    if 0 in drafts[1:]:
+                        found_fallback = True
+                        # Fallback must not be permanent: a later probe drafts again.
+                        first_fallback = drafts.index(0)
+                        if len(drafts) > first_fallback + PROBE_EVERY + 1:
+                            self.assertTrue(any(drafts[first_fallback:]))
+        self.assertTrue(found_fallback, "Tiny test model must trigger the ordinary fallback")
+
+    def test_batched_greedy_matches_per_prompt_greedy(self):
+        prompts = [[1, 3, 5], [2, 4, 6, 8, 10, 12], [7], [9, 9, 9, 9]]
+        for limit in (0, 1, 15):
+            with self.subTest(limit=limit):
+                expected = [native_greedy(self.model, p, limit) for p in prompts]
+                self.assertEqual(batched_greedy(self.model, prompts, limit), expected)
+        # Rows stop at their own EOS while the rest of the batch continues.
+        eos = (native_greedy(self.model, prompts[0], 15)[3],)
+        self.assertEqual(batched_greedy(self.model, prompts, 15, eos),
+                         [native_greedy(self.model, p, 15, eos) for p in prompts])
+        with self.assertRaises(ValueError):
+            batched_greedy(self.model, [[1], []], 4)
 
     def test_invalid_configuration(self):
         with self.assertRaises(ValueError):
