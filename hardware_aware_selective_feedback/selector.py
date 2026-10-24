@@ -132,6 +132,14 @@ class Selector:
                     bucket[0] += int(item["match"])
                     bucket[1] += 1
 
+    def exclude(self, key: tuple[int, int]) -> None:
+        """Stop choosing a (depth, length) configuration, e.g. after a greedy mismatch.
+
+        Ordinary decoding is the exact-output reference and is never excluded.
+        """
+        if key != (0, 0):
+            self.arms = tuple(arm for arm in self.arms if arm.key != key)
+
     def record_observer_pair(
         self,
         base: tuple,
@@ -266,6 +274,11 @@ class CostBandit:
         self.exploration = exploration
         self._costs: dict[tuple, list[float]] = defaultdict(list)
 
+    def exclude(self, key: tuple[int, int]) -> None:
+        """Stop choosing a (depth, length) configuration; ordinary is never excluded."""
+        if key != (0, 0):
+            self.arms = tuple(arm for arm in self.arms if arm.key != key)
+
     def update(self, action: Action, measured: dict, output: dict) -> None:
         """Record executed cost for the chosen arm."""
         key = "energy_j" if self.objective == "energy" else "latency_s"
@@ -279,8 +292,10 @@ class CostBandit:
         for arm in self.arms:
             if not self._costs[arm.key]:
                 return arm
-        total = sum(len(v) for v in self._costs.values())
-        scale = mean(mean(v) for v in self._costs.values())
+        # Only costs of arms still eligible, so excluded arms do not skew the scale.
+        visited = [self._costs[arm.key] for arm in self.arms]
+        total = sum(len(v) for v in visited)
+        scale = mean(mean(v) for v in visited)
         return min(
             self.arms,
             key=lambda arm: (

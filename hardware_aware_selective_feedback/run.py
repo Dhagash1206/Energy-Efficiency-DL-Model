@@ -190,8 +190,14 @@ def build_graph_drafters(model, depths, token_limit, max_draft_length):
     return {depth: GraphDrafter(model, depth, max_len) for depth in sorted(set(depths)) if depth}
 
 
+def first_divergence(tokens, reference):
+    """Index of the first differing token (or the shorter length if one is a prefix)."""
+    return next((i for i, (a, b) in enumerate(zip(tokens, reference, strict=False)) if a != b),
+                min(len(tokens), len(reference)))
+
+
 def run_one(model, meter, prompt, token_limit, action, eos, reference=None, adaptive_drafts=False,
-            graph_drafters=None):
+            graph_drafters=None, stop_on_mismatch=True):
     active_exits = tuple(d for d in action.observations if d != action.depth)
     # Observer hooks do not fire inside the graphed draft step, so observed
     # requests keep the ordinary forward_early path.
@@ -201,7 +207,8 @@ def run_one(model, meter, prompt, token_limit, action, eos, reference=None, adap
         model, prompt, token_limit, action.depth, action.length,
         active_exits, "all" if active_exits else "none", eos=eos,
         adaptive_drafts=adaptive_drafts, graph_drafter=drafter))
-    if reference is not None and output["tokens"] != reference:
+    output["greedy_match"] = reference is None or output["tokens"] == reference
+    if not output["greedy_match"] and stop_on_mismatch:
         raise AssertionError(f"Greedy output mismatch for depth={action.depth}, length={action.length}")
     return output, measured
 
@@ -226,7 +233,7 @@ def row(prompt, policy, action, output, measured, split, repeat=0, order=0):
         "excluded_feedback": sum(not o["valid"] for o in observations),
         "accepted_drafts": sum(c["accepted"] for c in output["cycles"]),
         "drafted_tokens": sum(len(c["draft"]) for c in output["cycles"]),
-        "greedy_match": True,
+        "greedy_match": output.get("greedy_match", True),
     }
 
 
@@ -270,6 +277,10 @@ def main():
     parser.add_argument("--context-selector", action="store_true",
                         help="Score selector arms per prompt context (dataset and "
                              "short/long prompt) once that context has samples.")
+    parser.add_argument("--stop-on-mismatch", action="store_true",
+                        help="Abort on the first greedy mismatch (old behaviour). By default "
+                             "the mismatch is recorded and that configuration is excluded "
+                             "from the adaptive selector and bandit.")
     parser.add_argument("--cuda-graph-drafts", action="store_true",
                         help="PROTOTYPE: replay draft steps as CUDA Graphs with a static "
                              "KV cache (CUDA only; not with --compile or --quantize).")
@@ -324,10 +335,34 @@ def main():
                 if args.cuda_graph_drafts else None)
     bandit = CostBandit(selector.arms, objective=objective)
     rows = []
+    mismatches = []
+    excluded = set()
+
+    def execute(prompt, policy, action, reference, split, repeat=0, order=0):
+        """Run one request, record its row, and exclude a mismatching configuration."""
+        result = run_one(model, meter, prompt["ids"], args.tokens, action, eos, reference,
+                         args.adaptive_drafts, drafters, args.stop_on_mismatch)
+        rows.append(row(prompt, policy, action, *result, split, repeat, order))
+        if not result[0]["greedy_match"]:
+            index = first_divergence(result[0]["tokens"], reference)
+            mismatches.append({
+                "prompt_id": prompt["id"], "policy": policy, "split": split,
+                "repeat": repeat, "depth": action.depth, "draft_length": action.length,
+                "token_index": index,
+                "actual": result[0]["tokens"][index:index + 1],
+                "expected": reference[index:index + 1],
+            })
+            if action.key not in excluded and action.key != (0, 0):
+                excluded.add(action.key)
+                selector.exclude(action.key)
+                bandit.exclude(action.key)
+                print(f"Greedy mismatch: excluding depth={action.depth}, "
+                      f"length={action.length} from adaptive selection", flush=True)
+        return result
+
     print(f"Model loaded; objective={objective}; energy boundary={meter.scope or 'unavailable'}",
           flush=True)
 
-    adaptive = args.adaptive_drafts
     cleanup = ExitStack()
     try:
         gpu_settings = cleanup.enter_context(
@@ -337,10 +372,10 @@ def main():
         first = calibration[0]
         ref = native_greedy(model, first["ids"], args.tokens, eos)
         for arm in selector.arms:
-            result = run_one(model, meter, first["ids"], args.tokens, arm, eos, ref, adaptive, drafters)
-            selector.update(arm, result[1], result[0], prompt_context(first))
-            bandit.update(arm, result[1], result[0])
-            rows.append(row(first, "calibration", arm, *result, "calibration"))
+            result = execute(first, "calibration", arm, ref, "calibration")
+            if result[0]["greedy_match"]:
+                selector.update(arm, result[1], result[0], prompt_context(first))
+                bandit.update(arm, result[1], result[0])
         observed_arm = Action(8, 3, (4,))
         all_arm = Action(8, 3, (4, 12))
         pair_prompt_ids = []
@@ -358,13 +393,13 @@ def main():
                 results = {}
                 for position, kind in enumerate(order):
                     chosen = base_arm if kind == "base" else arm
-                    results[kind] = run_one(model, meter, prompt["ids"], args.tokens,
-                                            chosen, eos, reference, adaptive, drafters)
-                    selector.update(chosen, results[kind][1], results[kind][0],
-                                    prompt_context(prompt))
-                    rows.append(row(prompt, "calibration_pair_" + mode + "_" + kind,
-                                    chosen, *results[kind], "calibration", pair_index, position))
-                selector.record_observer_pair(results["base"], results["observed"], mode)
+                    results[kind] = execute(prompt, "calibration_pair_" + mode + "_" + kind,
+                                            chosen, reference, "calibration", pair_index, position)
+                    if results[kind][0]["greedy_match"]:
+                        selector.update(chosen, results[kind][1], results[kind][0],
+                                        prompt_context(prompt))
+                if all(r[0]["greedy_match"] for r in results.values()):
+                    selector.record_observer_pair(results["base"], results["observed"], mode)
 
         # Additional calibration prompts: update the online selector.
         for index, prompt in enumerate(calibration[1:]):
@@ -372,15 +407,13 @@ def main():
             action = selector.choose(len(calibration) + len(heldout) * args.repeats - index,
                                      prompt_context(prompt))
             bandit_action = bandit.choose()
-            result = run_one(model, meter, prompt["ids"], args.tokens, action, eos, reference,
-                             adaptive, drafters)
-            selector.update(action, result[1], result[0], prompt_context(prompt))
-            rows.append(row(prompt, "adaptive_calibration", action, *result, "calibration"))
-            bandit_result = run_one(model, meter, prompt["ids"], args.tokens, bandit_action, eos,
-                                    reference, adaptive, drafters)
-            bandit.update(bandit_action, bandit_result[1], bandit_result[0])
-            rows.append(row(prompt, "bandit_calibration", bandit_action,
-                            *bandit_result, "calibration"))
+            result = execute(prompt, "adaptive_calibration", action, reference, "calibration")
+            if result[0]["greedy_match"]:
+                selector.update(action, result[1], result[0], prompt_context(prompt))
+            bandit_result = execute(prompt, "bandit_calibration", bandit_action, reference,
+                                    "calibration")
+            if bandit_result[0]["greedy_match"]:
+                bandit.update(bandit_action, bandit_result[1], bandit_result[0])
 
         # Test: same prompt/reference for every policy. Online selector may
         # learn from previous test requests, but no parameters are retuned.
@@ -404,13 +437,13 @@ def main():
                 ]
                 rng.shuffle(policies)
                 for order, (name, action) in enumerate(policies):
-                    result = run_one(model, meter, prompt["ids"], args.tokens,
-                                     action, eos, reference, adaptive, drafters)
+                    result = execute(prompt, name, action, reference, "test", repeat, order)
+                    if not result[0]["greedy_match"]:
+                        continue
                     if name == "adaptive":
                         selector.update(action, result[1], result[0], prompt_context(prompt))
                     elif name == "bandit":
                         bandit.update(action, result[1], result[0])
-                    rows.append(row(prompt, name, action, *result, "test", repeat, order))
                 request_index += 1
             print(f"Completed test prompt {prompt_index + 1}/{len(heldout)}", flush=True)
     finally:
@@ -435,6 +468,7 @@ def main():
                                    sum(r["generated_tokens"] for r in group)
                                    if all(r["energy_j"] is not None for r in group) else None),
             "all_greedy_match": all(r["greedy_match"] for r in group),
+            "greedy_mismatches": sum(not r["greedy_match"] for r in group),
         }
     paired_observer_deltas = []
     paired_vs_ordinary = []
@@ -467,10 +501,14 @@ def main():
     for prompt in heldout:
         means = {}
         for policy in fixed_candidates:
-            group = [r for r in rows if r["split"] == "test" and
+            # Only exact-output runs can win; a mismatching setting is not a valid candidate.
+            group = [r for r in rows if r["split"] == "test" and r["greedy_match"] and
                      r["prompt_id"] == prompt["id"] and r["policy"] == policy]
-            means[policy] = statistics.median(r[objective_key] / r["generated_tokens"] for r in group)
-        winner_by_prompt[prompt["id"]] = min(means, key=means.get)
+            if group:
+                means[policy] = statistics.median(r[objective_key] / r["generated_tokens"]
+                                                  for r in group)
+        if means:
+            winner_by_prompt[prompt["id"]] = min(means, key=means.get)
     observation_overhead = {}
     for mode in ("selected_observe", "always_observe"):
         selected = [r for r in paired_observer_deltas if r["mode"] == mode]
@@ -494,6 +532,8 @@ def main():
         "calibration_total_objective": sum(r[objective_key] for r in calibration_rows),
         "paired_observer_deltas": paired_observer_deltas,
         "paired_vs_ordinary": paired_vs_ordinary,
+        "mismatches": mismatches,
+        "excluded_configurations": sorted(list(key) for key in excluded),
         "feasibility": feasibility,
         "model": MODEL, "revision": revision, "precision": args.precision,
         "device": str(model.device), "processor": platform.processor(),
@@ -535,15 +575,21 @@ def main():
         f"Best executed fixed setting varies across prompts: {feasibility['best_fixed_varies_across_prompts']}.",
         f"Prompts: {len(calibration)} calibration, {len(heldout)} held out; "
         f"{args.repeats} held-out repeat(s), {args.tokens} maximum generated tokens.",
-        f"All {len(rows)} executed requests matched native greedy token IDs.",
+        (f"All {len(rows)} executed requests matched native greedy token IDs."
+         if not mismatches else
+         f"{len(rows) - len(mismatches)}/{len(rows)} executed requests matched native greedy "
+         f"token IDs. Excluded from adaptive/bandit selection after a mismatch: "
+         + ", ".join(f"depth={d} length={k}" for d, k in sorted(excluded)) + ". "
+         "Policies with mismatches are not valid exact-output comparisons."),
         "",
-        "| Policy | Runs | Latency s/token | Energy J/token |",
-        "|---|---:|---:|---:|",
+        "| Policy | Runs | Latency s/token | Energy J/token | Greedy mismatches |",
+        "|---|---:|---:|---:|---:|",
     ]
     for name, result in aggregates.items():
         energy = (f"{result['energy_j_per_token']:.6f}" if result['energy_j_per_token'] is not None
                   else "unavailable")
-        lines.append(f"| {name} | {result['runs']} | {result['latency_s_per_token']:.6f} | {energy} |")
+        lines.append(f"| {name} | {result['runs']} | {result['latency_s_per_token']:.6f} | {energy} "
+                     f"| {result['greedy_mismatches']} |")
     lines += [
         "", "Observed feedback cost per request (selected/all): " +
         ", ".join(f"{name} {value['median_delta_per_request']:.6f} " +
