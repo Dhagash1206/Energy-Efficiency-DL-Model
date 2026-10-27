@@ -3,16 +3,16 @@
 Weights, tokenizer files and the Hugging Face token are stored under the
 repository-root ``layerskip/cache`` folder: a dedicated top-level directory
 for the checkpoint, not nested inside any existing folder.
-None of it reaches source control: ``layerskip/.gitignore`` excludes the
-cache directory.
+None of it reaches source control: the root ``.gitignore`` excludes the
+``layerskip/`` directory.
 
-Results stay under this package (``results/``) because they are small,
+Results stay under this package (``results/pilot/``) because they are small,
 reviewable artifacts that belong with the code that produced them.
 """
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parent
-REPO = PACKAGE.parents[1]
+REPO = PACKAGE.parent
 MODELS = REPO / "layerskip"
 CACHE = MODELS / "cache"
 HUB = CACHE / "hub"

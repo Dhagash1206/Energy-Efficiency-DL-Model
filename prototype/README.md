@@ -7,7 +7,7 @@ From the repository root:
 
 ```powershell
 python -m prototype.demo
-python -m unittest prototype.test_prototype -v
+python -m unittest prototype.tests.test_prototype -v
 ```
 
 The demo prints a comparison and writes `prototype/results/demo.json`, including

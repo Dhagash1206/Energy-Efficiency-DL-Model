@@ -23,6 +23,7 @@ import hashlib
 import json
 import random
 import statistics
+from contextlib import ExitStack
 from urllib.request import Request, urlopen
 
 import torch
@@ -31,6 +32,8 @@ from transformers import AutoTokenizer, LlamaForCausalLM
 from huggingface_hub import snapshot_download
 
 from hardware_aware_selective_feedback.engine import generate, native_greedy
+from hardware_aware_selective_feedback.gpu_clocks import pinned_gpu
+from hardware_aware_selective_feedback.graph_drafter import GraphDrafter
 from hardware_aware_selective_feedback.measurement import Meter
 from hardware_aware_selective_feedback.selector import Action, CostBandit, Selector
 
@@ -42,6 +45,8 @@ DATASETS = {
     "humaneval": ("openai/human-eval", "data/HumanEval.jsonl.gz",
                   "6d43fb980f9fee3c892a914eda09951f772ad10d", "MIT"),
 }
+SHORT_PROMPT_TOKENS = 64  # prompt-context boundary for the context-aware selector
+MAX_PROMPT_TOKENS = 192   # prompts are truncated to this many tokens
 
 
 def resolve_dtype(precision, device):
@@ -179,14 +184,32 @@ def load_model(device, precision="fp32", quantize=None, attn="auto", compile_mod
     return model, tokenizer, REVISION
 
 
-def run_one(model, meter, prompt, token_limit, action, eos, reference=None):
+def build_graph_drafters(model, depths, token_limit, max_draft_length):
+    """One static-cache drafter per draft depth, sized for the longest request."""
+    max_len = MAX_PROMPT_TOKENS + token_limit + max_draft_length + 1
+    return {depth: GraphDrafter(model, depth, max_len) for depth in sorted(set(depths)) if depth}
+
+
+def run_one(model, meter, prompt, token_limit, action, eos, reference=None, adaptive_drafts=False,
+            graph_drafters=None):
     active_exits = tuple(d for d in action.observations if d != action.depth)
+    # Observer hooks do not fire inside the graphed draft step, so observed
+    # requests keep the ordinary forward_early path.
+    drafter = (graph_drafters.get(action.depth)
+               if graph_drafters and action.depth and not active_exits else None)
     output, measured = meter.run(lambda: generate(
         model, prompt, token_limit, action.depth, action.length,
-        active_exits, "all" if active_exits else "none", eos=eos))
+        active_exits, "all" if active_exits else "none", eos=eos,
+        adaptive_drafts=adaptive_drafts, graph_drafter=drafter))
     if reference is not None and output["tokens"] != reference:
         raise AssertionError(f"Greedy output mismatch for depth={action.depth}, length={action.length}")
     return output, measured
+
+
+def prompt_context(prompt):
+    """Coarse prompt type used to specialise the selector: dataset plus length bucket."""
+    length = "short" if len(prompt["ids"]) < SHORT_PROMPT_TOKENS else "long"
+    return f"{prompt['dataset']}:{length}"
 
 
 def row(prompt, policy, action, output, measured, split, repeat=0, order=0):
@@ -241,6 +264,19 @@ def main():
                         help="Attention backend. 'auto' selects sdpa on CUDA, "
                              "eager on CPU/MPS. Re-verify token matches after "
                              "switching from eager.")
+    parser.add_argument("--adaptive-drafts", action="store_true",
+                        help="Shorten drafts below 50%% recent acceptance and decode "
+                             "ordinarily below 30%%, with periodic re-probes.")
+    parser.add_argument("--context-selector", action="store_true",
+                        help="Score selector arms per prompt context (dataset and "
+                             "short/long prompt) once that context has samples.")
+    parser.add_argument("--cuda-graph-drafts", action="store_true",
+                        help="PROTOTYPE: replay draft steps as CUDA Graphs with a static "
+                             "KV cache (CUDA only; not with --compile or --quantize).")
+    parser.add_argument("--gpu-clock-mhz", type=int, default=None,
+                        help="Lock the NVIDIA graphics clock during the run (admin/root).")
+    parser.add_argument("--gpu-power-limit-w", type=float, default=None,
+                        help="Cap NVIDIA board power during the run (admin/root).")
     args = parser.parse_args()
     if min(args.calibration, args.test, args.tokens, args.threads,
            args.observer_pairs, args.repeats) < 1:
@@ -258,6 +294,10 @@ def main():
         resolve_dtype(args.precision, device)
     except ValueError as error:
         parser.error(str(error))
+    if (args.gpu_clock_mhz is not None or args.gpu_power_limit_w is not None) and device != "cuda":
+        parser.error("--gpu-clock-mhz and --gpu-power-limit-w require --device cuda")
+    if args.cuda_graph_drafts and (device != "cuda" or args.compile_model or args.quantize):
+        parser.error("--cuda-graph-drafts requires --device cuda and no --compile/--quantize")
     meter = Meter(device, args.energy_source, args.counter_file,
                   args.counter_unit, args.energy_scope)
     if args.probe:
@@ -277,21 +317,28 @@ def main():
     )
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     for prompt in calibration + heldout:
-        prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:192]
-    selector = Selector(objective=objective)
+        prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[:MAX_PROMPT_TOKENS]
+    selector = Selector(objective=objective, context_aware=args.context_selector)
+    drafters = (build_graph_drafters(model, selector.depths, args.tokens,
+                                     max(arm.length for arm in selector.arms))
+                if args.cuda_graph_drafts else None)
     bandit = CostBandit(selector.arms, objective=objective)
     rows = []
     print(f"Model loaded; objective={objective}; energy boundary={meter.scope or 'unavailable'}",
           flush=True)
 
+    adaptive = args.adaptive_drafts
+    cleanup = ExitStack()
     try:
+        gpu_settings = cleanup.enter_context(
+            pinned_gpu(args.gpu_clock_mhz, args.gpu_power_limit_w))
         # Calibrate base actions on the first prompt, then observer overhead
         # with executed same-prompt pairs across distinct calibration prompts.
         first = calibration[0]
         ref = native_greedy(model, first["ids"], args.tokens, eos)
         for arm in selector.arms:
-            result = run_one(model, meter, first["ids"], args.tokens, arm, eos, ref)
-            selector.update(arm, result[1], result[0])
+            result = run_one(model, meter, first["ids"], args.tokens, arm, eos, ref, adaptive, drafters)
+            selector.update(arm, result[1], result[0], prompt_context(first))
             bandit.update(arm, result[1], result[0])
             rows.append(row(first, "calibration", arm, *result, "calibration"))
         observed_arm = Action(8, 3, (4,))
@@ -312,8 +359,9 @@ def main():
                 for position, kind in enumerate(order):
                     chosen = base_arm if kind == "base" else arm
                     results[kind] = run_one(model, meter, prompt["ids"], args.tokens,
-                                            chosen, eos, reference)
-                    selector.update(chosen, results[kind][1], results[kind][0])
+                                            chosen, eos, reference, adaptive, drafters)
+                    selector.update(chosen, results[kind][1], results[kind][0],
+                                    prompt_context(prompt))
                     rows.append(row(prompt, "calibration_pair_" + mode + "_" + kind,
                                     chosen, *results[kind], "calibration", pair_index, position))
                 selector.record_observer_pair(results["base"], results["observed"], mode)
@@ -321,12 +369,15 @@ def main():
         # Additional calibration prompts: update the online selector.
         for index, prompt in enumerate(calibration[1:]):
             reference = native_greedy(model, prompt["ids"], args.tokens, eos)
-            action = selector.choose(len(calibration) + len(heldout) * args.repeats - index)
+            action = selector.choose(len(calibration) + len(heldout) * args.repeats - index,
+                                     prompt_context(prompt))
             bandit_action = bandit.choose()
-            result = run_one(model, meter, prompt["ids"], args.tokens, action, eos, reference)
-            selector.update(action, result[1], result[0])
+            result = run_one(model, meter, prompt["ids"], args.tokens, action, eos, reference,
+                             adaptive, drafters)
+            selector.update(action, result[1], result[0], prompt_context(prompt))
             rows.append(row(prompt, "adaptive_calibration", action, *result, "calibration"))
-            bandit_result = run_one(model, meter, prompt["ids"], args.tokens, bandit_action, eos, reference)
+            bandit_result = run_one(model, meter, prompt["ids"], args.tokens, bandit_action, eos,
+                                    reference, adaptive, drafters)
             bandit.update(bandit_action, bandit_result[1], bandit_result[0])
             rows.append(row(prompt, "bandit_calibration", bandit_action,
                             *bandit_result, "calibration"))
@@ -339,7 +390,8 @@ def main():
         for prompt_index, prompt in enumerate(heldout):
             reference = native_greedy(model, prompt["ids"], args.tokens, eos)
             for repeat in range(args.repeats):
-                adaptive_action = selector.choose(total_requests - request_index)
+                adaptive_action = selector.choose(total_requests - request_index,
+                                                  prompt_context(prompt))
                 bandit_action = bandit.choose()
                 policies = [
                     ("ordinary", Action()),
@@ -353,16 +405,19 @@ def main():
                 rng.shuffle(policies)
                 for order, (name, action) in enumerate(policies):
                     result = run_one(model, meter, prompt["ids"], args.tokens,
-                                     action, eos, reference)
+                                     action, eos, reference, adaptive, drafters)
                     if name == "adaptive":
-                        selector.update(action, result[1], result[0])
+                        selector.update(action, result[1], result[0], prompt_context(prompt))
                     elif name == "bandit":
                         bandit.update(action, result[1], result[0])
                     rows.append(row(prompt, name, action, *result, "test", repeat, order))
                 request_index += 1
             print(f"Completed test prompt {prompt_index + 1}/{len(heldout)}", flush=True)
     finally:
-        meter.close()
+        try:
+            cleanup.close()
+        finally:
+            meter.close()
 
     aggregates = {}
     for name in ("ordinary", "fixed", "never_observe", "selected_observe", "always_observe", "bandit", "adaptive"):
@@ -453,6 +508,7 @@ def main():
         "energy_limitation": meter.reason,
         "dataset": dataset_info,
         "arguments": {**vars(args), "output": str(args.output) if args.output else None},
+        "gpu_pinning": gpu_settings,
         "selector": selector.summary(), "bandit": bandit.summary(),
         "aggregates": aggregates, "rows": rows,
         "interpretation": "Measured implementation check; small samples do not establish energy savings, superiority, or novelty.",

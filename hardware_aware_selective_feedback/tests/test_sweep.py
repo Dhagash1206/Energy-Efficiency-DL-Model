@@ -1,10 +1,10 @@
 """Regression checks for valid paired energy comparisons and cleanup."""
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from .measurement import Meter
-from .selector import Action
-from .sweep import summarize
+from ..measurement import Meter
+from ..selector import Action
+from ..sweep import measure_batched, summarize
 
 
 def request(depth=0, length=0, energy=10.0, matched=True):
@@ -45,6 +45,37 @@ class SweepTests(unittest.TestCase):
             with meter:
                 raise RuntimeError("load failed")
         meter.close.assert_called_once()
+
+
+class FakeMeter:
+    """Runs the measured function and reports 2 J and 0.5 s per call."""
+
+    def run(self, function):
+        return function(), {"latency_s": 0.5, "energy_j": 2.0}
+
+
+class BatchedBaselineTests(unittest.TestCase):
+    prompts = [{"id": name, "ids": [index + 1]} for index, name in enumerate("abc")]
+    references = {"a": [1, 1], "b": [2, 2], "c": [3, 3]}
+
+    def _measure(self, decoded, batch_size=2, repeats=1):
+        with patch("hardware_aware_selective_feedback.sweep.batched_greedy",
+                   side_effect=lambda model, ids, limit, eos, pad: [decoded[i[0]] for i in ids]):
+            return measure_batched(None, FakeMeter(), self.prompts, self.references,
+                                   batch_size, 2, (), repeats)
+
+    def test_groups_prompts_and_reports_per_token_cost(self):
+        result = self._measure({1: [1, 1], 2: [2, 2], 3: [3, 3]}, repeats=2)
+        self.assertEqual([r["prompt_ids"] for r in result["records"][:2]], [["a", "b"], ["c"]])
+        self.assertEqual(result["batches"], 4)
+        self.assertEqual(result["generated_tokens"], 12)
+        self.assertAlmostEqual(result["energy_j_per_token"], 8.0 / 12)
+        self.assertTrue(result["greedy_matches"])
+
+    def test_mismatch_is_reported(self):
+        result = self._measure({1: [1, 1], 2: [2, 9], 3: [3, 3]})
+        self.assertFalse(result["greedy_matches"])
+        self.assertEqual(result["records"][0]["mismatched_prompt_ids"], ["b"])
 
 
 if __name__ == "__main__":

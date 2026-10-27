@@ -82,7 +82,7 @@ def fetch_public(name, revision, limit, output):
     try:
         from datasets import load_dataset as hf_load
     except ImportError as exc:
-        raise RuntimeError("Install optional requirements-hf.txt to import public datasets") from exc
+        raise RuntimeError("Install requirements.txt to import public datasets") from exc
     choices = {"gsm8k": ("openai/gsm8k", "main", "reasoning"),
                "cnn_dailymail": ("abisee/cnn_dailymail", "3.0.0", "summarization")}
     repo, config, task = choices[name]

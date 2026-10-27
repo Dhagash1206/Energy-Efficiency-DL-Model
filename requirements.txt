@@ -1,9 +1,18 @@
-# Core project dependencies used by the prototype and experiment scaffolding.
-# Install real-model CUDA dependencies using the GPU-specific script in scripts/setup_cuda_3050.ps1.
+# Single dependency list for prototype/, hardware_aware_selective_feedback/ and
+# edge_llm_inference/. On Windows + RTX 3050, run scripts/setup_cuda_3050.ps1,
+# which installs the CUDA build of torch first and then this file.
 
-numpy>=1.26
+# Core
+numpy==2.2.6
 psutil>=5.9
-pynvml>=11.5
+# NVIDIA energy counters (provides the `pynvml` module)
+nvidia-ml-py
 
-# Optional, but used by public dataset fetches and real-model inference.
-# See requirements-hf.txt for the full CUDA-enabled stack.
+# Model stack: the vendored LayerSkip helper requires transformers 4.50.0 exactly
+torch==2.6.0
+transformers==4.50.0
+huggingface-hub>=0.26,<1.0
+accelerate>=0.31
+datasets>=2.18
+sentencepiece>=0.2
+bitsandbytes>=0.45; platform_system != "Darwin"

@@ -153,8 +153,8 @@ def main():
     result["paired_observation_deltas"] = deltas
     result["model_memory_bytes"] = model.get_memory_footprint()
     result["expected_runs"] = len(jobs)
-    path = ROOT / "results" / f"{args.model}-{args.precision}-pilot.json"
-    path.parent.mkdir(exist_ok=True)
+    path = ROOT / "results" / "pilot" / f"{args.model}-{args.precision}-pilot.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     path.with_suffix(".md").write_text(render(result), encoding="utf-8")
     print(json.dumps(dict(report=str(path), status=result["status"], runs=len(rows),

@@ -74,6 +74,20 @@ Token generation  ->  Evaluation
 `-- docs/               # notes, proposal, hardware specs
 ```
 
+Current layout:
+
+```
+.
+|-- requirements.txt                    # single dependency list
+|-- prototype/                          # toy controller simulation (tests/ inside)
+|-- hardware_aware_selective_feedback/  # LayerSkip experiment + pilot
+|   |-- vendor/                         # attributed LayerSkip helper + license
+|   |-- tests/
+|   `-- results/                        # grouped by experiment
+|-- edge_llm_inference/                 # Qwen3 distillation and benchmarks
+`-- scripts/                            # setup_cuda_3050.ps1
+```
+
 ## Setup
 
 1. Clone the repo
