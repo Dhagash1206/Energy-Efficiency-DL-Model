@@ -1,0 +1,7 @@
+# Extra packages for joulerexit/. Install CUDA torch first, then:
+#   .\.venv\Scripts\python.exe -m pip install -r joulerexit\requirements.txt
+numpy>=2.2
+transformers>=4.50
+huggingface-hub>=0.26
+nvidia-ml-py
+datasets>=3.0

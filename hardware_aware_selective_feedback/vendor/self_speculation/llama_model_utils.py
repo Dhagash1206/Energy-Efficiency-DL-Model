@@ -30,6 +30,32 @@ import torch
 import transformers
 
 
+def _legacy_to_dynamic(past_key_values):
+    """Build a DynamicCache from the tuple cache this engine stores.
+
+    transformers 5 removed DynamicCache.from_legacy_cache. An empty cache is
+    returned when past_key_values is None so the first prefill can fill it.
+    """
+    cache = transformers.cache_utils.DynamicCache()
+    if past_key_values is None:
+        return cache
+    for layer_idx, item in enumerate(past_key_values):
+        if item is None or item == []:
+            break
+        cache.update(item[0], item[1], layer_idx)
+    return cache
+
+
+def _dynamic_to_legacy(cache):
+    """Return only layers that received keys, as (key, value) tuples."""
+    legacy = []
+    for layer in cache.layers:
+        if not getattr(layer, "is_initialized", False):
+            break
+        legacy.append((layer.keys, layer.values))
+    return tuple(legacy)
+
+
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
@@ -119,14 +145,16 @@ def _run_decoder(
     older versions accept neither. We inject both unconditionally and strip the
     deprecated padding_mask kwarg.
     """
-    cache = kwargs["past_key_value"]
+    cache = kwargs.pop("past_key_value")
     kwargs.pop("padding_mask", None)
+    kwargs["past_key_values"] = cache
     positions = kwargs["position_ids"]
     if "position_embeddings" not in kwargs:
         kwargs["position_embeddings"] = model.model.rotary_emb(hidden_states, positions)
     kwargs["cache_position"] = positions[0]
     outputs = layer(hidden_states, **kwargs)
-    return outputs[0], cache
+    hidden = outputs[0] if isinstance(outputs, tuple) else outputs
+    return hidden, cache
 
 
 # ---------------------------------------------------------------------------
@@ -154,11 +182,30 @@ def crop_past_key_values(
 # Forward: full model (all layers)
 # ---------------------------------------------------------------------------
 
+def _pad_stopped_cache(cache, stop_layer: Optional[int], n_layers: int) -> KVCache:
+    """Keep every layer's cache the same length after a shallow check.
+
+    Layers that were not run are filled with a copy of the last layer that
+    was. A later full-depth check must not be mixed into that same answer.
+    """
+    legacy = _dynamic_to_legacy(cache)
+    if stop_layer is None or stop_layer >= n_layers:
+        return legacy
+    if stop_layer < 1 or len(legacy) < stop_layer:
+        raise RuntimeError("the shallow check did not reach its stop layer")
+    kept = list(legacy[:stop_layer])
+    last_k, last_v = kept[-1]
+    while len(kept) < n_layers:
+        kept.append((last_k.clone(), last_v.clone()))
+    return tuple(kept)
+
+
 def forward(
     model: transformers.LlamaForCausalLM,
     input_ids: torch.Tensor,
     past_key_values: Optional[KVCache],
     logits_to_keep: int = 0,
+    stop_layer: Optional[int] = None,
 ) -> ForwardResult:
     """Run all N transformer layers and return logits + updated KV cache.
 
@@ -179,7 +226,7 @@ def forward(
     batch, seq = input_ids.shape
     past_len = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _legacy_to_dynamic(past_key_values)
     position_ids = torch.arange(past_len, seq + past_len, dtype=torch.long, device=device)
     position_ids = position_ids.unsqueeze(0)
 
@@ -187,7 +234,10 @@ def forward(
     attn_mask = _causal_mask(model, batch, seq, past_len, hidden)
     pos_emb = model.model.rotary_emb(hidden, position_ids)
 
-    for layer in model.model.layers:
+    n_layers = len(model.model.layers)
+    for index, layer in enumerate(model.model.layers):
+        if stop_layer is not None and index >= stop_layer:
+            break
         hidden, cache = _run_decoder(
             model, layer, hidden,
             attention_mask=attn_mask,
@@ -199,7 +249,7 @@ def forward(
             padding_mask=None,
         )
 
-    cache = cache.to_legacy_cache()
+    cache = _pad_stopped_cache(cache, stop_layer, n_layers)
     if logits_to_keep:
         hidden = hidden[:, -logits_to_keep:]
     logits = model.lm_head(model.model.norm(hidden))
@@ -237,7 +287,7 @@ def forward_early(
     batch, seq = input_ids.shape
     past_len = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _legacy_to_dynamic(past_key_values)
     position_ids = torch.arange(past_len, seq + past_len, dtype=torch.long, device=device)
     position_ids = position_ids.unsqueeze(0)
 
@@ -257,7 +307,7 @@ def forward_early(
             padding_mask=None,
         )
 
-    cache = cache.to_legacy_cache()
+    cache = _dynamic_to_legacy(cache)
 
     # Accumulate pre-exit hidden states for the remainder block.
     exit_query_cache = (
@@ -280,6 +330,7 @@ def forward_remainder(
     past_key_values: Optional[KVCache],
     exit_layer: int,
     exit_query_cache: Optional[torch.Tensor],
+    stop_layer: Optional[int] = None,
 ) -> ForwardResult:
     """Run layers exit_layer..N-1 over [pending, *draft] tokens to verify drafts.
 
@@ -329,7 +380,7 @@ def forward_remainder(
 
     total_seq = num_pending + draft_past_len   # full sequence length after this step
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _legacy_to_dynamic(past_key_values)
     hidden = model.model.embed_tokens(input_ids)
 
     # Position IDs span [full_past_len, full_past_len + seq).
@@ -347,7 +398,10 @@ def forward_remainder(
     full_mask = _causal_mask(model, batch, seq, full_past_len, hidden)
 
     full_hidden: Optional[torch.Tensor] = None
+    n_layers = len(model.model.layers)
     for idx, layer in enumerate(model.model.layers):
+        if stop_layer is not None and idx >= stop_layer:
+            break
         if idx < exit_layer:
             # Early layers: process only the pending token.
             pending_hidden = hidden[:, -num_pending:]
@@ -383,7 +437,7 @@ def forward_remainder(
             )
             full_hidden = hidden  # subsequent upper layers reuse output directly
 
-    cache = cache.to_legacy_cache()
+    cache = _pad_stopped_cache(cache, stop_layer, n_layers)
     logits = model.lm_head(model.model.norm(hidden))
     return ForwardResult(logits=logits, past_key_values=cache,
                          exit_query_cache=exit_query_cache)

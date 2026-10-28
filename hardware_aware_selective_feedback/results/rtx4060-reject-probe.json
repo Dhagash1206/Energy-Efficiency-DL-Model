@@ -1,0 +1,218 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "energy_scope": "nvidia_gpu",
+  "model": "facebook/layerskip-llama3.2-1B",
+  "revision": "81deb0f88734409cca506bcefcfb5c6bd2667565",
+  "verdict": "TRAIN",
+  "head_training": "blocked",
+  "token_match": {
+    "probe_prompt_limit_64": {
+      "depth_4_draft_1": true,
+      "depth_4_draft_4": true,
+      "depth_8_draft_2": true
+    },
+    "gsm8k_test_first_8_limit_32_depth_4_draft_4": "8/8"
+  },
+  "note": "The reject term beats a token-count fit, and the coefficient is negative. Depth 4 with draft length 4 used fewer joules than greedy and matched greedy token ids. A head trained to minimize c times expected rejects would collapse to that fixed length.",
+  "intercept": -3.431347295968539,
+  "committed_j": 1.1202499354719764,
+  "rejected_j": -0.7677573254670597,
+  "full_rmse_j": 5.128159859763321,
+  "token_count_rmse_j": 11.482066162959375,
+  "repeat_noise_j": 2.8404197626269854,
+  "reject_is_real": true,
+  "rows": [
+    {
+      "setting": "n32-d0-k0",
+      "repeat": 0,
+      "committed": 32,
+      "rejected": 0,
+      "joules": 42.182,
+      "latency_s": 0.705347700000857
+    },
+    {
+      "setting": "n32-d0-k0",
+      "repeat": 1,
+      "committed": 32,
+      "rejected": 0,
+      "joules": 34.99,
+      "latency_s": 0.6558825000010984
+    },
+    {
+      "setting": "n32-d0-k0",
+      "repeat": 2,
+      "committed": 32,
+      "rejected": 0,
+      "joules": 32.532,
+      "latency_s": 0.7119438999998238
+    },
+    {
+      "setting": "n32-d4-k1",
+      "repeat": 0,
+      "committed": 32,
+      "rejected": 2,
+      "joules": 26.818,
+      "latency_s": 0.4864680999999109
+    },
+    {
+      "setting": "n32-d4-k1",
+      "repeat": 1,
+      "committed": 32,
+      "rejected": 2,
+      "joules": 19.827,
+      "latency_s": 0.47685099999944214
+    },
+    {
+      "setting": "n32-d4-k1",
+      "repeat": 2,
+      "committed": 32,
+      "rejected": 2,
+      "joules": 32.236,
+      "latency_s": 0.45349280000118597
+    },
+    {
+      "setting": "n32-d4-k4",
+      "repeat": 0,
+      "committed": 32,
+      "rejected": 7,
+      "joules": 21.571,
+      "latency_s": 0.3554044000011345
+    },
+    {
+      "setting": "n32-d4-k4",
+      "repeat": 1,
+      "committed": 32,
+      "rejected": 7,
+      "joules": 25.634,
+      "latency_s": 0.35948889999963285
+    },
+    {
+      "setting": "n32-d4-k4",
+      "repeat": 2,
+      "committed": 32,
+      "rejected": 7,
+      "joules": 27.003,
+      "latency_s": 0.3552217999986169
+    },
+    {
+      "setting": "n32-d8-k2",
+      "repeat": 0,
+      "committed": 32,
+      "rejected": 5,
+      "joules": 29.341,
+      "latency_s": 0.4939329999997426
+    },
+    {
+      "setting": "n32-d8-k2",
+      "repeat": 1,
+      "committed": 32,
+      "rejected": 5,
+      "joules": 30.026,
+      "latency_s": 0.5069407999999385
+    },
+    {
+      "setting": "n32-d8-k2",
+      "repeat": 2,
+      "committed": 32,
+      "rejected": 5,
+      "joules": 34.594,
+      "latency_s": 0.5137024999985442
+    },
+    {
+      "setting": "n64-d0-k0",
+      "repeat": 0,
+      "committed": 64,
+      "rejected": 0,
+      "joules": 71.316,
+      "latency_s": 1.309761200000139
+    },
+    {
+      "setting": "n64-d0-k0",
+      "repeat": 1,
+      "committed": 64,
+      "rejected": 0,
+      "joules": 72.246,
+      "latency_s": 1.3814581999995426
+    },
+    {
+      "setting": "n64-d0-k0",
+      "repeat": 2,
+      "committed": 64,
+      "rejected": 0,
+      "joules": 69.89,
+      "latency_s": 1.3527435999985755
+    },
+    {
+      "setting": "n64-d4-k1",
+      "repeat": 0,
+      "committed": 64,
+      "rejected": 7,
+      "joules": 53.748,
+      "latency_s": 0.9278962000007596
+    },
+    {
+      "setting": "n64-d4-k1",
+      "repeat": 1,
+      "committed": 64,
+      "rejected": 7,
+      "joules": 54.893,
+      "latency_s": 0.9503768999984459
+    },
+    {
+      "setting": "n64-d4-k1",
+      "repeat": 2,
+      "committed": 64,
+      "rejected": 7,
+      "joules": 57.636,
+      "latency_s": 0.9379258000008122
+    },
+    {
+      "setting": "n64-d4-k4",
+      "repeat": 0,
+      "committed": 64,
+      "rejected": 27,
+      "joules": 46.351,
+      "latency_s": 0.8365800999999919
+    },
+    {
+      "setting": "n64-d4-k4",
+      "repeat": 1,
+      "committed": 64,
+      "rejected": 27,
+      "joules": 48.523,
+      "latency_s": 0.8126930999987962
+    },
+    {
+      "setting": "n64-d4-k4",
+      "repeat": 2,
+      "committed": 64,
+      "rejected": 27,
+      "joules": 48.661,
+      "latency_s": 0.7877052999992884
+    },
+    {
+      "setting": "n64-d8-k2",
+      "repeat": 0,
+      "committed": 64,
+      "rejected": 13,
+      "joules": 67.209,
+      "latency_s": 1.047675200001322
+    },
+    {
+      "setting": "n64-d8-k2",
+      "repeat": 1,
+      "committed": 64,
+      "rejected": 13,
+      "joules": 56.758,
+      "latency_s": 1.0427555000005668
+    },
+    {
+      "setting": "n64-d8-k2",
+      "repeat": 2,
+      "committed": 64,
+      "rejected": 13,
+      "joules": 63.691,
+      "latency_s": 1.062204500000007
+    }
+  ]
+}

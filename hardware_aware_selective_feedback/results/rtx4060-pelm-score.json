@@ -1,0 +1,622 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "energy_scope": "nvidia_gpu",
+  "repeat_noise_j": 2.7683230483453354,
+  "locked": {
+    "depth": 4,
+    "length": 4,
+    "mean_joules": 67.36872222222222,
+    "runs": 18
+  },
+  "full_stop": 16,
+  "token_cap": 256,
+  "worked_examples": 8,
+  "shallow_check": "not_run",
+  "clock_written": false,
+  "energy_counter_polled_inside_request": false,
+  "calibration": {
+    "prefill_j": 0.0,
+    "cycle_deltas_j": []
+  },
+  "kept": false,
+  "beats_short": false,
+  "short_draft": {
+    "depth": 4,
+    "length": 1
+  },
+  "mean_short_minus_round_j": -10.377125,
+  "per_token_win_rejected": false,
+  "round_actions": {
+    "4/4/stop16": 7,
+    "4/1/stop16": 560
+  },
+  "summary": {
+    "gsm8k": {
+      "greedy": {
+        "correct": 1,
+        "count": 8,
+        "accuracy_points": 12.5,
+        "joules": 1453.276,
+        "joules_per_token": 1.4332110453648916
+      },
+      "fixed": {
+        "correct": 1,
+        "count": 8,
+        "accuracy_points": 12.5,
+        "joules": 1086.839,
+        "joules_per_token": 1.0718333333333332
+      },
+      "short": {
+        "correct": 1,
+        "count": 8,
+        "accuracy_points": 12.5,
+        "joules": 1039.185,
+        "joules_per_token": 1.024837278106509
+      },
+      "round": {
+        "correct": 1,
+        "count": 8,
+        "accuracy_points": 12.5,
+        "joules": 1122.202,
+        "joules_per_token": 1.1067080867850099
+      },
+      "hold": {
+        "correct": 1,
+        "count": 8,
+        "accuracy_points": 12.5,
+        "joules": 1149.4279999999999,
+        "joules_per_token": 1.133558185404339
+      },
+      "mean_greedy_minus_fixed_j": 45.804625,
+      "mean_greedy_minus_short_j": 51.761375,
+      "mean_greedy_minus_round_j": 41.384249999999994,
+      "mean_greedy_minus_hold_j": 37.981
+    },
+    "svamp": {
+      "greedy": {
+        "correct": 0,
+        "count": 4,
+        "accuracy_points": 0.0,
+        "joules": 813.229,
+        "joules_per_token": 1.4732409420289856
+      },
+      "fixed": {
+        "correct": 0,
+        "count": 4,
+        "accuracy_points": 0.0,
+        "joules": 636.518,
+        "joules_per_token": 1.1531123188405799
+      },
+      "short": {
+        "correct": 0,
+        "count": 4,
+        "accuracy_points": 0.0,
+        "joules": 581.225,
+        "joules_per_token": 1.0529438405797102
+      },
+      "round": {
+        "correct": 0,
+        "count": 4,
+        "accuracy_points": 0.0,
+        "joules": 612.203,
+        "joules_per_token": 1.1090634057971014
+      },
+      "hold": {
+        "correct": 0,
+        "count": 4,
+        "accuracy_points": 0.0,
+        "joules": 611.1289999999999,
+        "joules_per_token": 1.1071177536231882
+      },
+      "mean_greedy_minus_fixed_j": 44.17775000000001,
+      "mean_greedy_minus_short_j": 58.001000000000005,
+      "mean_greedy_minus_round_j": 50.2565,
+      "mean_greedy_minus_hold_j": 50.525000000000006
+    }
+  },
+  "records": [
+    {
+      "task": "gsm8k",
+      "gold": "230",
+      "joules": {
+        "greedy": 34.431,
+        "fixed": 45.934,
+        "short": 30.55,
+        "round": 40.487,
+        "hold": 46.357
+      },
+      "tokens": {
+        "greedy": 27,
+        "fixed": 27,
+        "short": 27,
+        "round": 27,
+        "hold": 27
+      },
+      "answers": {
+        "greedy": "230",
+        "fixed": "230",
+        "short": "230",
+        "round": "230",
+        "hold": "230"
+      },
+      "correct": {
+        "greedy": true,
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 15
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "57500",
+      "joules": {
+        "greedy": 336.688,
+        "fixed": 269.497,
+        "short": 250.228,
+        "round": 271.67,
+        "hold": 260.198
+      },
+      "tokens": {
+        "greedy": 256,
+        "fixed": 256,
+        "short": 256,
+        "round": 256,
+        "hold": 256
+      },
+      "answers": {
+        "greedy": "",
+        "fixed": "",
+        "short": "",
+        "round": "",
+        "hold": ""
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": false,
+        "short": true,
+        "round": true,
+        "hold": false
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 148
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "7",
+      "joules": {
+        "greedy": 69.418,
+        "fixed": 86.114,
+        "short": 56.117,
+        "round": 57.409,
+        "hold": 70.832
+      },
+      "tokens": {
+        "greedy": 39,
+        "fixed": 39,
+        "short": 39,
+        "round": 39,
+        "hold": 39
+      },
+      "answers": {
+        "greedy": "84",
+        "fixed": "84",
+        "short": "84",
+        "round": "84",
+        "hold": "84"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 26
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "6",
+      "joules": {
+        "greedy": 352.888,
+        "fixed": 206.648,
+        "short": 239.989,
+        "round": 261.413,
+        "hold": 260.562
+      },
+      "tokens": {
+        "greedy": 256,
+        "fixed": 256,
+        "short": 256,
+        "round": 256,
+        "hold": 256
+      },
+      "answers": {
+        "greedy": "",
+        "fixed": "",
+        "short": "",
+        "round": "",
+        "hold": ""
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 134
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "15",
+      "joules": {
+        "greedy": 67.178,
+        "fixed": 69.634,
+        "short": 53.62,
+        "round": 59.276,
+        "hold": 68.552
+      },
+      "tokens": {
+        "greedy": 42,
+        "fixed": 42,
+        "short": 42,
+        "round": 42,
+        "hold": 42
+      },
+      "answers": {
+        "greedy": "14",
+        "fixed": "14",
+        "short": "14",
+        "round": "14",
+        "hold": "14"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 23
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "14",
+      "joules": {
+        "greedy": 114.026,
+        "fixed": 78.637,
+        "short": 80.571,
+        "round": 89.837,
+        "hold": 91.733
+      },
+      "tokens": {
+        "greedy": 69,
+        "fixed": 69,
+        "short": 69,
+        "round": 69,
+        "hold": 69
+      },
+      "answers": {
+        "greedy": "6",
+        "fixed": "6",
+        "short": "6",
+        "round": "6",
+        "hold": "6"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 39
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "7",
+      "joules": {
+        "greedy": 107.066,
+        "fixed": 126.047,
+        "short": 88.876,
+        "round": 90.047,
+        "hold": 102.371
+      },
+      "tokens": {
+        "greedy": 69,
+        "fixed": 69,
+        "short": 69,
+        "round": 69,
+        "hold": 69
+      },
+      "answers": {
+        "greedy": "12",
+        "fixed": "12",
+        "short": "12",
+        "round": "12",
+        "hold": "12"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/1/stop16": 45
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "8",
+      "joules": {
+        "greedy": 371.581,
+        "fixed": 204.328,
+        "short": 239.234,
+        "round": 252.063,
+        "hold": 248.823
+      },
+      "tokens": {
+        "greedy": 256,
+        "fixed": 256,
+        "short": 256,
+        "round": 256,
+        "hold": 256
+      },
+      "answers": {
+        "greedy": "",
+        "fixed": "",
+        "short": "",
+        "round": "",
+        "hold": ""
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 130
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "27",
+      "joules": {
+        "greedy": 367.491,
+        "fixed": 256.885,
+        "short": 237.416,
+        "round": 265.413,
+        "hold": 264.978
+      },
+      "tokens": {
+        "greedy": 256,
+        "fixed": 256,
+        "short": 256,
+        "round": 256,
+        "hold": 256
+      },
+      "answers": {
+        "greedy": "",
+        "fixed": "",
+        "short": "",
+        "round": "",
+        "hold": ""
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/2/stop16": 1,
+        "4/1/stop16": 131
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "4",
+      "joules": {
+        "greedy": 34.84,
+        "fixed": 47.947,
+        "short": 37.479,
+        "round": 33.626,
+        "hold": 31.897
+      },
+      "tokens": {
+        "greedy": 17,
+        "fixed": 17,
+        "short": 17,
+        "round": 17,
+        "hold": 17
+      },
+      "answers": {
+        "greedy": "8",
+        "fixed": "8",
+        "short": "8",
+        "round": "8",
+        "hold": "8"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/1/stop16": 11
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "16",
+      "joules": {
+        "greedy": 39.512,
+        "fixed": 63.654,
+        "short": 51.701,
+        "round": 35.392,
+        "hold": 45.287
+      },
+      "tokens": {
+        "greedy": 23,
+        "fixed": 23,
+        "short": 23,
+        "round": 23,
+        "hold": 23
+      },
+      "answers": {
+        "greedy": "6",
+        "fixed": "6",
+        "short": "6",
+        "round": "6",
+        "hold": "6"
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/1/stop16": 16
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "64",
+      "joules": {
+        "greedy": 371.386,
+        "fixed": 268.032,
+        "short": 254.629,
+        "round": 277.772,
+        "hold": 268.967
+      },
+      "tokens": {
+        "greedy": 256,
+        "fixed": 256,
+        "short": 256,
+        "round": 256,
+        "hold": 256
+      },
+      "answers": {
+        "greedy": "",
+        "fixed": "",
+        "short": "",
+        "round": "",
+        "hold": ""
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "short": false,
+        "round": false,
+        "hold": false
+      },
+      "token_match": {
+        "fixed": true,
+        "short": true,
+        "round": true,
+        "hold": true
+      },
+      "round_actions": {
+        "4/4/stop16": 1,
+        "4/1/stop16": 139
+      }
+    }
+  ],
+  "result": "the fixed layer-4 length-1 draft remains the energy result"
+}

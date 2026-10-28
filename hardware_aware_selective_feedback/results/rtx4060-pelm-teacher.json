@@ -1,0 +1,71 @@
+{
+  "varies": true,
+  "reason": "the cheapest action changes across steps",
+  "teacher_depth": 4,
+  "fits": {
+    "4": {
+      "intercept": 0.025107187764460272,
+      "verify_j": 1.1272424425270435,
+      "accepted_j": 0.47961757439841396,
+      "rejected_j": 0.43414360359796383,
+      "full_rmse_j": 3.789746352583203,
+      "token_count_rmse_j": 6.036801202383418,
+      "repeat_noise_j": 8.170609859559088,
+      "rejected_is_waste": 0.0
+    },
+    "8": {
+      "intercept": 0.029400332481234075,
+      "verify_j": 1.123588497569228,
+      "accepted_j": 0.7580327812297525,
+      "rejected_j": 0.598831445528782,
+      "full_rmse_j": 4.698068001819887,
+      "token_count_rmse_j": 5.363998525412637,
+      "repeat_noise_j": 11.06696377347458,
+      "rejected_is_waste": 0.0
+    }
+  },
+  "speeds": {
+    "0/0": 42.77165570291042,
+    "4/1": 59.28097365590553,
+    "4/2": 61.917692824640625,
+    "4/4": 59.44761454830481,
+    "8/1": 52.09909580866319,
+    "8/2": 52.01154629011067,
+    "8/4": 47.61446422599925
+  },
+  "speed_floor": 42.77165570291042,
+  "shared_verify_j": 1.1818550753991055,
+  "repeat_noise_j": 2.7683230483453354,
+  "locked": {
+    "depth": 4,
+    "length": 4,
+    "mean_joules": 67.36872222222222,
+    "runs": 18
+  },
+  "trained": true,
+  "train": {
+    "final_loss": 0.9468700289726257,
+    "label_match": 0.9972222447395325,
+    "cool_action": {
+      "depth": 4,
+      "length": 4,
+      "stop": 16
+    },
+    "hot_action": {
+      "depth": 4,
+      "length": 1,
+      "stop": 16
+    },
+    "live_action": {
+      "depth": 4,
+      "length": 4,
+      "stop": 16
+    },
+    "distinct_labels": [
+      0,
+      2,
+      4,
+      6
+    ]
+  }
+}

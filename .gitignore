@@ -17,3 +17,5 @@ layerskip/
 # Tool caches
 .ruff_cache/
 .pytest_cache/
+.tmp/
+joulerexit/checkpoints/

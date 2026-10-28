@@ -38,7 +38,7 @@ Measured (SmolLM2-135M, CPU fp32, 4 prompts x 32 tokens, median of 3):
   SmolLM is not exit-trained, so speculation is still slower than ordinary
   decoding here; the fallback limits the loss.
 
-
+1
 2. PER-PROMPT SELECTOR SETTINGS
 -------------------------------
 What: The selector keeps separate cost tables per prompt context

@@ -1,0 +1,7 @@
+{
+  "status": "not_measured",
+  "gpu_visible": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "required": "NVIDIA GeForce RTX 3050",
+  "reason": "The RTX 3050 is not in this machine. The 4060 profile is not a 3050 result.",
+  "command": "python -m hardware_aware_selective_feedback.startup_sweep --require-3050"
+}

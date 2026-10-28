@@ -1,0 +1,243 @@
+{
+  "model": "HuggingFaceTB/SmolLM2-135M",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "joules_are": "per token",
+  "energy_scope": "nvidia_gpu",
+  "counter": "NVML cumulative GPU energy (mJ)",
+  "exits": [
+    8,
+    15,
+    23,
+    30
+  ],
+  "residual_is_real": true,
+  "depth_only_rmse_j": 0.28827690549377183,
+  "full_rmse_j": 0.10003373221662659,
+  "repeat_noise_j": 0.002456371032653071,
+  "coefficients": {
+    "intercept": -0.009938028100129939,
+    "depth_slope": 0.0028185100966899826,
+    "log_length_slope": -0.008008025879023087,
+    "decode_offset": 0.5678978515624997,
+    "depth_only_intercept": 0.14790705924795963,
+    "depth_only_slope": 0.002818510096689984
+  },
+  "rows": [
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.0069234375
+    },
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.00907421875
+    },
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.0124515625
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.01948046875
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.017328125
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.012152343749999999
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.0168453125
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.01632734375
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.02024140625
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.020789843750000002
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.02041875
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "prefill",
+      "joules": 0.01828671875
+    },
+    {
+      "depth": 8,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.002042578125
+    },
+    {
+      "depth": 8,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.0034390625000000003
+    },
+    {
+      "depth": 8,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.002126171875
+    },
+    {
+      "depth": 15,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.003180078125
+    },
+    {
+      "depth": 15,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.004969140625
+    },
+    {
+      "depth": 15,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.0038703124999999996
+    },
+    {
+      "depth": 23,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.006144140625
+    },
+    {
+      "depth": 23,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.0049642578125
+    },
+    {
+      "depth": 23,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.006500976562499999
+    },
+    {
+      "depth": 30,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.006863085937500001
+    },
+    {
+      "depth": 30,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.005995312500000001
+    },
+    {
+      "depth": 30,
+      "seq_len": 128,
+      "phase": "prefill",
+      "joules": 0.007006640625
+    },
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.29071875
+    },
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.78396875
+    },
+    {
+      "depth": 8,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.49696875
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.75884375
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.5970625
+    },
+    {
+      "depth": 15,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.273375
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.7251875
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.4093125
+    },
+    {
+      "depth": 23,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.5235625
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.62275
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.76459375
+    },
+    {
+      "depth": 30,
+      "seq_len": 32,
+      "phase": "decode",
+      "joules": 0.75875
+    }
+  ]
+}

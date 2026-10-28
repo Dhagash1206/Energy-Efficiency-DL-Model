@@ -1,0 +1,895 @@
+{
+  "bar_cleared": false,
+  "reason": "The head did not collapse to one action. On 16 GSM8K items it matched greedy's 1 correct answer, and its paired joule interval against greedy includes zero. The fixed depth-4 draft of length 4 and the outside selector both used fewer GPU joules. SVAMP was 0 for greedy and for the head.",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "energy_scope": "nvidia_gpu",
+  "fixed_action": {
+    "depth": 4,
+    "length": 4
+  },
+  "head_collapsed": false,
+  "head_actions": {
+    "0/0": 226,
+    "4/4": 94,
+    "4/2": 28,
+    "4/1": 84
+  },
+  "summary": {
+    "gsm8k": {
+      "greedy": {
+        "correct": 1,
+        "count": 16,
+        "joules": 969.688,
+        "joules_per_correct": 969.688
+      },
+      "fixed": {
+        "correct": 1,
+        "count": 16,
+        "joules": 882.241,
+        "joules_per_correct": 882.241
+      },
+      "selector": {
+        "correct": 1,
+        "count": 16,
+        "joules": 858.512,
+        "joules_per_correct": 858.512
+      },
+      "head": {
+        "correct": 1,
+        "count": 16,
+        "joules": 958.409,
+        "joules_per_correct": 958.409
+      },
+      "greedy_minus_fixed": {
+        "difference": 67.17101628175517,
+        "low": -6.301875000000006,
+        "high": 170.43499999999995,
+        "draws": 1299
+      },
+      "greedy_minus_selector": {
+        "difference": 86.86882685399024,
+        "low": 12.561674999999987,
+        "high": 184.57564999999988,
+        "draws": 1299
+      },
+      "greedy_minus_head": {
+        "difference": 9.14030397741851,
+        "low": -34.257100000000136,
+        "high": 63.264999999999915,
+        "draws": 1299
+      }
+    },
+    "svamp": {
+      "greedy": {
+        "correct": 0,
+        "count": 8,
+        "joules": 332.20799999999997,
+        "joules_per_correct": null
+      },
+      "fixed": {
+        "correct": 0,
+        "count": 8,
+        "joules": 333.976,
+        "joules_per_correct": null
+      },
+      "selector": {
+        "correct": 0,
+        "count": 8,
+        "joules": 258.903,
+        "joules_per_correct": null
+      },
+      "head": {
+        "correct": 0,
+        "count": 8,
+        "joules": 352.35400000000004,
+        "joules_per_correct": null
+      },
+      "greedy_minus_fixed": {
+        "difference": null,
+        "low": null,
+        "high": null,
+        "draws": 0
+      },
+      "greedy_minus_selector": {
+        "difference": null,
+        "low": null,
+        "high": null,
+        "draws": 0
+      },
+      "greedy_minus_head": {
+        "difference": null,
+        "low": null,
+        "high": null,
+        "draws": 0
+      }
+    }
+  },
+  "selector": {
+    "objective": "energy",
+    "decisions": 24,
+    "context_aware": false,
+    "context_costs_per_token": {},
+    "executed_costs_per_token": {
+      "(0, 0)": {
+        "mean": 1.1232708333333334,
+        "n": 1
+      },
+      "(4, 1)": {
+        "mean": 0.9456909722222222,
+        "n": 6
+      },
+      "(4, 2)": {
+        "mean": 1.1687916666666667,
+        "n": 1
+      },
+      "(4, 4)": {
+        "mean": 1.0786550925925926,
+        "n": 9
+      },
+      "(8, 1)": {
+        "mean": 1.1077979166666667,
+        "n": 5
+      },
+      "(8, 2)": {
+        "mean": 1.1023541666666665,
+        "n": 1
+      },
+      "(8, 4)": {
+        "mean": 1.6609375,
+        "n": 1
+      }
+    },
+    "observed_request_costs_per_token": {},
+    "valid_one_step": {
+      "4": {
+        "matches": 365,
+        "observations": 535,
+        "rate": 0.6822429906542056
+      },
+      "8": {
+        "matches": 132,
+        "observations": 185,
+        "rate": 0.7135135135135136
+      }
+    },
+    "measured_observer_deltas_per_token": {},
+    "decision_rule": "Heuristic: minimum observed cost plus uncertainty penalty. Paid exits scheduled only at depth=8 length=3 after \u22653 calibration pairs. No formal safety guarantee."
+  },
+  "records": [
+    {
+      "task": "gsm8k",
+      "gold": "230",
+      "joules": {
+        "greedy": 54.287,
+        "fixed": 54.424,
+        "selector": 53.917,
+        "head": 58.933
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 21,
+        "4/4": 3,
+        "4/2": 2,
+        "4/1": 4
+      },
+      "selector_action": {
+        "depth": 0,
+        "length": 0
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "57500",
+      "joules": {
+        "greedy": 56.532,
+        "fixed": 53.195,
+        "selector": 49.45,
+        "head": 62.627
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "4/1": 4,
+        "0/0": 13,
+        "4/4": 7,
+        "4/2": 2
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "7",
+      "joules": {
+        "greedy": 59.83,
+        "fixed": 70.905,
+        "selector": 56.102,
+        "head": 63.205
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 16,
+        "4/1": 7,
+        "4/2": 5,
+        "4/4": 4
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 2
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "6",
+      "joules": {
+        "greedy": 53.577,
+        "fixed": 33.973,
+        "selector": 30.628,
+        "head": 34.965
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "4/1": 1,
+        "4/4": 9
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "15",
+      "joules": {
+        "greedy": 61.858,
+        "fixed": 51.011,
+        "selector": 49.34,
+        "head": 59.796
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 14,
+        "4/1": 6,
+        "4/4": 6,
+        "4/2": 2
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 1
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "14",
+      "joules": {
+        "greedy": 59.443,
+        "fixed": 52.149,
+        "selector": 52.913,
+        "head": 60.062
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 8,
+        "4/1": 5,
+        "4/4": 9,
+        "4/2": 2
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 2
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "7",
+      "joules": {
+        "greedy": 57.498,
+        "fixed": 61.671,
+        "selector": 79.725,
+        "head": 58.288
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 25,
+        "4/1": 5,
+        "4/2": 3,
+        "4/4": 2
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "8",
+      "joules": {
+        "greedy": 67.195,
+        "fixed": 42.404,
+        "selector": 46.905,
+        "head": 58.858
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 8,
+        "4/1": 6,
+        "4/4": 6,
+        "4/2": 1
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "26",
+      "joules": {
+        "greedy": 62.151,
+        "fixed": 60.223,
+        "selector": 56.647,
+        "head": 66.353
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 13,
+        "4/1": 13,
+        "4/2": 1,
+        "4/4": 3
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "2",
+      "joules": {
+        "greedy": 54.146,
+        "fixed": 43.438,
+        "selector": 42.852,
+        "head": 51.746
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 3,
+        "4/4": 12,
+        "4/1": 2
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "243",
+      "joules": {
+        "greedy": 62.971,
+        "fixed": 47.792,
+        "selector": 52.862,
+        "head": 62.177
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "4/1": 10,
+        "0/0": 8,
+        "4/4": 6,
+        "4/2": 3
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "16",
+      "joules": {
+        "greedy": 66.555,
+        "fixed": 63.307,
+        "selector": 57.273,
+        "head": 65.159
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "head_actions": {
+        "0/0": 21,
+        "4/1": 7,
+        "4/4": 5,
+        "4/2": 1
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "25",
+      "joules": {
+        "greedy": 68.234,
+        "fixed": 61.51,
+        "selector": 60.957,
+        "head": 70.36
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 27,
+        "4/1": 4,
+        "4/2": 2,
+        "4/4": 4
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "104",
+      "joules": {
+        "greedy": 68.129,
+        "fixed": 42.298,
+        "selector": 45.944,
+        "head": 54.918
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 10,
+        "4/1": 2,
+        "4/4": 9,
+        "4/2": 1
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "109",
+      "joules": {
+        "greedy": 58.919,
+        "fixed": 80.281,
+        "selector": 71.911,
+        "head": 71.477
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 23,
+        "4/1": 5,
+        "4/4": 3,
+        "4/2": 3
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 4
+      }
+    },
+    {
+      "task": "gsm8k",
+      "gold": "80",
+      "joules": {
+        "greedy": 58.363,
+        "fixed": 63.66,
+        "selector": 51.086,
+        "head": 59.485
+      },
+      "correct": {
+        "greedy": true,
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 16,
+        "4/1": 3,
+        "4/4": 6
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "27",
+      "joules": {
+        "greedy": 40.101,
+        "fixed": 32.031,
+        "selector": 33.001,
+        "head": 49.422
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 17,
+        "4/4": 2,
+        "4/1": 3,
+        "4/2": 1
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "4",
+      "joules": {
+        "greedy": 38.164,
+        "fixed": 54.291,
+        "selector": 38.794,
+        "head": 48.593
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 14,
+        "4/1": 5,
+        "4/4": 2,
+        "4/2": 2
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "16",
+      "joules": {
+        "greedy": 48.898,
+        "fixed": 58.494,
+        "selector": 38.502,
+        "head": 56.292
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 12,
+        "4/1": 7,
+        "4/2": 1,
+        "4/4": 2
+      },
+      "selector_action": {
+        "depth": 8,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "64",
+      "joules": {
+        "greedy": 39.301,
+        "fixed": 28.33,
+        "selector": 23.141,
+        "head": 30.387
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "4/4": 7
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "31",
+      "joules": {
+        "greedy": 39.537,
+        "fixed": 39.685,
+        "selector": 30.377,
+        "head": 44.322
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 5,
+        "4/1": 3,
+        "4/4": 7,
+        "4/2": 1
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "720",
+      "joules": {
+        "greedy": 42.181,
+        "fixed": 47.404,
+        "selector": 34.758,
+        "head": 44.61
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 14,
+        "4/4": 2,
+        "4/1": 5,
+        "4/2": 2
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "21",
+      "joules": {
+        "greedy": 44.267,
+        "fixed": 31.816,
+        "selector": 30.018,
+        "head": 42.116
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "4/4": 8,
+        "0/0": 2,
+        "4/1": 1
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    },
+    {
+      "task": "svamp",
+      "gold": "64",
+      "joules": {
+        "greedy": 39.759,
+        "fixed": 41.925,
+        "selector": 30.312,
+        "head": 36.612
+      },
+      "correct": {
+        "greedy": false,
+        "fixed": false,
+        "selector": false,
+        "head": false
+      },
+      "token_match": {
+        "fixed": true,
+        "selector": true,
+        "head": true
+      },
+      "head_actions": {
+        "0/0": 8,
+        "4/4": 5,
+        "4/1": 2
+      },
+      "selector_action": {
+        "depth": 4,
+        "length": 1
+      }
+    }
+  ]
+}

@@ -250,6 +250,10 @@ def generate(
     adaptive_drafts: bool = False,
     log_margins: bool = False,
     graph_drafter=None,
+    choose_draft=None,
+    on_cycle=None,
+    clip_commit=None,
+    halt=None,
 ) -> dict:
     """Generate tokens with optional LayerSkip speculative decoding.
 
@@ -275,6 +279,9 @@ def generate(
         mode:            Observer mode: 'none' | 'selected' | 'all' | 'periodic'.
         period:          Observe every `period` cycles (mode='periodic' only).
         eos:             Stop-token IDs.
+        clip_commit:     Optional (tokens_so_far, committed) -> committed prefix.
+                         Used to end a cycle at the newline after a finished answer.
+        halt:            Optional tokens_so_far -> bool. Stops the request after a cycle.
         adaptive_drafts: Scale draft length per cycle using a rolling acceptance
                          rate window, falling back to ordinary steps when
                          acceptance is very low. Reduces wasted draft passes.
@@ -301,6 +308,8 @@ def generate(
         raise ValueError("Ordinary=(depth=0, drafts=0); speculative depth must be < layers.")
     if len(set(exits)) != len(exits) or any(not 1 <= d < layers for d in exits):
         raise ValueError("exits must be unique layer indices in [1, layers).")
+    if graph_drafter is not None and choose_draft is not None:
+        raise ValueError("choose_draft replaces a fixed depth and cannot use a graph drafter.")
     if graph_drafter is not None:
         if graph_drafter.depth != depth:
             raise ValueError("graph_drafter depth must equal the draft depth.")
@@ -329,11 +338,26 @@ def generate(
     pending = result.logits[:, -1].argmax(-1).reshape(1, 1)
     tokens.append(pending[0, 0].item())
     del result
+    if halt is not None and halt(tokens):
+        return dict(tokens=tokens, cycles=cycles, feedback_statistics=state.export())
 
     # ── Decode loop ───────────────────────────────────────────────────────
     while len(tokens) < limit and tokens[-1] not in eos:
         context = prompt + tokens
         _check_cache(cache, layers, len(context) - 1)
+        stop_layer = None
+        if choose_draft is not None:
+            choice = choose_draft(pending, cache)
+            if len(choice) == 2:
+                depth, drafts = choice
+            elif len(choice) == 3:
+                depth, drafts, stop_layer = choice
+            else:
+                raise ValueError("choose_draft must return a depth and a draft length")
+            if (depth == 0) != (drafts == 0) or not 0 <= depth < layers or drafts < 0:
+                raise ValueError("choose_draft returned an invalid action")
+            if stop_layer is not None and (stop_layer <= depth or stop_layer > layers):
+                raise ValueError("the check must run past the draft exit and stop by the last layer")
 
         # Number of draft tokens this cycle.
         k = (
@@ -350,9 +374,11 @@ def generate(
         proposed_tensors: list[torch.Tensor] = []
         with _observe(model, requested) as collected:
             if k == 0:
-                # Ordinary step: single full-model pass.
-                result = forward(model, pending, cache)
+                # Ordinary step: single full-model pass, optionally stopping early.
+                result = forward(model, pending, cache, stop_layer=stop_layer)
             elif graph_drafter is not None:
+                if stop_layer is not None:
+                    raise ValueError("a graph drafter cannot stop the check early")
                 proposed_tensors, cache, query = graph_drafter.draft(cache, pending, k, eos_t)
                 block = torch.cat([pending, *proposed_tensors], dim=1)
                 result = forward_remainder(model, block, cache, depth, query)
@@ -370,7 +396,9 @@ def generate(
                     if eos_t is not None and torch.isin(draft_input, eos_t).item():
                         break
                 block = torch.cat([pending, *proposed_tensors], dim=1)
-                result = forward_remainder(model, block, cache, depth, query)
+                result = forward_remainder(
+                    model, block, cache, depth, query, stop_layer=stop_layer
+                )
 
         # ── Cycle output: one GPU sync per cycle, not per token ───────────
         target_ids = result.logits.argmax(-1)
@@ -397,6 +425,10 @@ def generate(
             if tok in eos:
                 committed = committed[: i + 1]
                 break
+        if clip_commit is not None:
+            clipped = clip_commit(tokens, committed)
+            if clipped:
+                committed = list(clipped)
 
         # ── Feedback and state update ─────────────────────────────────────
         predictions = {
@@ -425,6 +457,9 @@ def generate(
 
         cycles.append({
             "context_ids":   context,
+            "chosen_depth":  depth,
+            "chosen_drafts": drafts,
+            "chosen_stop":   layers if stop_layer is None else stop_layer,
             "draft":         proposed,
             "target":        target,
             "accepted":      matched,
@@ -435,6 +470,10 @@ def generate(
                 str(n): min(n, matched) for n in range(1, len(proposed) + 1)
             },
         })
+        if on_cycle is not None:
+            on_cycle(cycles[-1])
+        if halt is not None and halt(tokens):
+            break
 
     return dict(tokens=tokens, cycles=cycles, feedback_statistics=state.export())
 

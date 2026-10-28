@@ -1,0 +1,9 @@
+{
+  "status": "not_measured",
+  "gpu_visible": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "required": "NVIDIA GeForce RTX 3050",
+  "reason": "The RTX 3050 is not in this machine. The 4060 profile and network are not a 3050 result.",
+  "copied_4060_profile": false,
+  "copied_4060_network": false,
+  "command": "python -m hardware_aware_selective_feedback.pelm_second_gpu"
+}
