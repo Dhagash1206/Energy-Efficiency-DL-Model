@@ -17,3 +17,4 @@ layerskip/
 # Tool caches
 .ruff_cache/
 .pytest_cache/
+PROJECT_EXPLANATION.md

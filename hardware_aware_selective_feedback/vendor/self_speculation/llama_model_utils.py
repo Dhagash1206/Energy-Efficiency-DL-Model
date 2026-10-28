@@ -23,6 +23,7 @@ once the crop-in-place API stabilises in transformers.
 """
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
@@ -120,13 +121,18 @@ def _run_decoder(
     deprecated padding_mask kwarg.
     """
     cache = kwargs["past_key_value"]
+    kwargs.pop("past_key_value")
     kwargs.pop("padding_mask", None)
     positions = kwargs["position_ids"]
     if "position_embeddings" not in kwargs:
         kwargs["position_embeddings"] = model.model.rotary_emb(hidden_states, positions)
     kwargs["cache_position"] = positions[0]
+    if "past_key_values" in inspect.signature(layer.forward).parameters:
+        kwargs["past_key_values"] = cache
+    else:
+        kwargs["past_key_value"] = cache
     outputs = layer(hidden_states, **kwargs)
-    return outputs[0], cache
+    return (outputs[0] if isinstance(outputs, tuple) else outputs), cache
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +154,27 @@ def crop_past_key_values(
             break
         cropped.append((k[:, :, :maximum_length, :], v[:, :, :maximum_length, :]))
     return tuple(cropped)
+
+
+def _dynamic_cache_from_legacy(
+    past_key_values: Optional[KVCache],
+) -> transformers.cache_utils.DynamicCache:
+    """Create a DynamicCache across the Transformers 4.50 and 5.x APIs."""
+    cache_type = transformers.cache_utils.DynamicCache
+    from_legacy = getattr(cache_type, "from_legacy_cache", None)
+    if from_legacy is not None:
+        return from_legacy(past_key_values)
+    return cache_type(ddp_cache_data=past_key_values)
+
+
+def _dynamic_cache_to_legacy(
+    cache: transformers.cache_utils.DynamicCache,
+) -> KVCache:
+    """Return legacy K/V tuples across the Transformers 4.50 and 5.x APIs."""
+    to_legacy = getattr(cache, "to_legacy_cache", None)
+    if to_legacy is not None:
+        return to_legacy()
+    return tuple((layer.keys, layer.values) for layer in cache.layers)
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +206,7 @@ def forward(
     batch, seq = input_ids.shape
     past_len = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _dynamic_cache_from_legacy(past_key_values)
     position_ids = torch.arange(past_len, seq + past_len, dtype=torch.long, device=device)
     position_ids = position_ids.unsqueeze(0)
 
@@ -199,7 +226,7 @@ def forward(
             padding_mask=None,
         )
 
-    cache = cache.to_legacy_cache()
+    cache = _dynamic_cache_to_legacy(cache)
     if logits_to_keep:
         hidden = hidden[:, -logits_to_keep:]
     logits = model.lm_head(model.model.norm(hidden))
@@ -237,7 +264,7 @@ def forward_early(
     batch, seq = input_ids.shape
     past_len = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _dynamic_cache_from_legacy(past_key_values)
     position_ids = torch.arange(past_len, seq + past_len, dtype=torch.long, device=device)
     position_ids = position_ids.unsqueeze(0)
 
@@ -257,7 +284,7 @@ def forward_early(
             padding_mask=None,
         )
 
-    cache = cache.to_legacy_cache()
+    cache = _dynamic_cache_to_legacy(cache)
 
     # Accumulate pre-exit hidden states for the remainder block.
     exit_query_cache = (
@@ -329,7 +356,7 @@ def forward_remainder(
 
     total_seq = num_pending + draft_past_len   # full sequence length after this step
 
-    cache = transformers.cache_utils.DynamicCache.from_legacy_cache(past_key_values)
+    cache = _dynamic_cache_from_legacy(past_key_values)
     hidden = model.model.embed_tokens(input_ids)
 
     # Position IDs span [full_past_len, full_past_len + seq).
@@ -383,7 +410,7 @@ def forward_remainder(
             )
             full_hidden = hidden  # subsequent upper layers reuse output directly
 
-    cache = cache.to_legacy_cache()
+    cache = _dynamic_cache_to_legacy(cache)
     logits = model.lm_head(model.model.norm(hidden))
     return ForwardResult(logits=logits, past_key_values=cache,
                          exit_query_cache=exit_query_cache)
