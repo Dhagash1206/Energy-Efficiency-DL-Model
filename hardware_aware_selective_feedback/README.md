@@ -151,4 +151,22 @@ SHA-256 verification. Pilot reports are written to `results/pilot/`.
 
 `results/latest.*` is the default `run.py` output. Earlier runs are grouped by
 experiment: `smoke/`, `fp16-run/`, `fp16-100tokens/`, `fp16-200tokens/`,
-`fixed-sweep/`, `engine-optimization/`, `memory-optimization/` and `pilot/`.
+`fixed-sweep/`, `engine-optimization/`, `memory-optimization/`, `benchmark/`
+and `pilot/`.
+
+`benchmark/rtx3050-fp32-energy-safe.*` is the current reference benchmark:
+FP32 on an RTX 3050 with NVML energy, 8 held-out prompts x 2 repeats, 16 tokens,
+133/133 requests matching native greedy. Against ordinary decoding, the adaptive
+policy measured 3.48 vs 4.39 J/token (20.7% less GPU energy) and 75.5 vs
+112.3 ms/token (32.8% lower latency, 1.49x throughput). This is a small
+feasibility sample; repeat it with more prompts and longer outputs.
+
+## Greedy mismatches
+
+`run.py` now records a greedy-output mismatch instead of stopping: the report
+lists it under `mismatches`, the configuration is excluded from adaptive and
+bandit selection (`excluded_configurations`), and the policy table shows a
+mismatch count. Use `--stop-on-mismatch` for the old abort behaviour. To find
+out whether a mismatch is an FP16 near-tie or a real divergence:
+
+    python -m hardware_aware_selective_feedback.diagnose_mismatch --report path/to/report.json

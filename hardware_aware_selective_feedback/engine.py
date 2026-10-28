@@ -79,8 +79,11 @@ def _observe(
     def _make_hook(depth: int):
         def _hook(module, args, output):
             hidden = output[0] if isinstance(output, tuple) else output
+            normalized = model.model.norm(hidden.float()).to(
+                model.lm_head.weight.dtype
+            )
             chunks[depth].append(
-                model.lm_head(model.model.norm(hidden.float())).argmax(-1)
+                model.lm_head(normalized).argmax(-1)
             )
         return _hook
 

@@ -27,7 +27,7 @@ All tests:
 One file:
   python -m pytest -q hardware_aware_selective_feedback/tests/test_engine.py
 
-Expected: 58 passed.
+Expected: 62 passed.
 
 
 3. SYNTHETIC DEMO (no model, fictional numbers)
@@ -69,6 +69,13 @@ Fixed-setting energy sweep:
   --context-selector       per prompt-type selector costs (run.py only)
   --batch-sizes 2 4 8      batched ordinary-decoding baseline (sweep.py only)
   --cuda-graph-drafts      PROTOTYPE static-cache CUDA Graph drafts (CUDA only)
+  --stop-on-mismatch       abort on first greedy mismatch (default: record + exclude)
+
+Diagnose greedy mismatches recorded in a report:
+  python -m hardware_aware_selective_feedback.diagnose_mismatch --report path/to/report.json
+
+Larger FP16 run (the one that stopped at depth=4, length=3):
+  python -m hardware_aware_selective_feedback.run --device cuda --precision fp16 --objective energy --calibration 8 --test 16 --tokens 64 --repeats 3 --output hardware_aware_selective_feedback/results/fp16-run/fp16-large.json
   --gpu-clock-mhz 1500     lock GPU clock (admin/root, CUDA only)
   --gpu-power-limit-w 50   cap GPU power (admin/root, CUDA only)
   --quantize int8|int4     bitsandbytes weights (run.py, CUDA only)

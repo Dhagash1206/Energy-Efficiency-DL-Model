@@ -110,10 +110,39 @@ Not done: batched SPECULATIVE decoding. Each prompt accepts a different
   batching alone beats speculation on the RTX 3050.
 
 
+RTX 3050 BENCHMARK (Vinanth, commit 610de1e)
+--------------------------------------------
+Report: results/benchmark/rtx3050-fp32-energy-safe.md / .json
+Setup:  FP32, NVML GPU energy, 2 calibration + 4 test prompts per dataset,
+        2 repeats, 16 max tokens, 2 observer pairs. 133 requests
+        (112 test + 21 calibration), 133/133 match native greedy.
+  | Policy            | ms/token | J/token  |
+  | Ordinary          | 112.348  | 4.392223 |
+  | Fixed speculative |  86.302  | 3.916281 |
+  | Never observe     |  81.016  | 3.741449 |
+  | Selected observe  |  89.186  | 4.181785 |
+  | Always observe    |  91.540  | 4.240984 |
+  | Bandit            |  84.205  | 3.640500 |
+  | Adaptive          |  75.542  | 3.482609 |
+Adaptive vs ordinary:
+  Energy:     1 - 3.482609 / 4.392223 = 1 - 0.7929 = 20.7% lower
+  Latency:    1 - 75.542 / 112.348    = 1 - 0.6724 = 32.8% lower
+  Throughput: 112.348 / 75.542        = 1.49x higher (not 1.32x)
+Small feasibility sample; repeat with more prompts and 64 tokens.
+
+FP16: the larger run (8 calibration, 16 test, 3 repeats, 64 tokens) stopped
+at 21/32 test groups on a greedy mismatch at depth=4, length=3. run.py now
+records mismatches and excludes that configuration instead of stopping
+(--stop-on-mismatch restores the old abort). Rerun it, then diagnose:
+  python -m hardware_aware_selective_feedback.diagnose_mismatch --report <report.json>
+
+
 TESTS
 -----
   python -m pytest -q hardware_aware_selective_feedback prototype
-Result: 58 passed, 0 failed.
+Result: 62 passed, 0 failed.
+  tests/test_run.py            mismatch recorded/excluded end-to-end; --stop-on-mismatch
+  tests/test_diagnose_mismatch.py  cases read from run/sweep reports
 New / changed:
   tests/test_engine.py         adaptive thresholds and fallback; batched_greedy
   tests/test_selector.py       ContextSelectorTests (3); the 5 old tests were

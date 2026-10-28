@@ -1,12 +1,16 @@
-"""Diagnose the FP16 mismatch on gsm8k-test-880 (token 21) and
-gsm8k-test-411 (token 93).
+"""Diagnose greedy-output mismatches of speculative decoding.
 
 Runs each prompt in three modes and reports the top-2 logit margin at the
 diverging token so we can tell whether the mismatch is a near-tie (fixable
 with FP32 projection) or a structural error (different forward paths).
 
+Without arguments it checks the two known FP16 cases (gsm8k-test-880 token 21,
+gsm8k-test-411 token 93). With --report it reads the "mismatches" list of a
+run.py or sweep.py JSON report and rebuilds the same prompt set.
+
 Usage:
     python -m hardware_aware_selective_feedback.diagnose_mismatch
+    python -m hardware_aware_selective_feedback.diagnose_mismatch --report path/to/report.json
 """
 import os
 from pathlib import Path
@@ -19,11 +23,12 @@ if (CACHE / "token").exists() and "HF_TOKEN" not in os.environ:
 os.environ["HF_HUB_DISABLE_XET"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+import argparse
 import json
 import torch
 from transformers import AutoTokenizer, LlamaForCausalLM
 
-from hardware_aware_selective_feedback.run import load_model, load_prompts, REVISION
+from hardware_aware_selective_feedback.run import MAX_PROMPT_TOKENS, load_model, load_prompts
 from hardware_aware_selective_feedback.engine import native_greedy, generate
 
 # ── prompts that diverge ────────────────────────────────────────────────────
@@ -32,6 +37,23 @@ CASES = [
     {"prompt_id": "gsm8k-test-411",  "mismatch_token": 93,  "depth": 4, "draft": 1},
 ]
 TOKEN_LIMIT = 100
+DEFAULT_PROMPT_SET = {"calibration": 1, "test": 4, "seed": 44}  # the sweep that found CASES
+
+
+def cases_from_report(report_path: Path) -> tuple[list[dict], dict, int, str]:
+    """Read unique mismatches and the prompt-set arguments from a run/sweep report."""
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    arguments = report["arguments"]
+    # sweep.py loads one calibration prompt per dataset; run.py records its own count.
+    prompt_set = {"calibration": arguments.get("calibration", 1),
+                  "test": arguments["test"], "seed": arguments["seed"]}
+    unique = {}
+    for item in report.get("mismatches", []):
+        key = (item["prompt_id"], item["depth"], item["draft_length"])
+        unique.setdefault(key, {"prompt_id": item["prompt_id"],
+                                "mismatch_token": item["token_index"],
+                                "depth": item["depth"], "draft": item["draft_length"]})
+    return list(unique.values()), prompt_set, arguments["tokens"], arguments["precision"]
 
 
 def top2_margin_at(logits_fp32: torch.Tensor, pos: int) -> dict:
@@ -102,21 +124,36 @@ def run_fp32_reference(model_fp16, prompt_ids: list, limit: int, eos) -> list:
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--report", type=Path,
+                        help="run.py or sweep.py JSON report whose mismatches to diagnose")
+    args = parser.parse_args()
+    if args.report:
+        cases, prompt_set, token_limit, precision = cases_from_report(args.report)
+        if not cases:
+            print(f"No mismatches recorded in {args.report}")
+            return
+    else:
+        cases, prompt_set, token_limit, precision = CASES, DEFAULT_PROMPT_SET, TOKEN_LIMIT, "fp16"
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Device: {device}")
-    model, tokenizer, rev = load_model(device, "fp16", attn="auto")
+    if precision == "fp16" and device != "cuda":
+        raise SystemExit("FP16 diagnosis needs a CUDA GPU.")
+    print(f"Device: {device}  precision: {precision}")
+    model, tokenizer, rev = load_model(device, precision, attn="auto")
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     print(f"Model loaded  revision={rev}\n")
 
-    # Load the same prompt set used in the sweep (seed=44).
-    _, heldout, _ = load_prompts(1, 4, 44)
+    # Rebuild the prompt set the mismatching run used (calibration prompts too).
+    calibration, heldout, _ = load_prompts(prompt_set["calibration"], prompt_set["test"],
+                                           prompt_set["seed"])
     prompt_map = {}
-    for p in heldout:
-        ids = tokenizer.encode(p["text"], add_special_tokens=True)[:192]
+    for p in calibration + heldout:
+        ids = tokenizer.encode(p["text"], add_special_tokens=True)[:MAX_PROMPT_TOKENS]
         prompt_map[p["id"]] = ids
 
     results = {}
-    for case in CASES:
+    for case in cases:
         pid   = case["prompt_id"]
         mpos  = case["mismatch_token"]
         depth = case["depth"]
@@ -132,13 +169,13 @@ def main():
         print(f"Prompt length: {len(prompt_ids)} tokens")
 
         # 1. FP16 greedy reference (current native_greedy with float() fix).
-        ref_fp16 = native_greedy(model, prompt_ids, TOKEN_LIMIT, eos)
+        ref_fp16 = native_greedy(model, prompt_ids, token_limit, eos)
         print(f"  FP16 greedy  token[{mpos}] = {ref_fp16[mpos] if len(ref_fp16) > mpos else 'EOS'}")
 
         # 2. FP16 LayerSkip with margin logging.
-        ls_fp16  = run_fp16_with_margins(model, prompt_ids, TOKEN_LIMIT,
+        ls_fp16  = run_fp16_with_margins(model, prompt_ids, token_limit,
                                           depth, draft, mpos, eos)
-        match_fp16 = (ls_fp16["tokens"][:TOKEN_LIMIT] == ref_fp16[:TOKEN_LIMIT])
+        match_fp16 = (ls_fp16["tokens"][:token_limit] == ref_fp16[:token_limit])
         print(f"  LayerSkip FP16  token[{mpos}] = {ls_fp16['mismatch_token_id']}  "
               f"match={match_fp16}")
         if ls_fp16["cycle_margin_at_mismatch"] is not None:
@@ -148,12 +185,12 @@ def main():
             print(f"  (margin not captured at token {mpos})")
 
         # 3. FP32 reference — authoritative near-tie resolver.
-        ref_fp32 = run_fp32_reference(model, prompt_ids, TOKEN_LIMIT, eos)
+        ref_fp32 = run_fp32_reference(model, prompt_ids, token_limit, eos)
         print(f"  FP32 greedy  token[{mpos}] = {ref_fp32[mpos] if len(ref_fp32) > mpos else 'EOS'}")
 
         # 4. Agreement check with FP32 as ground truth.
-        agree_fp16_vs_fp32 = (ref_fp16[:TOKEN_LIMIT] == ref_fp32[:TOKEN_LIMIT])
-        agree_ls_vs_fp32   = (ls_fp16["tokens"][:TOKEN_LIMIT] == ref_fp32[:TOKEN_LIMIT])
+        agree_fp16_vs_fp32 = (ref_fp16[:token_limit] == ref_fp32[:token_limit])
+        agree_ls_vs_fp32   = (ls_fp16["tokens"][:token_limit] == ref_fp32[:token_limit])
         print(f"  FP16-greedy agrees with FP32: {agree_fp16_vs_fp32}")
         print(f"  LayerSkip   agrees with FP32: {agree_ls_vs_fp32}")
 
