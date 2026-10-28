@@ -1,8 +1,10 @@
 """Diagnose greedy-output mismatches of speculative decoding.
 
 Runs each prompt in three modes and reports the top-2 logit margin at the
-diverging token so we can tell whether the mismatch is a near-tie (fixable
-with FP32 projection) or a structural error (different forward paths).
+diverging token so we can tell whether the mismatch is an FP16 near-tie or a
+structural error. The FP16 reference is same-code ordinary decoding; the FP32
+reference runs a genuine FP32 copy of the model on the CPU (upcasting FP16
+logits before argmax cannot change the winner, so it is not a reference).
 
 Without arguments it checks the two known FP16 cases (gsm8k-test-880 token 21,
 gsm8k-test-411 token 93). With --report it reads the "mismatches" list of a
@@ -29,7 +31,7 @@ import torch
 from transformers import AutoTokenizer, LlamaForCausalLM
 
 from hardware_aware_selective_feedback.run import MAX_PROMPT_TOKENS, load_model, load_prompts
-from hardware_aware_selective_feedback.engine import native_greedy, generate
+from hardware_aware_selective_feedback.engine import generate, reference_greedy
 
 # ── prompts that diverge ────────────────────────────────────────────────────
 CASES = [
@@ -105,22 +107,9 @@ def run_fp16_with_margins(model, prompt_ids: list, limit: int,
     }
 
 
-@torch.inference_mode()
-def run_fp32_reference(model_fp16, prompt_ids: list, limit: int, eos) -> list:
-    """Run native_greedy forcing FP32 logits at every step."""
-    ids = torch.tensor([prompt_ids], device=model_fp16.device)
-    tokens, cache = [], None
-    eos_set = set(eos)
-    for _ in range(limit):
-        out = model_fp16(ids, past_key_values=cache, use_cache=True)
-        cache = out.past_key_values
-        # FP32 argmax — removes FP16 near-tie ambiguity.
-        ids = out.logits[:, -1].float().argmax(-1).reshape(1, 1)
-        tok = ids[0, 0].item()
-        tokens.append(tok)
-        if tok in eos_set:
-            break
-    return tokens
+def run_fp32_reference(model_fp32, prompt_ids: list, limit: int, eos) -> list:
+    """Same-code greedy decoding with an FP32 model: every layer computes in FP32."""
+    return reference_greedy(model_fp32, prompt_ids, limit, eos)
 
 
 def main():
@@ -141,6 +130,8 @@ def main():
         raise SystemExit("FP16 diagnosis needs a CUDA GPU.")
     print(f"Device: {device}  precision: {precision}")
     model, tokenizer, rev = load_model(device, precision, attn="auto")
+    # FP32 on CPU keeps GPU memory free; slow, but diagnosis runs offline.
+    model_fp32 = model if precision == "fp32" else load_model("cpu", "fp32", attn="eager")[0]
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     print(f"Model loaded  revision={rev}\n")
 
@@ -168,8 +159,8 @@ def main():
         print(f"Prompt: {pid}  |  mismatch at token {mpos}")
         print(f"Prompt length: {len(prompt_ids)} tokens")
 
-        # 1. FP16 greedy reference (current native_greedy with float() fix).
-        ref_fp16 = native_greedy(model, prompt_ids, token_limit, eos)
+        # 1. FP16 reference: ordinary decoding through the same vendored code.
+        ref_fp16 = reference_greedy(model, prompt_ids, token_limit, eos)
         print(f"  FP16 greedy  token[{mpos}] = {ref_fp16[mpos] if len(ref_fp16) > mpos else 'EOS'}")
 
         # 2. FP16 LayerSkip with margin logging.
@@ -185,7 +176,7 @@ def main():
             print(f"  (margin not captured at token {mpos})")
 
         # 3. FP32 reference — authoritative near-tie resolver.
-        ref_fp32 = run_fp32_reference(model, prompt_ids, token_limit, eos)
+        ref_fp32 = run_fp32_reference(model_fp32, prompt_ids, token_limit, eos)
         print(f"  FP32 greedy  token[{mpos}] = {ref_fp32[mpos] if len(ref_fp32) > mpos else 'EOS'}")
 
         # 4. Agreement check with FP32 as ground truth.

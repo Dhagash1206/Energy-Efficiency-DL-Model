@@ -47,6 +47,27 @@ class MeasurementTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 meter.run(lambda: path.write_text("1100"))
 
+    def test_short_requests_repeat_until_window_and_report_per_request_mean(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "counter.txt"
+            path.write_text("0")
+            meter = Meter("cpu", energy_source="file", counter_file=path,
+                          energy_scope="whole_device")
+            def work():
+                path.write_text(str(float(path.read_text()) + 2.0))  # 2 J per request
+                return [7, 8]
+            output, measured = meter.run(work, min_seconds=0.05)
+            self.assertEqual(output, [7, 8])
+            self.assertGreater(measured["measure_repetitions"], 1)
+            self.assertAlmostEqual(measured["energy_j"], 2.0)
+            self.assertGreaterEqual(measured["measure_window_s"], 0.05)
+
+    def test_repeated_measurement_rejects_changing_output(self):
+        meter = Meter("cpu", energy_source="none")
+        outputs = iter(range(1000))
+        with self.assertRaisesRegex(RuntimeError, "different output"):
+            meter.run(lambda: next(outputs), min_seconds=0.05)
+
     def test_missing_counter_is_null_with_reason(self):
         meter = Meter("cpu", energy_source="none")
         _, measured = meter.run(lambda: 1)

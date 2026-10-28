@@ -63,10 +63,12 @@ class Selector:
 
     def __init__(
         self,
-        depths: tuple[int, ...] = (4, 8, 12),
-        lengths: tuple[int, ...] = (1, 3),
+        # The RTX 3050 sweeps found depths 3-4 cheapest; 6 and 8 keep deeper options.
+        depths: tuple[int, ...] = (3, 4, 6, 8),
+        lengths: tuple[int, ...] = (1, 2, 3),
         objective: str = "latency",
         context_aware: bool = False,
+        exploration: float = 0.5,
     ) -> None:
         if objective not in ("latency", "energy"):
             raise ValueError("Objective must be 'latency' or 'energy'.")
@@ -75,6 +77,7 @@ class Selector:
             Action(d, k) for d in depths for k in lengths
         )
         self.objective = objective
+        self.exploration = exploration
         # When True, arms are scored with costs from the same prompt context
         # (e.g. dataset and prompt length) once that context has enough samples.
         self.context_aware = context_aware
@@ -168,14 +171,12 @@ class Selector:
         arm = min(self.arms, key=lambda candidate: self._arm_score(candidate, context))
         self.decisions += 1
 
-        # Observer exits are only offered when running depth=8, length=3 and
-        # the overhead has been calibrated (>= 3 pairs) and is cost-justified.
-        if arm.key != (8, 3) or remaining_requests <= 1:
+        # Paid exits are offered for whichever speculative arm wins, once the
+        # overhead has been calibrated (>= 3 pairs) and is cost-justified.
+        if not arm.depth or remaining_requests <= 1:
             return arm
-
-        selected_exits = (4,)
-        all_exits      = (4, 12)
-        if not set(all_exits).issubset(self.depths):
+        selected_exits, all_exits = self.observer_exits(arm.depth)
+        if not selected_exits:
             return arm
 
         best_cost = min((mean(v) for v in self._costs.values() if v), default=1.0)
@@ -193,6 +194,17 @@ class Selector:
         if _justified(selected_exits, "selected"):
             return Action(arm.depth, arm.length, selected_exits)
         return arm
+
+    def observer_exits(self, depth: int) -> tuple[tuple[int, ...], tuple[int, ...]]:
+        """(selected, all) exits for a draft depth: the nearest other candidate
+        depth, and every other candidate depth."""
+        others = sorted((d for d in self.depths if d != depth), key=lambda d: (abs(d - depth), d))
+        return tuple(others[:1]), tuple(sorted(others))
+
+    def best_speculative(self) -> Optional[Action]:
+        """Cheapest executed speculative arm so far, or None before any runs."""
+        executed = [arm for arm in self.arms if arm.depth and self._costs[arm.key]]
+        return min(executed, key=lambda arm: mean(self._costs[arm.key]), default=None)
 
     def summary(self) -> dict:
         """Return a JSON-serialisable summary of accumulated statistics."""
@@ -221,9 +233,9 @@ class Selector:
                 for mode, v in self._observer_cost.items() if v
             },
             "decision_rule": (
-                "Heuristic: minimum observed cost plus uncertainty penalty. "
-                "Paid exits scheduled only at depth=8 length=3 after ≥3 calibration pairs. "
-                "No formal safety guarantee."
+                "Lower confidence bound on executed cost per token, so every arm is "
+                "revisited as decisions accumulate. Paid exits may be scheduled for the "
+                "chosen speculative arm after >=3 calibration pairs. No formal safety guarantee."
             ),
         }
 
@@ -235,21 +247,35 @@ class Selector:
         p = (successes + 1) / (n + 2)
         return sqrt(p * (1 - p) / (n + 3))
 
-    def _arm_score(self, arm: Action, context: Optional[str] = None) -> float:
-        """Lower score = preferred arm.  Returns -inf for unexecuted arms."""
+    def _arm_values(self, arm: Action, context: Optional[str]) -> list[float]:
         values = self._costs[arm.key]
-        if not values:
-            return float("-inf")  # force each arm to execute at least once
         if self.context_aware and context is not None:
             context_values = self._context_costs[context][arm.key]
             # Two samples give a usable noise estimate; until then the
             # global costs act as the prior for this context.
             if len(context_values) >= 2:
                 values = context_values
+        return values
+
+    def _arm_score(self, arm: Action, context: Optional[str] = None) -> float:
+        """Lower confidence bound on cost per token; lower = preferred.
+
+        Optimism under uncertainty: an arm with few samples gets a bonus that
+        grows with the total number of samples, so one unlucky measurement
+        cannot exclude it forever. Returns -inf for unexecuted arms.
+        """
+        values = self._arm_values(arm, context)
+        if not values:
+            return float("-inf")  # force each arm to execute at least once
+        samples = [self._arm_values(other, context) for other in self.arms]
+        samples = [v for v in samples if v]
+        total = sum(len(v) for v in samples)
+        # A shared scale keeps the bonus comparable between cheap and costly arms.
+        scale = mean(mean(v) for v in samples)
         avg   = mean(values)
         noise = stdev(values) / sqrt(len(values)) if len(values) > 1 else avg * 0.10
-        uncertainty_penalty = avg * self._uncertainty(arm.depth) * 0.10 if arm.depth else 0.0
-        return avg + noise + uncertainty_penalty
+        bonus = self.exploration * scale * sqrt(log(total + 1) / len(values))
+        return avg - noise - bonus
 
 
 # ---------------------------------------------------------------------------

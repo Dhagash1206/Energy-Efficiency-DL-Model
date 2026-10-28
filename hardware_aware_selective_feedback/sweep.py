@@ -4,7 +4,9 @@ Each prompt is run with every configured action in randomised order.  The
 ordinary greedy baseline is included automatically as the reference.  All
 comparisons are paired (same prompt, same repeat) to cancel prompt-level
 variance.  A comparison is only marked valid when both the greedy baseline
-and the candidate produce token-identical output to native_greedy.
+and the candidate produce token-identical output to reference_greedy, which
+uses the same vendored forward code as speculative decoding. Paired deltas are
+per generated token, so a configuration emitting more tokens is not penalised.
 
 Usage:
     python -m hardware_aware_selective_feedback.sweep \\
@@ -24,10 +26,11 @@ from pathlib import Path
 
 import torch
 
-from .engine import batched_greedy, native_greedy
+from .engine import batched_greedy, native_greedy, reference_greedy
 from .gpu_clocks import pinned_gpu
 from .measurement import Meter
-from .run import MAX_PROMPT_TOKENS, build_graph_drafters, load_model, load_prompts, row, run_one
+from .run import (MAX_PROMPT_TOKENS, build_graph_drafters, load_model, load_prompts,
+                  paired_per_token_delta, row, run_one, warm_up)
 from .selector import Action
 
 
@@ -42,8 +45,8 @@ def summarize(rows: list[dict], actions: list[Action]) -> list[dict]:
     if any row lacks generated tokens or energy.
 
     A valid_comparison entry is True only when:
-      - the ordinary greedy baseline matched native_greedy for all pairs, AND
-      - the candidate itself matched native_greedy for all pairs.
+      - the ordinary greedy baseline matched reference_greedy for all pairs, AND
+      - the candidate itself matched reference_greedy for all pairs.
     """
     # Group rows by action key and (prompt_id, repeat) pair.
     grouped: dict[tuple, dict] = defaultdict(dict)
@@ -72,7 +75,7 @@ def summarize(rows: list[dict], actions: list[Action]) -> list[dict]:
         group  = list(records.values())
         tokens = sum(r["generated_tokens"] for r in group)
         paired = [
-            r["energy_j"] - ordinary[r["prompt_id"], r["repeat"]]["energy_j"]
+            paired_per_token_delta(r, ordinary[r["prompt_id"], r["repeat"]], "energy_j")
             for r in group
         ]
         summary.append({
@@ -81,8 +84,8 @@ def summarize(rows: list[dict], actions: list[Action]) -> list[dict]:
             "requests":                    len(group),
             "energy_j_per_token":          sum(r["energy_j"] for r in group) / tokens,
             "latency_s_per_token":         sum(r["latency_s"] for r in group) / tokens,
-            "median_paired_energy_delta_j": statistics.median(paired),
-            "mean_paired_energy_delta_j":   statistics.mean(paired),
+            "median_paired_energy_delta_j_per_token": statistics.median(paired),
+            "mean_paired_energy_delta_j_per_token":   statistics.mean(paired),
             "greedy_matches":              all(r["greedy_match"] for r in group),
             "valid_comparison":            baseline_valid and all(r["greedy_match"] for r in group),
         })
@@ -90,19 +93,22 @@ def summarize(rows: list[dict], actions: list[Action]) -> list[dict]:
 
 
 def measure_batched(model, meter, prompts: list[dict], references: dict, batch_size: int,
-                    token_limit: int, eos: tuple, repeats: int, pad_id: int = 0) -> dict:
+                    token_limit: int, eos: tuple, repeats: int, pad_id: int = 0,
+                    min_seconds: float = 0.0) -> dict:
     """Measure batched ordinary decoding as a baseline against per-request decoding.
 
     Prompts are processed in consecutive groups of ``batch_size`` (the last
     group may be smaller). Energy and latency are per batch, so only totals
     per generated token are comparable with the per-request sweep rows.
+    ``references`` should come from native_greedy: batching uses the Hugging
+    Face forward, so that is the same-code comparison here.
     """
     batches = []
     for repeat in range(repeats):
         for start in range(0, len(prompts), batch_size):
             group = prompts[start:start + batch_size]
             outputs, measured = meter.run(lambda group=group: batched_greedy(
-                model, [p["ids"] for p in group], token_limit, eos, pad_id))
+                model, [p["ids"] for p in group], token_limit, eos, pad_id), min_seconds)
             mismatched = [p["id"] for p, out in zip(group, outputs, strict=True)
                           if out != references[p["id"]]]
             batches.append({
@@ -153,10 +159,13 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
     rows: list[dict]  = []
     mismatches: list[dict] = []
     references: dict[str, list[int]] = {}
+    native_references: dict[str, list[int]] = {}
+    warm_up(model, heldout[0]["ids"], args.tokens, actions, eos, drafters, args.warmup)
 
     for index, prompt in enumerate(heldout):
-        reference = native_greedy(model, prompt["ids"], args.tokens, eos)
+        reference = reference_greedy(model, prompt["ids"], args.tokens, eos)
         references[prompt["id"]] = reference
+        native_references[prompt["id"]] = native_greedy(model, prompt["ids"], args.tokens, eos)
 
         for repeat in range(args.repeats):
             order = actions.copy()
@@ -165,7 +174,8 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
             for position, action in enumerate(order):
                 output, measured = run_one(model, meter, prompt["ids"], args.tokens,
                                            action, eos, adaptive_drafts=args.adaptive_drafts,
-                                           graph_drafters=drafters)
+                                           graph_drafters=drafters,
+                                           min_seconds=args.min_measure_seconds)
                 matched = output["tokens"] == reference
 
                 if not matched:
@@ -192,8 +202,8 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
         print(f"Completed prompt {index + 1}/{len(heldout)}", flush=True)
 
     pad_id = next((t for t in (tokenizer.pad_token_id, tokenizer.eos_token_id) if t is not None), 0)
-    batched = [measure_batched(model, meter, heldout, references, size, args.tokens,
-                               eos, args.repeats, pad_id)
+    batched = [measure_batched(model, meter, heldout, native_references, size, args.tokens,
+                               eos, args.repeats, pad_id, args.min_measure_seconds)
                for size in args.batch_sizes]
 
     # ── Report ────────────────────────────────────────────────────────────
@@ -208,6 +218,8 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
         "arguments":        {**vars(args), "output": str(args.output)},
         "summary":          summary,
         "mismatches":       mismatches,
+        "reference":        "reference_greedy (same vendored forward code as speculation)",
+        "native_hf_agreement": {pid: native_references[pid] == references[pid] for pid in references},
         "batched_baseline": batched,
         "rows":             rows,
     }
@@ -223,7 +235,7 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
         f"Energy boundary: {meter.scope}.  "
         f"{len(rows) - len(mismatches)}/{len(rows)} requests matched greedy tokens.", "",
         "| Depth | Draft length | Energy J/token | Latency s/token | "
-        "Median paired ΔE J | Greedy matches | Valid |",
+        "Median paired ΔE J/token | Greedy matches | Valid |",
         "|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for item in sorted(summary, key=lambda x: x["energy_j_per_token"]):
@@ -231,7 +243,7 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
             f"| {item['depth']} | {item['draft_length']} "
             f"| {item['energy_j_per_token']:.6f} "
             f"| {item['latency_s_per_token']:.6f} "
-            f"| {item['median_paired_energy_delta_j']:+.4f} "
+            f"| {item['median_paired_energy_delta_j_per_token']:+.6f} "
             f"| {item['greedy_matches']} "
             f"| {item['valid_comparison']} |"
         )
@@ -249,7 +261,9 @@ def run_sweep(args: argparse.Namespace, meter: Meter) -> None:
     lines += [
         "",
         "A comparison is valid only when both the greedy baseline and the candidate "
-        "match native_greedy on all pairs.",
+        "match reference_greedy (same-code ordinary decoding) on all pairs.",
+        f"Hugging Face native greedy agreed with the reference on "
+        f"{sum(report['native_hf_agreement'].values())}/{len(references)} prompts (cross-check only).",
         "Confirm any promising setting on fresh prompts and repeats before reporting.",
     ]
     args.output.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -279,7 +293,7 @@ def main() -> None:
     parser.add_argument("--repeats",   type=int, default=2,
                         help="Number of repeated runs per (prompt, action) pair.")
     parser.add_argument("--seed",      type=int, default=42)
-    parser.add_argument("--depths",    type=int, nargs="+", default=[4, 8, 12],
+    parser.add_argument("--depths",    type=int, nargs="+", default=[3, 4, 6, 8],
                         help="Early-exit layer depths to sweep.")
     parser.add_argument("--lengths",   type=int, nargs="+", default=[1, 2, 3, 4],
                         help="Draft token lengths to sweep.")
@@ -292,6 +306,11 @@ def main() -> None:
                         help="PROTOTYPE: replay draft steps as CUDA Graphs (CUDA only).")
     parser.add_argument("--adaptive-drafts", action="store_true",
                         help="Shorten drafts below 50%% acceptance; decode ordinarily below 30%%.")
+    parser.add_argument("--min-measure-seconds", type=float, default=1.0,
+                        help="Repeat each measured request until this window has elapsed; "
+                             "NVML updates too coarsely for sub-second requests.")
+    parser.add_argument("--warmup", type=int, default=1,
+                        help="Unmeasured warm-up passes over every action before measuring.")
     parser.add_argument("--gpu-clock-mhz", type=int, default=None,
                         help="Lock the NVIDIA graphics clock during the sweep (admin/root).")
     parser.add_argument("--gpu-power-limit-w", type=float, default=None,
@@ -301,6 +320,8 @@ def main() -> None:
     if min(args.test, args.tokens, args.repeats, *args.depths, *args.lengths,
            *args.batch_sizes) < 1:
         parser.error("All counts, depths, and lengths must be positive integers.")
+    if args.min_measure_seconds < 0 or args.warmup < 0:
+        parser.error("--min-measure-seconds and --warmup must be nonnegative.")
     if args.precision == "fp16" and args.device != "cuda":
         parser.error("FP16 requires --device cuda.")
     if args.device == "cuda" and not torch.cuda.is_available():

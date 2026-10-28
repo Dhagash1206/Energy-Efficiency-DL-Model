@@ -7,9 +7,9 @@ from ..selector import Action
 from ..sweep import measure_batched, summarize
 
 
-def request(depth=0, length=0, energy=10.0, matched=True):
+def request(depth=0, length=0, energy=10.0, matched=True, tokens=5):
     return {"depth": depth, "draft_length": length, "prompt_id": "example",
-            "repeat": 0, "generated_tokens": 5, "energy_j": energy,
+            "repeat": 0, "generated_tokens": tokens, "energy_j": energy,
             "latency_s": 1.0, "greedy_match": matched}
 
 
@@ -19,8 +19,14 @@ class SweepTests(unittest.TestCase):
     def test_paired_saving(self):
         result = summarize([request(), request(4, 1, 8.0)], self.actions)[1]
         self.assertEqual(result["energy_j_per_token"], 1.6)
-        self.assertEqual(result["mean_paired_energy_delta_j"], -2.0)
+        # Per token: 8/5 - 10/5 = -0.4 J/token.
+        self.assertAlmostEqual(result["mean_paired_energy_delta_j_per_token"], -0.4)
         self.assertTrue(result["valid_comparison"])
+
+    def test_paired_delta_is_per_token_not_per_request(self):
+        # 12 J for 10 tokens beats 10 J for 5 tokens: +2 J/request but -0.8 J/token.
+        result = summarize([request(), request(4, 1, 12.0, tokens=10)], self.actions)[1]
+        self.assertAlmostEqual(result["median_paired_energy_delta_j_per_token"], 1.2 - 2.0)
 
     def test_invalid_baseline_cannot_support_a_win(self):
         results = summarize([request(matched=False), request(4, 1, 1.0)], self.actions)
@@ -50,7 +56,7 @@ class SweepTests(unittest.TestCase):
 class FakeMeter:
     """Runs the measured function and reports 2 J and 0.5 s per call."""
 
-    def run(self, function):
+    def run(self, function, min_seconds=0.0):
         return function(), {"latency_s": 0.5, "energy_j": 2.0}
 
 

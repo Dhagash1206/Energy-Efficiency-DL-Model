@@ -48,20 +48,41 @@ class SelectorTests(unittest.TestCase):
         bandit.update(arms[1], {"latency_s": 1.0}, {"tokens": [1]})
         self.assertEqual(set(bandit.summary()), {str(a.key) for a in arms})
 
-    def test_paid_feedback_only_on_calibrated_configuration(self):
+    def test_paid_feedback_offered_on_best_arm_after_calibration(self):
         policy = Selector()
         output = {"tokens": [1], "cycles": []}
         for arm in policy.arms:
-            policy.update(arm, {"latency_s": 0.5 if arm.key == (8, 3) else 2.0}, output)
+            policy.update(arm, {"latency_s": 0.5 if arm.key == (4, 2) else 2.0}, output)
+        self.assertEqual(policy.best_speculative().key, (4, 2))
+        self.assertEqual(policy.choose(10).observations, ())  # overhead not calibrated yet
         base = (output, {"latency_s": 0.5})
         for _ in range(3):
             policy.record_observer_pair(base, (output, {"latency_s": 0.51}), "selected")
             policy.record_observer_pair(base, (output, {"latency_s": 0.52}), "all")
         chosen = policy.choose(10)
-        self.assertEqual(chosen.key, (8, 3))
-        self.assertIn(chosen.observations, ((4,), (4, 12)))
-        policy._costs[(4, 3)] = [0.1]
-        self.assertEqual(policy.choose(10).observations, ())
+        self.assertEqual(chosen.key, (4, 2))
+        self.assertIn(chosen.observations, policy.observer_exits(4))
+        self.assertEqual(policy.observer_exits(4), ((3,), (3, 6, 8)))
+        self.assertEqual(policy.choose(1).observations, ())  # no future request to benefit
+
+    def test_default_grid_covers_sweep_winners(self):
+        keys = {arm.key for arm in Selector().arms}
+        self.assertTrue({(3, 1), (3, 2), (4, 1), (4, 2)} <= keys)
+
+    def test_unlucky_arm_is_revisited(self):
+        policy = Selector(depths=(1,), lengths=(1,))
+        ordinary, speculative = Action(), Action(1, 1)
+        output = {"tokens": [1], "cycles": []}
+        policy.update(ordinary, {"latency_s": 1.0}, output)
+        policy.update(speculative, {"latency_s": 1.5}, output)  # one bad measurement
+        chosen = []
+        for _ in range(30):
+            arm = policy.choose()
+            chosen.append(arm.key)
+            policy.update(arm, {"latency_s": 1.0 if arm.key == (0, 0) else 0.8}, output)
+        # The arm gets another chance and, being cheaper in truth, takes over.
+        self.assertIn((1, 1), chosen)
+        self.assertEqual(policy.choose().key, (1, 1))
 
     def test_energy_requires_real_reading(self):
         with self.assertRaises(ValueError):

@@ -27,7 +27,7 @@ All tests:
 One file:
   python -m pytest -q hardware_aware_selective_feedback/tests/test_engine.py
 
-Expected: 62 passed.
+Expected: 69 passed, 1 skipped (the FP16 engine check needs CUDA).
 
 
 3. SYNTHETIC DEMO (no model, fictional numbers)

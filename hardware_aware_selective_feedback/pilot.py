@@ -20,7 +20,7 @@ import urllib.request
 import torch
 import transformers
 from transformers import AutoTokenizer, LlamaConfig, LlamaForCausalLM
-from .engine import generate, native_greedy
+from .engine import generate, reference_greedy
 from .measurement import Meter
 from .report import render
 
@@ -103,7 +103,8 @@ def main():
     cases = [(0, 0, "none")]
     cases += [(d, k, mode) for d in depths for k in (1, 3)
               for mode in ("none", "selected", "all", "periodic")]
-    reference = {p["id"]: native_greedy(model, p["ids"], args.tokens, eos) for p in prompts}
+    # Same-code reference: in FP16 the Hugging Face forward rounds differently.
+    reference = {p["id"]: reference_greedy(model, p["ids"], args.tokens, eos) for p in prompts}
     # Warm every execution/observation path without including it in timing.
     for depth, length, mode in cases:
         generate(model, prompts[0]["ids"], min(args.tokens, 5), depth, length,

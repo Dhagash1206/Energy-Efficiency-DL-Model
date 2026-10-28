@@ -3,7 +3,7 @@ import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import (
     FALLBACK_BELOW, PROBE_EVERY, SHORTEN_BELOW, _adaptive_k, batched_greedy, generate,
-    native_greedy,
+    native_greedy, reference_greedy,
 )
 from hardware_aware_selective_feedback.feedback import validate_feedback, LearningState
 from hardware_aware_selective_feedback.vendor.self_speculation.llama_model_utils import forward
@@ -120,6 +120,37 @@ class EngineTests(unittest.TestCase):
                          [native_greedy(self.model, p, 15, eos) for p in prompts])
         with self.assertRaises(ValueError):
             batched_greedy(self.model, [[1], []], 4)
+
+    def test_reference_uses_same_code_and_agrees_with_native_in_fp32(self):
+        prompt = [1, 3, 5]
+        for limit in (0, 1, 7):
+            reference = reference_greedy(self.model, prompt, limit)
+            self.assertEqual(reference, generate(self.model, prompt, limit)["tokens"])
+            self.assertEqual(reference, native_greedy(self.model, prompt, limit))
+
+    def test_speculation_matches_same_code_reference_in_fp16(self):
+        # Half-precision matmuls need an accelerator in torch 2.6; CPU checks run in FP32.
+        if not torch.cuda.is_available():
+            self.skipTest("FP16 decoding check needs CUDA")
+        model = self.model.half().cuda()
+        try:
+            reference = reference_greedy(model, [1, 3, 5], 20)
+            for depth, length in ((1, 1), (2, 3), (3, 2)):
+                self.assertEqual(generate(model, [1, 3, 5], 20, depth, length)["tokens"], reference)
+        finally:
+            self.model.float().cpu()
+
+    def test_observer_projection_matches_main_path(self):
+        # Observing the deepest intermediate layer must use the main path's norm + head.
+        prompt = [1, 3, 5]
+        result = generate(self.model, prompt, 6, 1, 2, (3,), "all")
+        for cycle in result["cycles"]:
+            for row in cycle["observations"]:
+                with torch.inference_mode():
+                    hidden = self.model(torch.tensor([row["prefix_ids"]]),
+                                        output_hidden_states=True).hidden_states[row["depth"]][:, -1]
+                    expected = self.model.lm_head(self.model.model.norm(hidden)).argmax(-1).item()
+                self.assertEqual(row["prediction"], expected)
 
     def test_invalid_configuration(self):
         with self.assertRaises(ValueError):

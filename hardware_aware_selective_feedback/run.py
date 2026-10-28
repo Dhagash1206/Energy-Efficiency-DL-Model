@@ -31,7 +31,7 @@ import transformers
 from transformers import AutoTokenizer, LlamaForCausalLM
 from huggingface_hub import snapshot_download
 
-from hardware_aware_selective_feedback.engine import generate, native_greedy
+from hardware_aware_selective_feedback.engine import generate, native_greedy, reference_greedy
 from hardware_aware_selective_feedback.gpu_clocks import pinned_gpu
 from hardware_aware_selective_feedback.graph_drafter import GraphDrafter
 from hardware_aware_selective_feedback.measurement import Meter
@@ -197,7 +197,7 @@ def first_divergence(tokens, reference):
 
 
 def run_one(model, meter, prompt, token_limit, action, eos, reference=None, adaptive_drafts=False,
-            graph_drafters=None, stop_on_mismatch=True):
+            graph_drafters=None, stop_on_mismatch=True, min_seconds=0.0):
     active_exits = tuple(d for d in action.observations if d != action.depth)
     # Observer hooks do not fire inside the graphed draft step, so observed
     # requests keep the ordinary forward_early path.
@@ -206,11 +206,33 @@ def run_one(model, meter, prompt, token_limit, action, eos, reference=None, adap
     output, measured = meter.run(lambda: generate(
         model, prompt, token_limit, action.depth, action.length,
         active_exits, "all" if active_exits else "none", eos=eos,
-        adaptive_drafts=adaptive_drafts, graph_drafter=drafter))
+        adaptive_drafts=adaptive_drafts, graph_drafter=drafter), min_seconds)
     output["greedy_match"] = reference is None or output["tokens"] == reference
     if not output["greedy_match"] and stop_on_mismatch:
         raise AssertionError(f"Greedy output mismatch for depth={action.depth}, length={action.length}")
     return output, measured
+
+
+def per_token(record, key):
+    """Request cost divided by generated tokens; None when the cost is unmeasured."""
+    return None if record[key] is None else record[key] / record["generated_tokens"]
+
+
+def paired_per_token_delta(record, baseline, key):
+    """Per-token cost difference, so policies producing more tokens are not penalised."""
+    value, base = per_token(record, key), per_token(baseline, key)
+    return None if value is None or base is None else value - base
+
+
+def warm_up(model, prompt, token_limit, actions, eos, graph_drafters=None, runs=1):
+    """Exercise every code path (kernels, allocator, CUDA graphs) before measuring."""
+    for _ in range(runs):
+        for action in actions:
+            exits = tuple(d for d in action.observations if d != action.depth)
+            drafter = (graph_drafters.get(action.depth)
+                       if graph_drafters and action.depth and not exits else None)
+            generate(model, prompt, token_limit, action.depth, action.length, exits,
+                     "all" if exits else "none", eos=eos, graph_drafter=drafter)
 
 
 def prompt_context(prompt):
@@ -227,6 +249,7 @@ def row(prompt, policy, action, output, measured, split, repeat=0, order=0):
         "depth": action.depth, "draft_length": action.length,
         "observed_exits": action.observations, "tokens": output["tokens"],
         "generated_tokens": len(output["tokens"]), "latency_s": measured["latency_s"],
+        "measure_repetitions": measured.get("measure_repetitions", 1),
         "energy_j": measured["energy_j"], "energy_boundary": measured["boundary"],
         "energy_source": measured["source"],
         "energy_reason": measured["energy_reason"], "valid_feedback": sum(o["valid"] for o in observations),
@@ -284,6 +307,12 @@ def main():
     parser.add_argument("--cuda-graph-drafts", action="store_true",
                         help="PROTOTYPE: replay draft steps as CUDA Graphs with a static "
                              "KV cache (CUDA only; not with --compile or --quantize).")
+    parser.add_argument("--min-measure-seconds", type=float, default=None,
+                        help="Repeat each measured request until this window has elapsed and "
+                             "report the per-request mean; NVML updates too coarsely for "
+                             "sub-second requests. Default: 1.0 with an energy counter, else 0.")
+    parser.add_argument("--warmup", type=int, default=1,
+                        help="Unmeasured warm-up passes over every action before calibration.")
     parser.add_argument("--gpu-clock-mhz", type=int, default=None,
                         help="Lock the NVIDIA graphics clock during the run (admin/root).")
     parser.add_argument("--gpu-power-limit-w", type=float, default=None,
@@ -292,6 +321,8 @@ def main():
     if min(args.calibration, args.test, args.tokens, args.threads,
            args.observer_pairs, args.repeats) < 1:
         parser.error("counts must be positive")
+    if (args.min_measure_seconds or 0) < 0 or args.warmup < 0:
+        parser.error("--min-measure-seconds and --warmup must be nonnegative")
     xpu_available = bool(hasattr(torch, "xpu") and torch.xpu.is_available())
     mps_available = bool(hasattr(torch.backends, "mps") and torch.backends.mps.is_available())
     if args.device == "auto":
@@ -318,6 +349,8 @@ def main():
     if args.objective == "energy" and not meter.available:
         parser.error("Energy requested but no working counter: " + str(meter.reason))
     objective = ("energy" if meter.available else "latency") if args.objective == "auto" else args.objective
+    if args.min_measure_seconds is None:
+        args.min_measure_seconds = 1.0 if meter.available else 0.0
     torch.set_num_threads(args.threads)
     calibration, heldout, dataset_info = load_prompts(args.calibration, args.test, args.seed)
     model, tokenizer, revision = load_model(
@@ -341,7 +374,8 @@ def main():
     def execute(prompt, policy, action, reference, split, repeat=0, order=0):
         """Run one request, record its row, and exclude a mismatching configuration."""
         result = run_one(model, meter, prompt["ids"], args.tokens, action, eos, reference,
-                         args.adaptive_drafts, drafters, args.stop_on_mismatch)
+                         args.adaptive_drafts, drafters, args.stop_on_mismatch,
+                         args.min_measure_seconds)
         rows.append(row(prompt, policy, action, *result, split, repeat, order))
         if not result[0]["greedy_match"]:
             index = first_divergence(result[0]["tokens"], reference)
@@ -360,6 +394,14 @@ def main():
                       f"length={action.length} from adaptive selection", flush=True)
         return result
 
+    native_agreement = {}
+
+    def reference_for(prompt):
+        """Same-code ordinary decoding is the reference; HF output is a recorded cross-check."""
+        reference = reference_greedy(model, prompt["ids"], args.tokens, eos)
+        native_agreement[prompt["id"]] = native_greedy(model, prompt["ids"], args.tokens, eos) == reference
+        return reference
+
     print(f"Model loaded; objective={objective}; energy boundary={meter.scope or 'unavailable'}",
           flush=True)
 
@@ -370,20 +412,28 @@ def main():
         # Calibrate base actions on the first prompt, then observer overhead
         # with executed same-prompt pairs across distinct calibration prompts.
         first = calibration[0]
-        ref = native_greedy(model, first["ids"], args.tokens, eos)
+        warm_up(model, first["ids"], args.tokens,
+                selector.arms + tuple(Action(arm.depth, arm.length, selector.observer_exits(arm.depth)[1])
+                                      for arm in selector.arms if arm.depth),
+                eos, drafters, args.warmup)
+        ref = reference_for(first)
         for arm in selector.arms:
             result = execute(first, "calibration", arm, ref, "calibration")
             if result[0]["greedy_match"]:
                 selector.update(arm, result[1], result[0], prompt_context(first))
                 bandit.update(arm, result[1], result[0])
-        observed_arm = Action(8, 3, (4,))
-        all_arm = Action(8, 3, (4, 12))
+        # Calibrate observer overhead on the cheapest base arm, since that is
+        # where the selector would actually pay for observations.
+        pair_base = selector.best_speculative() or next(arm for arm in selector.arms if arm.depth)
+        selected_exits, all_exits = selector.observer_exits(pair_base.depth)
+        observed_arm = Action(pair_base.depth, pair_base.length, selected_exits)
+        all_arm = Action(pair_base.depth, pair_base.length, all_exits)
         pair_prompt_ids = []
         pair_rng = random.Random(args.seed + 2)
         for pair_index in range(args.observer_pairs):
             prompt = calibration[pair_index % len(calibration)]
             pair_prompt_ids.append(prompt["id"])
-            reference = ref if prompt is first else native_greedy(model, prompt["ids"], args.tokens, eos)
+            reference = ref if prompt is first else reference_for(prompt)
             modes = [("selected", observed_arm), ("all", all_arm)]
             pair_rng.shuffle(modes)
             for mode, arm in modes:
@@ -403,7 +453,7 @@ def main():
 
         # Additional calibration prompts: update the online selector.
         for index, prompt in enumerate(calibration[1:]):
-            reference = native_greedy(model, prompt["ids"], args.tokens, eos)
+            reference = reference_for(prompt)
             action = selector.choose(len(calibration) + len(heldout) * args.repeats - index,
                                      prompt_context(prompt))
             bandit_action = bandit.choose()
@@ -421,7 +471,7 @@ def main():
         request_index = 0
         total_requests = len(heldout) * args.repeats
         for prompt_index, prompt in enumerate(heldout):
-            reference = native_greedy(model, prompt["ids"], args.tokens, eos)
+            reference = reference_for(prompt)
             for repeat in range(args.repeats):
                 adaptive_action = selector.choose(total_requests - request_index,
                                                   prompt_context(prompt))
@@ -429,9 +479,9 @@ def main():
                 policies = [
                     ("ordinary", Action()),
                     ("fixed", Action(4, 3)),
-                    ("never_observe", Action(8, 3)),
-                    ("selected_observe", Action(8, 3, (4,))),
-                    ("always_observe", Action(8, 3, (4, 12))),
+                    ("never_observe", Action(pair_base.depth, pair_base.length)),
+                    ("selected_observe", observed_arm),
+                    ("always_observe", all_arm),
                     ("bandit", bandit_action),
                     ("adaptive", adaptive_action),
                 ]
@@ -479,19 +529,19 @@ def main():
             for mode in ("selected_observe", "always_observe"):
                 paired_observer_deltas.append({
                     "prompt_id": prompt["id"], "repeat": repeat, "mode": mode,
-                    "latency_delta_s": group[mode]["latency_s"] - group["never_observe"]["latency_s"],
-                    "energy_delta_j": (group[mode]["energy_j"] - group["never_observe"]["energy_j"]
-                                       if group[mode]["energy_j"] is not None and group["never_observe"]["energy_j"] is not None
-                                       else None),
+                    "latency_delta_s_per_token": paired_per_token_delta(
+                        group[mode], group["never_observe"], "latency_s"),
+                    "energy_delta_j_per_token": paired_per_token_delta(
+                        group[mode], group["never_observe"], "energy_j"),
                 })
             for policy in ("fixed", "never_observe", "selected_observe", "always_observe",
                            "bandit", "adaptive"):
                 paired_vs_ordinary.append({
                     "prompt_id": prompt["id"], "repeat": repeat, "policy": policy,
-                    "latency_delta_s": group[policy]["latency_s"] - group["ordinary"]["latency_s"],
-                    "energy_delta_j": (group[policy]["energy_j"] - group["ordinary"]["energy_j"]
-                                       if group[policy]["energy_j"] is not None and group["ordinary"]["energy_j"] is not None
-                                       else None),
+                    "latency_delta_s_per_token": paired_per_token_delta(
+                        group[policy], group["ordinary"], "latency_s"),
+                    "energy_delta_j_per_token": paired_per_token_delta(
+                        group[policy], group["ordinary"], "energy_j"),
                 })
     # Feasibility checks use only executed held-out policies. They are
     # descriptive, not a counterfactual oracle for unexecuted configurations.
@@ -512,10 +562,10 @@ def main():
     observation_overhead = {}
     for mode in ("selected_observe", "always_observe"):
         selected = [r for r in paired_observer_deltas if r["mode"] == mode]
-        deltas = [r["energy_delta_j" if objective == "energy" else "latency_delta_s"]
+        deltas = [r["energy_delta_j_per_token" if objective == "energy" else "latency_delta_s_per_token"]
                   for r in selected]
-        observation_overhead[mode] = {"mean_delta_per_request": statistics.mean(deltas),
-                                      "median_delta_per_request": statistics.median(deltas),
+        observation_overhead[mode] = {"mean_delta_per_token": statistics.mean(deltas),
+                                      "median_delta_per_token": statistics.median(deltas),
                                       "n": len(deltas)}
     feasibility = {
         "best_executed_fixed_by_prompt": winner_by_prompt,
@@ -533,6 +583,9 @@ def main():
         "paired_observer_deltas": paired_observer_deltas,
         "paired_vs_ordinary": paired_vs_ordinary,
         "mismatches": mismatches,
+        "reference": "ordinary decoding through the same vendored forward code as speculation",
+        "native_hf_agreement": native_agreement,
+        "observer_pair_base": [pair_base.depth, pair_base.length],
         "excluded_configurations": sorted(list(key) for key in excluded),
         "feasibility": feasibility,
         "model": MODEL, "revision": revision, "precision": args.precision,
@@ -556,7 +609,7 @@ def main():
             "The implementation uses an attributed LayerSkip inference helper in hardware_aware_selective_feedback.",
             "Request-level adaptation, not token-level adaptation.",
             "Observer overhead uses repeated paired calibration; thermal/order effects remain.",
-            "Fixed depth 4 and no-observation depth 8 are separate predetermined baselines.",
+            "Fixed depth 4 is predetermined; observer baselines use the cheapest calibrated arm.",
             "No optimized serving backend; counter scope may omit other hardware components.",
             "HumanEval supplies prompt diversity; generated code is not executed or scored.",
         ],
@@ -575,10 +628,10 @@ def main():
         f"Best executed fixed setting varies across prompts: {feasibility['best_fixed_varies_across_prompts']}.",
         f"Prompts: {len(calibration)} calibration, {len(heldout)} held out; "
         f"{args.repeats} held-out repeat(s), {args.tokens} maximum generated tokens.",
-        (f"All {len(rows)} executed requests matched native greedy token IDs."
+        (f"All {len(rows)} executed requests matched the same-code greedy reference."
          if not mismatches else
-         f"{len(rows) - len(mismatches)}/{len(rows)} executed requests matched native greedy "
-         f"token IDs. Excluded from adaptive/bandit selection after a mismatch: "
+         f"{len(rows) - len(mismatches)}/{len(rows)} executed requests matched the same-code greedy reference. "
+         f"Excluded from adaptive/bandit selection after a mismatch: "
          + ", ".join(f"depth={d} length={k}" for d, k in sorted(excluded)) + ". "
          "Policies with mismatches are not valid exact-output comparisons."),
         "",
@@ -591,10 +644,13 @@ def main():
         lines.append(f"| {name} | {result['runs']} | {result['latency_s_per_token']:.6f} | {energy} "
                      f"| {result['greedy_mismatches']} |")
     lines += [
-        "", "Observed feedback cost per request (selected/all): " +
-        ", ".join(f"{name} {value['median_delta_per_request']:.6f} " +
+        "", f"Observed feedback cost per token at depth={pair_base.depth} length={pair_base.length} "
+        "(selected/all): " +
+        ", ".join(f"{name} {value['median_delta_per_token']:+.6f} " +
                   ("J" if objective == "energy" else "s")
                   for name, value in observation_overhead.items()) + ".",
+        f"Reference: same-code ordinary decoding. Hugging Face native greedy agreed on "
+        f"{sum(native_agreement.values())}/{len(native_agreement)} prompts (cross-check only).",
         "Observer overhead is measured by same-prompt paired executions. "
         f"Raw runs, order, token IDs, valid feedback, and paired deltas are in {output_file.name}.",
         "Calibration work is reported separately and is not allocated to any single baseline.",

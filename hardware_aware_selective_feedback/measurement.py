@@ -258,19 +258,40 @@ class Meter:
         elif self.device.type == "xpu":
             torch.xpu.synchronize(self.device)
 
-    def run(self, function):
+    def run(self, function, min_seconds=0.0):
+        """Measure `function`, repeating it until `min_seconds` have elapsed.
+
+        Cumulative counters such as NVML update only every few tens of
+        milliseconds, so a sub-second request reads as a few coarse steps.
+        Repeating a deterministic request and dividing by the repetition count
+        gives a per-request value with less quantization noise. Every
+        repetition must return identical output.
+        """
         self.sync()
         before = self.counter()
         start = time.perf_counter()
+        repetitions = 0
         try:
-            result = function()
+            while True:
+                result = function()
+                repetitions += 1
+                if repetitions == 1:
+                    first = result
+                elif result != first:
+                    raise RuntimeError("Repeated measurement produced different output")
+                self.sync()
+                if time.perf_counter() - start >= min_seconds:
+                    break
         finally:
             self.sync()
         elapsed = time.perf_counter() - start
         after = self.counter()
-        return result, {
-            "latency_s": elapsed,
-            "energy_j": self._joules(before, after) if self.available else None,
+        energy = self._joules(before, after) if self.available else None
+        return first, {
+            "latency_s": elapsed / repetitions,
+            "energy_j": None if energy is None else energy / repetitions,
+            "measure_repetitions": repetitions,
+            "measure_window_s": elapsed,
             "boundary": self.scope if self.available else "unavailable",
             "energy_reason": self.reason,
             "source": self.source,

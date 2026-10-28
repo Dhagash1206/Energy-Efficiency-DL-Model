@@ -2,8 +2,13 @@
 
 Public API
 ----------
+reference_greedy(model, prompt, limit, eos)
+    Ordinary greedy decoding through the same vendored forward code that
+    speculative decoding uses. This is the exact-output reference.
+
 native_greedy(model, prompt, limit, eos)
-    Plain autoregressive greedy decoding. Used as the exact-output reference.
+    Plain Hugging Face greedy decoding. An independent cross-check only: its
+    attention kernels round differently in FP16, so it is not the reference.
 
 batched_greedy(model, prompts, limit, eos, pad_id)
     Plain greedy decoding of several prompts in one batch (ordinary baseline).
@@ -69,9 +74,9 @@ def _observe(
     layers fire once per cycle.  The engine concatenates the buffers in
     ``generate`` to restore token-position alignment.
 
-    Note: projections use float32 to match the norm+lm_head precision in
-    ``forward_remainder``, keeping observer predictions consistent with the
-    main decoding path.
+    Projections apply the same norm + lm_head, in the model's dtype, as the
+    main decoding path, so an observer prediction at the final depth equals
+    the decoded token.
     """
     chunks: dict[int, list] = {d: [] for d in depths}
     handles = []
@@ -79,12 +84,7 @@ def _observe(
     def _make_hook(depth: int):
         def _hook(module, args, output):
             hidden = output[0] if isinstance(output, tuple) else output
-            normalized = model.model.norm(hidden.float()).to(
-                model.lm_head.weight.dtype
-            )
-            chunks[depth].append(
-                model.lm_head(normalized).argmax(-1)
-            )
+            chunks[depth].append(model.lm_head(model.model.norm(hidden)).argmax(-1))
         return _hook
 
     try:
@@ -137,6 +137,22 @@ def _adaptive_k(
 # Public: native greedy decoding (exact-output reference)
 # ---------------------------------------------------------------------------
 
+def reference_greedy(
+    model: torch.nn.Module,
+    prompt: list[int],
+    limit: int,
+    eos: tuple[int, ...] = (),
+) -> list[int]:
+    """Exact-output reference: ordinary decoding via the vendored forward().
+
+    Speculative decoding verifies drafts with the same vendored layers, so a
+    mismatch against this reference reflects drafting itself, not a
+    different attention kernel or rounding order (which ``native_greedy``
+    introduces in FP16).
+    """
+    return generate(model, prompt, limit, eos=eos)["tokens"]
+
+
 @torch.inference_mode()
 def native_greedy(
     model: torch.nn.Module,
@@ -144,7 +160,10 @@ def native_greedy(
     limit: int,
     eos: tuple[int, ...] = (),
 ) -> list[int]:
-    """Autoregressively decode up to `limit` tokens using greedy argmax.
+    """Autoregressively decode up to `limit` tokens using Hugging Face's forward.
+
+    Independent cross-check of ``reference_greedy``; in FP16 the two can
+    differ on near-tied logits because the attention kernels differ.
 
     Tokens are kept on-device throughout; the CPU sees exactly one sync
     (the final ``.tolist()``).  EOS checking uses ``torch.isin`` on-device.
@@ -168,9 +187,7 @@ def native_greedy(
     for _ in range(limit):
         out = model(ids, past_key_values=cache, use_cache=True)
         cache = out.past_key_values
-        # float() cast ensures argmax matches forward_remainder's FP32 logits,
-        # preventing near-tie divergence between reference and speculative paths.
-        ids = out.logits[:, -1].float().argmax(-1).reshape(1, 1)
+        ids = out.logits[:, -1].argmax(-1).reshape(1, 1)
         collected.append(ids)
         if eos_t is not None and torch.isin(ids, eos_t).item():
             break
@@ -218,8 +235,7 @@ def batched_greedy(
         out = model(ids, attention_mask=mask, position_ids=positions,
                     past_key_values=cache, use_cache=True)
         cache = out.past_key_values
-        # float() matches native_greedy's argmax precision on near-ties.
-        ids = out.logits[:, -1].float().argmax(-1, keepdim=True)
+        ids = out.logits[:, -1].argmax(-1, keepdim=True)
         collected.append(ids)
         if eos_t is not None:
             finished |= torch.isin(ids[:, 0], eos_t)
