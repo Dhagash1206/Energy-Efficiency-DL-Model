@@ -1,0 +1,1424 @@
+{
+    "schema_version":  1,
+    "audit_date":  "2026-10-29",
+    "timezone":  "Asia/Calcutta",
+    "source_revision":  "e3ef469c763a3e3d9dfbd312afa496714976a226",
+    "scope":  "Baseline tracked files only; generated handoff documents excluded. Hashes establish identity, not runtime correctness.",
+    "tracked_files":  134,
+    "python_files":  73,
+    "result_artifacts":  46,
+    "binary_checkpoints":  2,
+    "files":  [
+                  {
+                      "path":  ".gitignore",
+                      "bytes":  342,
+                      "sha256":  "31af0360b111176590e07985e214ed2aa6a29b90f72eff749208ca6772716d7b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  21
+                  },
+                  {
+                      "path":  "EFFICIENCY_CHANGES.txt",
+                      "bytes":  6976,
+                      "sha256":  "4fd7013ac31ae872dd704482dad1f35efc8eff9ff94a08c511554a5cf36d9dc4",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  124
+                  },
+                  {
+                      "path":  "README.md",
+                      "bytes":  4575,
+                      "sha256":  "0610d3118470fa75b47476168b7b162173d51ca5ef7e613bcd8e6f2c00e7c783",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  140
+                  },
+                  {
+                      "path":  "edge_llm_inference/distill.py",
+                      "bytes":  5257,
+                      "sha256":  "ebe43928791c36d1b84e527820aca046bdcee2d42dfc4791e609c89268f12c5b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  142
+                  },
+                  {
+                      "path":  "edge_llm_inference/test_models.py",
+                      "bytes":  2077,
+                      "sha256":  "7d4c80ebb17596de33229ea6028a882c997aaa91ebced7a11b25318fb847de7e",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  65
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/.gitignore",
+                      "bytes":  40,
+                      "sha256":  "5b330e671bdf0b1e0c5659558bbc001606afa1ebac77aff88896b089bd872e55",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  4
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/README.md",
+                      "bytes":  10216,
+                      "sha256":  "2f8f24fb3b584317b56955e917e5990354aa24d3a9810e093e3877bb72e1744d",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  154
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/__init__.py",
+                      "bytes":  69,
+                      "sha256":  "348ebb2715252cd4c98775797d59450ff9d96beb5299cc17446c2921892c5dd4",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/checkpoints/config-head.pt",
+                      "bytes":  1054085,
+                      "sha256":  "1ebb99df580af5cdf44b7f9923485dc15d30ef0721fad20eec1288f574b0a115",
+                      "inspection":  "metadata_and_hash_only_not_deserialized"
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/checkpoints/pelm-round.pt",
+                      "bytes":  8123,
+                      "sha256":  "1011d2338a1313e9057b8c2e375fde3a714612f85e004b2cd77190567212efba",
+                      "inspection":  "metadata_and_hash_only_not_deserialized"
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/config_head.py",
+                      "bytes":  2793,
+                      "sha256":  "9e3cb5312ea6f7ac5fbe4156efe75fb06ca141d32f579c11cc135ee8be91793c",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  65
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/device_energy.py",
+                      "bytes":  7890,
+                      "sha256":  "9ff7cffeeb416a64f68b4d3411181f04b797a1ec69efaaf746dbbb890e4d52b4",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  193
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/diagnose_mismatch.py",
+                      "bytes":  7637,
+                      "sha256":  "50e29bf461a14a20fc9c03b1a88f1b3e2da7c64eaac211eae735590bee2bbc69",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  189
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/download_layerskip.py",
+                      "bytes":  3870,
+                      "sha256":  "83369c48c085b4050dc6e0c378a129888a8a7ae105b0d73544994fea66f4b358",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  81
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/engine.py",
+                      "bytes":  22068,
+                      "sha256":  "f0b757616cefa1727c7c61bf031db73e908d064fd12a27107215bf4b64cd22cf",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  501
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/feedback.py",
+                      "bytes":  3562,
+                      "sha256":  "46ed9107fbbff2b31c57face5d3105c8af1f36436770db5997167c4c0951d6b5",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  89
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/gpu_clocks.py",
+                      "bytes":  3616,
+                      "sha256":  "82e07816a8fe3db52cc0438cf1ef5567fd8d10e2e8ad7fe5c93b362e299e20df",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  82
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/graph_drafter.py",
+                      "bytes":  8703,
+                      "sha256":  "76a6b8c705884fb21960609f446aed6792aedbbd56ea5021369e6a8b1104714b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  177
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/measurement.py",
+                      "bytes":  14502,
+                      "sha256":  "237dc45eca9e2ba010fccff185296cc2b87821e20b51b940286639faf30ee6be",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  310
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/paths.py",
+                      "bytes":  927,
+                      "sha256":  "8426fc22d1661d4ebc2b542a91ca538a3a8073c766e1c9ab21fb2425ab6448f3",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  26
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/pelm_round.py",
+                      "bytes":  12682,
+                      "sha256":  "2e82eb290931f02b8ad79f5092497db379800137bfaa78d7731807ff148c5568",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  301
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/pelm_second_gpu.py",
+                      "bytes":  1443,
+                      "sha256":  "915d2b4ed406f579eea5502e8f81665795520f0425f2b59ac2b9e70a061e31d6",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  43
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/pilot.py",
+                      "bytes":  9019,
+                      "sha256":  "ad4b4c19b5bfd23f498818df6be632f4d516e06af25048b3f4a367aa03b3207f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  167
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/reject_energy.py",
+                      "bytes":  2987,
+                      "sha256":  "24c4d83321ce346cf14a4371d62e81beb15288f4eeaf99ada7bf55501a6858c5",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  75
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/reject_probe.py",
+                      "bytes":  4888,
+                      "sha256":  "b66bb855a84a537ccdbcd583c4927473946814e7f10cf9362a6da850f7d2ec31",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  117
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/report.py",
+                      "bytes":  3270,
+                      "sha256":  "a3ec59bcfaa71683a5341a817f8b9052d422b2a28c502b9c72018f75baf99f14",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  64
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/engine-optimization/rtx3050-engine-optimization-final.json",
+                      "bytes":  65754,
+                      "sha256":  "9b3bcf704b2751bf0c172994327eba6c240d90f3335fac6e53e56136e7ac352a",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  3205,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "baseline_git",
+                                                  "measurement",
+                                                  "summary",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/engine-optimization/rtx3050-engine-optimization-final.md",
+                      "bytes":  1538,
+                      "sha256":  "18cce5135effdba3ef755b60ad5c4ec6f2c4ff9a270d368aa63b62e9b3db5d60",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  28
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/engine-optimization/rtx3050-engine-optimization.json",
+                      "bytes":  44181,
+                      "sha256":  "cb79fc0b4954011b8dafee76d67480cb30c629f8df346eca4beaabb6cfcdc508",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  2149,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "baseline_git",
+                                                  "measurement",
+                                                  "summary",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/engine-optimization/rtx3050-mismatch-regression.json",
+                      "bytes":  3773,
+                      "sha256":  "5f1fcc850dc5f75f43fe82348637862cf7fb3d709cec7444d46468812090b83a",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  239,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "prompt_id",
+                                                  "precision",
+                                                  "reference",
+                                                  "results"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fixed-sweep/rtx3050-fp16-fixed-confirm.json",
+                      "bytes":  75942,
+                      "sha256":  "76b2081b3cf8698ddfade809ae9aeabc576cb898772ae85ee6bf01e7894eca5e",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  3389,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fixed-sweep/rtx3050-fp16-fixed-confirm.md",
+                      "bytes":  656,
+                      "sha256":  "054fa57eb2a9ca06f252d8bda9436ac0908e26d0cb01c674195655a3966ae565",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  14
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fixed-sweep/rtx3050-fp16-fixed-sweep.json",
+                      "bytes":  190641,
+                      "sha256":  "257e7501c4b69a2a720e2c5ce6d4922f0df0f9e21b5c80af253b8880bebc9ee3",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  8512,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fixed-sweep/rtx3050-fp16-fixed-sweep.md",
+                      "bytes":  959,
+                      "sha256":  "976e2be09388b80782d40bd67e1a8d5b879e09742befce581ddf3a0174936130",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  22
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens-confirm.json",
+                      "bytes":  70079,
+                      "sha256":  "d1509d8a7d79de53f1cdffc88b06e5aa40c27133d5475ce0d674123eb572399f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  4075,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens-confirm.md",
+                      "bytes":  593,
+                      "sha256":  "e9e1aec043d07de2cdc2f0d945ecf6512516ff171e8ab3a6717e3d574740a356",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  12
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens-efficiency.md",
+                      "bytes":  1849,
+                      "sha256":  "ab145f1be054ed55b757077a246e9c1f354d9cbc9559e63ee4bf82e85b0dfed9",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens-fixed.json",
+                      "bytes":  70541,
+                      "sha256":  "38dce66f5a20ed1ef7b795f0a7b08a245ac4920ad7e6dd22a5b5a46a929a8373",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  4101,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens-fixed.md",
+                      "bytes":  593,
+                      "sha256":  "5b680266d06956014a692dc115a7c76d20de3c1bb0957a5fa08b9629d767af31",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  12
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens.json",
+                      "bytes":  69818,
+                      "sha256":  "36f14032c22b6544adf3de7aebd2c6e6e67f35cdb9462f8ca9cf28e05c587176",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  4075,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-100tokens/rtx3050-fp16-100tokens.md",
+                      "bytes":  593,
+                      "sha256":  "b9e71099e89370bfe9a5c494c28b16e19fac2bf1613d7419d078bd7386d883d7",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  12
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-200tokens/rtx3050-fp16-200tokens-sweep.json",
+                      "bytes":  518299,
+                      "sha256":  "2474c873e0b6c070dc25704d2c47ab6117daf5b842674c2ebddd03b17d5a8090",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  32886,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-200tokens/rtx3050-fp16-200tokens-sweep.md",
+                      "bytes":  973,
+                      "sha256":  "9a06020d1042b772fa6851a836ba9269634d06644a11ef6dea5df37932facc45",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  19
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-200tokens/rtx3050-fp16-200tokens.json",
+                      "bytes":  115739,
+                      "sha256":  "10082430705f410de528a05c57819d069f9d9509938a1e1cd88eab84d3349ff7",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  7301,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "device",
+                                                  "precision",
+                                                  "energy_boundary",
+                                                  "measurement",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "summary",
+                                                  "mismatches",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-200tokens/rtx3050-fp16-200tokens.md",
+                      "bytes":  593,
+                      "sha256":  "165f4c7f5a289a2a2c9c3fc89ecc89853e137a3e31624d35024a80273f586c90",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  12
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-repeat2.json",
+                      "bytes":  300210,
+                      "sha256":  "feb3c4e253aa1b2b97ec3e36efc3f2eac0988c96e4a81605d95c1de5aa533d29",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  13038,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "calibration_runs",
+                                                  "observer_pair_prompt_ids",
+                                                  "observer_pair_unique_prompts",
+                                                  "calibration_total_objective",
+                                                  "paired_observer_deltas",
+                                                  "paired_vs_ordinary",
+                                                  "feasibility",
+                                                  "model",
+                                                  "revision",
+                                                  "precision",
+                                                  "device",
+                                                  "processor",
+                                                  "measurement",
+                                                  "platform",
+                                                  "cpu_threads",
+                                                  "accelerator_name",
+                                                  "torch",
+                                                  "transformers",
+                                                  "objective",
+                                                  "energy_available",
+                                                  "energy_boundary",
+                                                  "energy_limitation",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "selector",
+                                                  "bandit",
+                                                  "aggregates",
+                                                  "rows",
+                                                  "interpretation",
+                                                  "limits"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-repeat2.md",
+                      "bytes":  1379,
+                      "sha256":  "f9b5a34fb323464a8154c7e901d28b8e5e506507a108e4327cb1eb4d321f35b9",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-repeat3.json",
+                      "bytes":  425129,
+                      "sha256":  "e6fdadc143e6046eb52f90f6ccb90a958c18f4f020a7d2061baaea253f9a62eb",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  18494,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "calibration_runs",
+                                                  "observer_pair_prompt_ids",
+                                                  "observer_pair_unique_prompts",
+                                                  "calibration_total_objective",
+                                                  "paired_observer_deltas",
+                                                  "paired_vs_ordinary",
+                                                  "feasibility",
+                                                  "model",
+                                                  "revision",
+                                                  "precision",
+                                                  "device",
+                                                  "processor",
+                                                  "measurement",
+                                                  "platform",
+                                                  "cpu_threads",
+                                                  "accelerator_name",
+                                                  "torch",
+                                                  "transformers",
+                                                  "objective",
+                                                  "energy_available",
+                                                  "energy_boundary",
+                                                  "energy_limitation",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "selector",
+                                                  "bandit",
+                                                  "aggregates",
+                                                  "rows",
+                                                  "interpretation",
+                                                  "limits"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-repeat3.md",
+                      "bytes":  1379,
+                      "sha256":  "425b5d3122c005836ca83c98950c2309cc5c5fe3e04b4ec90054df7f102493ee",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-run.json",
+                      "bytes":  300108,
+                      "sha256":  "d4a433432453473f65b01072f4095859e03c6e75ea0200848ed05056dbc62003",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  13038,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "calibration_runs",
+                                                  "observer_pair_prompt_ids",
+                                                  "observer_pair_unique_prompts",
+                                                  "calibration_total_objective",
+                                                  "paired_observer_deltas",
+                                                  "paired_vs_ordinary",
+                                                  "feasibility",
+                                                  "model",
+                                                  "revision",
+                                                  "precision",
+                                                  "device",
+                                                  "processor",
+                                                  "measurement",
+                                                  "platform",
+                                                  "cpu_threads",
+                                                  "accelerator_name",
+                                                  "torch",
+                                                  "transformers",
+                                                  "objective",
+                                                  "energy_available",
+                                                  "energy_boundary",
+                                                  "energy_limitation",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "selector",
+                                                  "bandit",
+                                                  "aggregates",
+                                                  "rows",
+                                                  "interpretation",
+                                                  "limits"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/fp16-run/rtx3050-fp16-run.md",
+                      "bytes":  1379,
+                      "sha256":  "91d93d6c0e3f2ffebabdf8d16bd485278b6f2abdf01f0d6d518d93f3498dfa89",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/latest.json",
+                      "bytes":  50665,
+                      "sha256":  "1e73615e74423b95abb3e1b3e16d030cf978e0acce1123849b63e4916078ba73",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1968,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "calibration_runs",
+                                                  "observer_pair_prompt_ids",
+                                                  "observer_pair_unique_prompts",
+                                                  "calibration_total_objective",
+                                                  "paired_observer_deltas",
+                                                  "paired_vs_ordinary",
+                                                  "feasibility",
+                                                  "model",
+                                                  "revision",
+                                                  "precision",
+                                                  "device",
+                                                  "processor",
+                                                  "measurement",
+                                                  "platform",
+                                                  "cpu_threads",
+                                                  "accelerator_name",
+                                                  "torch",
+                                                  "transformers",
+                                                  "objective",
+                                                  "energy_available",
+                                                  "energy_boundary",
+                                                  "energy_limitation",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "selector",
+                                                  "bandit",
+                                                  "aggregates",
+                                                  "rows",
+                                                  "interpretation",
+                                                  "limits"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/latest.md",
+                      "bytes":  1384,
+                      "sha256":  "306c340cc538cbb6c2402cb0ca34a039c7b23bd4904cf659f9ad976accd54c80",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/memory-optimization/rtx3050-memory-optimization.json",
+                      "bytes":  67926,
+                      "sha256":  "0d9337422c7c9393b93f1b40c19816e97f6a722c011b93f0276b038d831286a6",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  3406,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model_revision",
+                                                  "baseline_sha256",
+                                                  "dataset",
+                                                  "tokens",
+                                                  "repeats",
+                                                  "changed_outputs",
+                                                  "summary",
+                                                  "rows",
+                                                  "memory_metric"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/memory-optimization/rtx3050-memory-optimization.md",
+                      "bytes":  1621,
+                      "sha256":  "0ad16ae2cb3ae64915e4cd28377fa59119dcd95a6ec91d0ee5cd2e93baa32327",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  29
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/nvidia-geforce-rtx-4060-laptop-gpu-device-profile.json",
+                      "bytes":  36455,
+                      "sha256":  "0e7adad556808096c5e7c51faffecca0b2a351152332dff8a9149e9ab70b178c",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1695,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "gpu",
+                                                  "energy_scope",
+                                                  "model",
+                                                  "limit",
+                                                  "prompts",
+                                                  "startup_choice",
+                                                  "decision",
+                                                  "acceptance_histogram",
+                                                  "intercept",
+                                                  "verify_j",
+                                                  "accepted_j",
+                                                  "rejected_j",
+                                                  "full_rmse_j",
+                                                  "token_count_rmse_j",
+                                                  "repeat_noise_j",
+                                                  "rejected_is_waste",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/nvidia-geforce-rtx-4060-laptop-gpu-score.json",
+                      "bytes":  18839,
+                      "sha256":  "b7a9105b07950e9075f9b50e04119aa9261299503bc19803723ec07b2e4b9987",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  895,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "bar_cleared",
+                                                  "reason",
+                                                  "gpu",
+                                                  "energy_scope",
+                                                  "fixed_action",
+                                                  "head_collapsed",
+                                                  "head_actions",
+                                                  "summary",
+                                                  "selector",
+                                                  "records"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/pilot/layerskip-fp32-pilot.json",
+                      "bytes":  589758,
+                      "sha256":  "9a31df08b15485fa7713826e892423860e5264ee2a5b6be5875729fdc45badf6",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  26924,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "status",
+                                                  "model",
+                                                  "model_revision",
+                                                  "arguments",
+                                                  "prompts",
+                                                  "environment",
+                                                  "exit_trained",
+                                                  "research_energy_evidence",
+                                                  "limitations",
+                                                  "rows",
+                                                  "paired_observation_deltas",
+                                                  "model_memory_bytes",
+                                                  "expected_runs"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/pilot/layerskip-fp32-pilot.md",
+                      "bytes":  2158,
+                      "sha256":  "7728c731bce6dc17ca0c1f34e396bc153309a3194e614fba55db9b402d78cf12",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  51
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/pilot/smollm-fp32-pilot.json",
+                      "bytes":  2673609,
+                      "sha256":  "73026299a64083a576fa42058db20fee7b9ff7e229156094605ca950a590816b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  123037,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "status",
+                                                  "model",
+                                                  "model_revision",
+                                                  "arguments",
+                                                  "prompts",
+                                                  "environment",
+                                                  "exit_trained",
+                                                  "research_energy_evidence",
+                                                  "limitations",
+                                                  "rows",
+                                                  "paired_observation_deltas",
+                                                  "model_memory_bytes",
+                                                  "expected_runs"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/pilot/smollm-fp32-pilot.md",
+                      "bytes":  2738,
+                      "sha256":  "5306e9063e02e8a4d8f7016efae7c6d97799f0951d67cdad91d118fd5750f578",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  61
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/pilot/validation.json",
+                      "bytes":  1856,
+                      "sha256":  "c48c370e43a27fe63c691ad840c67fcbf3c4b0f7229e13caef67ce8db1bcc113",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  53,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "stage",
+                                                  "unit_tests_passed",
+                                                  "unit_tests_seconds",
+                                                  "pretrained_pilot",
+                                                  "not_validated",
+                                                  "next_step",
+                                                  "note",
+                                                  "latest_unit_test_run",
+                                                  "layerskip_pilot"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/rtx3050-device-profile.json",
+                      "bytes":  312,
+                      "sha256":  "468a3fac64b9daad7856c3947b6d1e3e27d319e62789306804324032a74b288e",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  7,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "status",
+                                                  "gpu_visible",
+                                                  "required",
+                                                  "reason",
+                                                  "command"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/rtx3050-pelm-status.json",
+                      "bytes":  378,
+                      "sha256":  "fbe34631ca4898cb41922cb3d43935a53ef63e86f15d334a9026730c5429590f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  9,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "status",
+                                                  "gpu_visible",
+                                                  "required",
+                                                  "reason",
+                                                  "copied_4060_profile",
+                                                  "copied_4060_network",
+                                                  "command"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/rtx4060-pelm-score.json",
+                      "bytes":  13572,
+                      "sha256":  "afde7a8263c9a9641717c79b36ae4dd346019a7fe9665dcc52dc53df09b7c313",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  622,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "gpu",
+                                                  "energy_scope",
+                                                  "repeat_noise_j",
+                                                  "locked",
+                                                  "full_stop",
+                                                  "token_cap",
+                                                  "worked_examples",
+                                                  "shallow_check",
+                                                  "clock_written",
+                                                  "energy_counter_polled_inside_request",
+                                                  "calibration",
+                                                  "kept",
+                                                  "beats_short",
+                                                  "short_draft",
+                                                  "mean_short_minus_round_j",
+                                                  "per_token_win_rejected",
+                                                  "round_actions",
+                                                  "summary",
+                                                  "records",
+                                                  "result"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/rtx4060-pelm-teacher.json",
+                      "bytes":  1736,
+                      "sha256":  "d4eb2faaa330a7425df1efb6f4a09a973e6d85c7d5e2c7557aa7368a440d16b5",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  71,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "varies",
+                                                  "reason",
+                                                  "teacher_depth",
+                                                  "fits",
+                                                  "speeds",
+                                                  "speed_floor",
+                                                  "shared_verify_j",
+                                                  "repeat_noise_j",
+                                                  "locked",
+                                                  "trained",
+                                                  "train"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/rtx4060-reject-probe.json",
+                      "bytes":  5234,
+                      "sha256":  "b501a46cf66af1e3f888dd3d82cb8af409b3162d535df0b168add237a326d599",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  218,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "gpu",
+                                                  "energy_scope",
+                                                  "model",
+                                                  "revision",
+                                                  "verdict",
+                                                  "head_training",
+                                                  "token_match",
+                                                  "note",
+                                                  "intercept",
+                                                  "committed_j",
+                                                  "rejected_j",
+                                                  "full_rmse_j",
+                                                  "token_count_rmse_j",
+                                                  "repeat_noise_j",
+                                                  "reject_is_real",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/smoke/rtx3050-fp16-smoke.json",
+                      "bytes":  31077,
+                      "sha256":  "a49e03638f8f9a95152593e4811a0a472622f8df45fc32ff446c5672873e2ead",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1160,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "calibration_runs",
+                                                  "observer_pair_prompt_ids",
+                                                  "observer_pair_unique_prompts",
+                                                  "calibration_total_objective",
+                                                  "paired_observer_deltas",
+                                                  "paired_vs_ordinary",
+                                                  "feasibility",
+                                                  "model",
+                                                  "revision",
+                                                  "precision",
+                                                  "device",
+                                                  "processor",
+                                                  "measurement",
+                                                  "platform",
+                                                  "cpu_threads",
+                                                  "accelerator_name",
+                                                  "torch",
+                                                  "transformers",
+                                                  "objective",
+                                                  "energy_available",
+                                                  "energy_boundary",
+                                                  "energy_limitation",
+                                                  "dataset",
+                                                  "arguments",
+                                                  "selector",
+                                                  "bandit",
+                                                  "aggregates",
+                                                  "rows",
+                                                  "interpretation",
+                                                  "limits"
+                                              ]
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/results/smoke/rtx3050-fp16-smoke.md",
+                      "bytes":  1369,
+                      "sha256":  "65406825f04a1ba411dcaa972cd01f06fd0ceda973fa0e336c28312746aaa716",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  24
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/run.py",
+                      "bytes":  32514,
+                      "sha256":  "ba3a9cce21a2a97878fdfde41d89b2eb266742ed20a4854896174d34cb09d60e",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  564
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/score_configs.py",
+                      "bytes":  7255,
+                      "sha256":  "f6fd1e8bc48b4a3493441354464e9bd0314495fbbdda0084ea8ba3734a6e02a2",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  159
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/score_pelm.py",
+                      "bytes":  13880,
+                      "sha256":  "063d425927d20d5df0009e60cc28d120fe9faac13cd7ff830d96b1d3b90fc562",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  331
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/selector.py",
+                      "bytes":  12888,
+                      "sha256":  "b8bda531f7c54f88738da62d3597bf65d69a6cc61d4e6dc39134399960d22490",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  293
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/startup_sweep.py",
+                      "bytes":  8410,
+                      "sha256":  "ad43747aa8b817ff61c3c4192820d88e2b3a09c2b92c79bd503b4339a6dead9d",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  216
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/sweep.py",
+                      "bytes":  15987,
+                      "sha256":  "b22bb0981433c15025ccb9ce459070922d5196e25bbae17aaa5227ff1841695c",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  325
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/__init__.py",
+                      "bytes":  5,
+                      "sha256":  "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_config_head.py",
+                      "bytes":  1226,
+                      "sha256":  "9e38c975e33c0250e2dec8f7d177b0f25cfec741569d3293c6db7d48437df209",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  34
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_device_energy.py",
+                      "bytes":  4082,
+                      "sha256":  "5b592e195671223e7b81a7cb1b43c8fb9d0c5e987d8fc3bdd95d14357a8dbf65",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  97
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_engine.py",
+                      "bytes":  9136,
+                      "sha256":  "75ba93901bcf709be173fdaf7a32c7c9311c66359de97c57abffb7d5f0446706",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  161
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_gpu_clocks.py",
+                      "bytes":  2718,
+                      "sha256":  "e5e2600bc5eaf5310fb5427e9d8b9e27a32f31de3c2e1fe78ef5497113e7e019",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  64
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_graph_drafter.py",
+                      "bytes":  3795,
+                      "sha256":  "be1403a8e966940cb414852124106626e69b368d393f3b37eedb681748340aca",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  70
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_measurement.py",
+                      "bytes":  2592,
+                      "sha256":  "1d5ac06e1a00f82613698108fc950a6bdcf2de6943bd27b48da1387a5499a427",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  59
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_pelm_round.py",
+                      "bytes":  4067,
+                      "sha256":  "7b2753d0f8dd99c04bae0cc9889cea591490527454c3e6523ad773d3d5cdad40",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  109
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_pilot.py",
+                      "bytes":  3350,
+                      "sha256":  "b1e8bf3439989454e25a0a63b798d8c6374d12c94aae98dcc8babd9005cd356f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  65
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_reject_energy.py",
+                      "bytes":  1097,
+                      "sha256":  "da34698b4a3b4f6fafe90c941c07bfbdfb8cf9607151ecca73c856665db1cc65",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  32
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_run.py",
+                      "bytes":  828,
+                      "sha256":  "23106648dec14154e9cc3a2c8072d366e0c38c7d1ddd64603c8d77be466edc53",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  26
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_score_answer.py",
+                      "bytes":  2016,
+                      "sha256":  "885dfb2b417ec1b8a571915a025066572552a34bc9d8c63e5f8034e4919e7474",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  52
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_selector.py",
+                      "bytes":  5223,
+                      "sha256":  "82b6659dd3ba1ccd3bdb6f6a5adbe4ea38e213c5f71d8c6db40636f4e659c7c2",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  104
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/tests/test_sweep.py",
+                      "bytes":  3493,
+                      "sha256":  "dd0cd54b0de0cfe588a742dc0d9776a7170b3045bf382fd5487117634b997296",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  82
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/train_config_head.py",
+                      "bytes":  5730,
+                      "sha256":  "9226f25a4b504f6d915a57cdd6f7d6fdfa4b4da301ca0e07f31b32a3b2bfad72",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  145
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/train_pelm.py",
+                      "bytes":  2342,
+                      "sha256":  "effeee29bbb2e3dd9fe2258c69287eb03ff400e9805372633ae6ef804f55be49",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  71
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/vendor/LICENSE.LayerSkip",
+                      "bytes":  19733,
+                      "sha256":  "f7dff359f5caaec0e6aa991cfaa9dc52224113ff8fd17d090aef1ec446bab2dd",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  400
+                  },
+                  {
+                      "path":  "hardware_aware_selective_feedback/vendor/self_speculation/llama_model_utils.py",
+                      "bytes":  18028,
+                      "sha256":  "ae0f626ab5816b544d491af000d1cb00af14bc69b74ad4d00b91948f07348e1f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  443
+                  },
+                  {
+                      "path":  "joulerexit/RESEARCH_PLAN.md",
+                      "bytes":  6609,
+                      "sha256":  "b100ceab727efe9c556c1892f194557f2330a04f5a2f3051438320247564c5ce",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  73
+                  },
+                  {
+                      "path":  "joulerexit/__init__.py",
+                      "bytes":  75,
+                      "sha256":  "1f89df27fd94158b0106cf305f2df2f7ff8f4d1118b1ad9bb71d69f7dc88828b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  3
+                  },
+                  {
+                      "path":  "joulerexit/controller.py",
+                      "bytes":  2268,
+                      "sha256":  "78363ef36e9762e05cff3ad706905decd3b97f6f43da4a51b226dc59c1c85a52",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  52
+                  },
+                  {
+                      "path":  "joulerexit/decode.py",
+                      "bytes":  7094,
+                      "sha256":  "14dd79c427a4e16440511194890b1feea805dd8f8966200057d34928cc55be7f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  182
+                  },
+                  {
+                      "path":  "joulerexit/device_repeat.py",
+                      "bytes":  2596,
+                      "sha256":  "ae743c9c06950084af45ed4ed98cfaa9c895c78eae4251e08708bba7e14169f0",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  74
+                  },
+                  {
+                      "path":  "joulerexit/energy.py",
+                      "bytes":  1285,
+                      "sha256":  "0399334585b07eb8a542911633604daca4ebd3ebe72d6032b84e962f90c39781",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  42
+                  },
+                  {
+                      "path":  "joulerexit/evaluate.py",
+                      "bytes":  11754,
+                      "sha256":  "9ebe2c359f71d02e64a374b0e84adb1b71e72e51951d99e85c1870fb4d1d7a34",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  280
+                  },
+                  {
+                      "path":  "joulerexit/exits.py",
+                      "bytes":  1063,
+                      "sha256":  "24996e2aa94064795a92f74902835388ab8bf7b1f385ad79492056f6821a3813",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  26
+                  },
+                  {
+                      "path":  "joulerexit/forward.py",
+                      "bytes":  2161,
+                      "sha256":  "8a1d6799c0389a1d190fe9a63d98c2b58c2ed81d94e0504be784fa6fc964715b",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  62
+                  },
+                  {
+                      "path":  "joulerexit/gate.py",
+                      "bytes":  2084,
+                      "sha256":  "2760eb06a640c06f3e1109c7abc60d11e60b7caa41b9924bdad74db2bb51d333",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  48
+                  },
+                  {
+                      "path":  "joulerexit/paths.py",
+                      "bytes":  2207,
+                      "sha256":  "3d9b50f497a1419293578fe8a497b27dd1528f5de14a3ae301400258b12d0dcc",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  51
+                  },
+                  {
+                      "path":  "joulerexit/probe.py",
+                      "bytes":  5617,
+                      "sha256":  "66ccecf352c8ebdeed53ff2bb84eb25c638f13c53a80fc1a63595ea943a614bd",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  145
+                  },
+                  {
+                      "path":  "joulerexit/profile_io.py",
+                      "bytes":  1684,
+                      "sha256":  "4cf954366e6466c44185f48ab5daa5f317799fefbd8c57197b19002dc740569f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  41
+                  },
+                  {
+                      "path":  "joulerexit/requirements.txt",
+                      "bytes":  229,
+                      "sha256":  "dc206be3efa9b1f8975790559b35d1dc502185f32ca926bda1c0a1567137d405",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  7
+                  },
+                  {
+                      "path":  "joulerexit/residual.py",
+                      "bytes":  4434,
+                      "sha256":  "479dbb9eaae82fa3be78cc59bbe395cdf4a3622a37a5e17386138f8407188d24",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  121
+                  },
+                  {
+                      "path":  "joulerexit/results/rtx4060-eval.json",
+                      "bytes":  304808,
+                      "sha256":  "f7d4a784327d43e50fa61a2e4bf68c93b47770b90fecd5414bfc4195877ae51a",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  8659,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "gpu",
+                                                  "energy_scope",
+                                                  "tau",
+                                                  "controller",
+                                                  "summary",
+                                                  "paired_baseline_minus_residual",
+                                                  "examples",
+                                                  "judge"
+                                              ]
+                  },
+                  {
+                      "path":  "joulerexit/results/rtx4060-outcome.md",
+                      "bytes":  1267,
+                      "sha256":  "50473fd3e775be4e0a7790e6c9613f7e057cd773ad43f519568256415e897350",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  11
+                  },
+                  {
+                      "path":  "joulerexit/results/rtx4060-smollm-probe.json",
+                      "bytes":  4864,
+                      "sha256":  "06732e89772e8198438c7870147e6e807c1b5cfad4004f9157d1c10769b4160c",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  243,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "model",
+                                                  "gpu",
+                                                  "joules_are",
+                                                  "energy_scope",
+                                                  "counter",
+                                                  "exits",
+                                                  "residual_is_real",
+                                                  "depth_only_rmse_j",
+                                                  "full_rmse_j",
+                                                  "repeat_noise_j",
+                                                  "coefficients",
+                                                  "rows"
+                                              ]
+                  },
+                  {
+                      "path":  "joulerexit/skip_forward.py",
+                      "bytes":  8170,
+                      "sha256":  "59e6d2c257edb3360d5fdfe783bceae32e49b3ae98df04986aff1b9e96b88ca1",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  200
+                  },
+                  {
+                      "path":  "joulerexit/stats.py",
+                      "bytes":  1502,
+                      "sha256":  "543bbd0cc0c20c6ca642d0fdbf31488090d313da9db58db636d470b9f6a654e5",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  37
+                  },
+                  {
+                      "path":  "joulerexit/tasks.py",
+                      "bytes":  5570,
+                      "sha256":  "a3d07ccaf7463b65e0d0cada45c37343fb2c30fc3ef8de6f175302f013805347",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  171
+                  },
+                  {
+                      "path":  "joulerexit/tests/test_gate.py",
+                      "bytes":  1037,
+                      "sha256":  "e9d0347123b54070008aa4663f13c4a5ee6b6def31419f13fd68f3b7cd7fe9a7",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  29
+                  },
+                  {
+                      "path":  "joulerexit/tests/test_paths.py",
+                      "bytes":  3241,
+                      "sha256":  "69ea4d83b5c3d34cbdb01ed0367c51fdfae2c42a61ea47f525bd84617811311a",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  72
+                  },
+                  {
+                      "path":  "joulerexit/tests/test_residual.py",
+                      "bytes":  2561,
+                      "sha256":  "cc4bc67afa914358f5c824c51c143ae87e43ef41cdc052430aebd6cf2837478f",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  58
+                  },
+                  {
+                      "path":  "joulerexit/train.py",
+                      "bytes":  7369,
+                      "sha256":  "1234a1582111e3c985ede839969a1558194102972c0c02e97732348e1f57abbc",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  187
+                  },
+                  {
+                      "path":  "prototype/README.md",
+                      "bytes":  4539,
+                      "sha256":  "7fa766029875f15569c78a9386932c14d5c2838c6348a6ba03b85ca8795e0441",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  89
+                  },
+                  {
+                      "path":  "prototype/__init__.py",
+                      "bytes":  79,
+                      "sha256":  "199a4f0cea7f1b1962cc32c76e6785938261b989b42bc6b7c8d842b249652e93",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1
+                  },
+                  {
+                      "path":  "prototype/backends.py",
+                      "bytes":  9073,
+                      "sha256":  "6bbd144baa4224098a67627da195ea1dca220d1c5220d7c218ddb02a3c27729e",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  187
+                  },
+                  {
+                      "path":  "prototype/controller.py",
+                      "bytes":  5170,
+                      "sha256":  "208ab4ba811b691e78697a8dec0e39abc7e0c3f55d4ed61ae0aa6ad58ace9e37",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  111
+                  },
+                  {
+                      "path":  "prototype/data.py",
+                      "bytes":  5205,
+                      "sha256":  "399a51c1c61e3577a248031e6a88dc33dc5e497f231af4d15cc980aeff8e6657",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  108
+                  },
+                  {
+                      "path":  "prototype/demo.py",
+                      "bytes":  7615,
+                      "sha256":  "17c518922ea547603a63f6b64a04b3b46396d17d6ec5f8d7b745034457eb9ff8",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  173
+                  },
+                  {
+                      "path":  "prototype/devices.py",
+                      "bytes":  3137,
+                      "sha256":  "3fd21a590d2d9e5a2095daea72cbefe4a053b769307749515f44f7dd6cfa5fd2",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  60
+                  },
+                  {
+                      "path":  "prototype/doctor.py",
+                      "bytes":  2106,
+                      "sha256":  "6f44613d0e91ba68594a9255a250f99600a9071f60526e7da637694a814eb6bf",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  66
+                  },
+                  {
+                      "path":  "prototype/experiment.py",
+                      "bytes":  18179,
+                      "sha256":  "5002000ca0a8239ad5644d3a78bb0254fe15ebf90d53b778a3b8131d802fedbe",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  303
+                  },
+                  {
+                      "path":  "prototype/measurement.py",
+                      "bytes":  1867,
+                      "sha256":  "ca4ff3ff9adcd6eac59d34a0a4aec5803b52ab6554ae7b9ea6be97d9f513a64a",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  52
+                  },
+                  {
+                      "path":  "prototype/synthetic_profile.json",
+                      "bytes":  1030,
+                      "sha256":  "4f5834df5931bdc43cec6c762cbaf1ed3827dc908bbcdae666241d7f1f462a21",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  12,
+                      "json_parse":  "valid",
+                      "json_top_level_keys":  [
+                                                  "source",
+                                                  "description",
+                                                  "hardware",
+                                                  "precision",
+                                                  "actions"
+                                              ]
+                  },
+                  {
+                      "path":  "prototype/tests/__init__.py",
+                      "bytes":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  1
+                  },
+                  {
+                      "path":  "prototype/tests/test_prototype.py",
+                      "bytes":  3498,
+                      "sha256":  "cb2a31f5625a528d57bfafa8f2e1ceedc7c902828ad70f181481a047372e86fd",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  76
+                  },
+                  {
+                      "path":  "requirements.txt",
+                      "bytes":  589,
+                      "sha256":  "970d35e38e91eab04bd4b2614ee71512a78462fc4c6032a9f954716e74891065",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  18
+                  },
+                  {
+                      "path":  "run.txt",
+                      "bytes":  3427,
+                      "sha256":  "c380da855499aadf351e6a6872a54bc7e41cb4a54e2a1207c9737cfa9d1dc279",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  84
+                  },
+                  {
+                      "path":  "scripts/setup_cuda_3050.ps1",
+                      "bytes":  1196,
+                      "sha256":  "9aaebf7b37f184b5173c8def231beda97ced043c0eb4c5f3aaff70309783c803",
+                      "inspection":  "text_inventory_and_research_audit",
+                      "text_lines":  33
+                  }
+              ]
+}
