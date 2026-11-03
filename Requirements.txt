@@ -1,0 +1,18 @@
+# Single dependency list for Controller_simulation/, Layerskip_energy/ and
+# Distillation/. On Windows + RTX 3050, run Scripts/Install-CudaEnvironment.ps1,
+# which installs the CUDA build of torch first and then this file.
+
+# Core
+numpy==2.2.6
+psutil>=5.9
+# NVIDIA energy counters (provides the `pynvml` module)
+nvidia-ml-py
+
+# Model stack: the vendored LayerSkip helper requires transformers 4.50.0 exactly
+torch==2.6.0
+transformers==4.50.0
+huggingface-hub>=0.26,<1.0
+accelerate>=0.31
+datasets>=2.18
+sentencepiece>=0.2
+bitsandbytes>=0.45; platform_system != "Darwin"

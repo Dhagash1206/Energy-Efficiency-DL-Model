@@ -1,0 +1,14 @@
+# Formatting and lint settings for the whole repository: run `ruff format .` and `ruff check .`
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Vendored LayerSkip code stays as close to upstream as possible; results are data.
+extend-exclude = ["Layerskip_energy/Vendor", "Layerskip_energy/Results"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+# Module-level imports after sys.path / environment setup are intentional in the CLIs.
+ignore = ["E402", "E501"]
+
+[tool.ruff.format]
+quote-style = "preserve"

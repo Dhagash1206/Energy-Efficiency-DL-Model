@@ -6,7 +6,7 @@ __pycache__/
 models/
 
 # Generated synthetic demonstration reports
-prototype/results/
+Controller_simulation/Results/
 
 # Editor settings
 .vscode/

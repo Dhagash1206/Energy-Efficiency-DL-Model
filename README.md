@@ -1,8 +1,8 @@
 # Hardware-Aware Energy-Efficient LLM Inference through Model Compression and Adaptive Early Exit
 
 > **Current prototype:** The research direction is being refined toward
-> energy-aware adaptive self-speculative decoding. Run `python -m prototype.demo`
-> for a dependency-free controller demonstration; see [prototype/README.md](prototype/README.md).
+> energy-aware adaptive self-speculative decoding. Run `python -m Controller_simulation.Demo`
+> for a dependency-free controller demonstration; see [Controller_simulation/README.md](Controller_simulation/README.md).
 > Its energy and latency values are synthetic, not GPU measurements. The original
 > research plan below is retained for context.
 
@@ -62,7 +62,7 @@ Token generation  ->  Evaluation
 ```
 .
 |-- README.md
-|-- requirements.txt
+|-- Requirements.txt
 |-- configs/            # seeds, dataset paths, run settings
 |-- data/               # datasets (not committed if large)
 |-- models/             # downloaded and generated models (git-ignored)
@@ -70,7 +70,7 @@ Token generation  ->  Evaluation
 |-- stage2_hw_search/   # configuration search and benchmarking
 |-- stage3_early_exit/  # CALM-style adaptive inference
 |-- benchmarks/         # benchmark scripts and raw results per device
-|-- results/            # tables and plots
+|-- Results/            # tables and plots
 `-- docs/               # notes, proposal, hardware specs
 ```
 
@@ -78,14 +78,14 @@ Current layout:
 
 ```
 .
-|-- requirements.txt                    # single dependency list
-|-- prototype/                          # toy controller simulation (tests/ inside)
-|-- hardware_aware_selective_feedback/  # LayerSkip experiment + pilot
-|   |-- vendor/                         # attributed LayerSkip helper + license
-|   |-- tests/
-|   `-- results/                        # grouped by experiment
-|-- edge_llm_inference/                 # Qwen3 distillation and benchmarks
-`-- scripts/                            # setup_cuda_3050.ps1
+|-- Requirements.txt                    # single dependency list
+|-- Controller_simulation/                          # toy controller simulation (Tests/ inside)
+|-- Layerskip_energy/  # LayerSkip experiment + pilot
+|   |-- Vendor/                         # attributed LayerSkip helper + license
+|   |-- Tests/
+|   `-- Results/                        # grouped by experiment
+|-- Distillation/                 # Qwen3 distillation and benchmarks
+`-- Scripts/                            # Install-CudaEnvironment.ps1
 ```
 
 ## Setup
@@ -103,7 +103,7 @@ Current layout:
    ```
 3. Install the base dependencies
    ```
-   pip install -r requirements.txt
+   pip install -r Requirements.txt
    ```
 4. Install llama.cpp (build from source or use a prebuilt release) for INT8/INT4 quantization and inference.
 
@@ -112,7 +112,7 @@ Current layout:
 For the real CUDA path, use the Windows setup script in this repo:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup_cuda_3050.ps1
+powershell -ExecutionPolicy Bypass -File .\Scripts\Install-CudaEnvironment.ps1
 ```
 
 This installs the CUDA-enabled PyTorch build for NVIDIA GPUs, then checks whether the 3050 is visible to CUDA.
@@ -120,7 +120,7 @@ This installs the CUDA-enabled PyTorch build for NVIDIA GPUs, then checks whethe
 After installation, validate the GPU path with:
 
 ```powershell
-python -m prototype.doctor
+python -m Layerskip_energy.Check_gpu
 ```
 
 Expected output should report `CUDA available: True` and the RTX 3050 device name.
