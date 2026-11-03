@@ -4,35 +4,35 @@
     "HumanEval/139"
   ],
   "observer_pair_unique_prompts": 1,
-  "calibration_total_objective": 74.418,
+  "calibration_total_objective": 166.254,
   "paired_observer_deltas": [
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "mode": "selected_observe",
-      "latency_delta_s": -0.0003947000077459961,
-      "energy_delta_j": 5.894
+      "latency_delta_s": 0.0052192000148352236,
+      "energy_delta_j": 6.720000000000001
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "mode": "always_observe",
-      "latency_delta_s": 0.017386299994541332,
-      "energy_delta_j": 4.878
+      "latency_delta_s": 0.011584099993342534,
+      "energy_delta_j": 7.197000000000001
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "mode": "selected_observe",
-      "latency_delta_s": 0.004027599992696196,
-      "energy_delta_j": -0.016000000000000014
+      "latency_delta_s": 0.0042975000105798244,
+      "energy_delta_j": 3.5310000000000006
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "mode": "always_observe",
-      "latency_delta_s": 0.006842999981017783,
-      "energy_delta_j": -4.923
+      "latency_delta_s": 0.006446799990953878,
+      "energy_delta_j": 2.564
     }
   ],
   "paired_vs_ordinary": [
@@ -40,102 +40,104 @@
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "fixed",
-      "latency_delta_s": -0.003774300013901666,
-      "energy_delta_j": -5.515
+      "latency_delta_s": -0.003819800040218979,
+      "energy_delta_j": -6.736999999999998
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "never_observe",
-      "latency_delta_s": 0.05334029998630285,
-      "energy_delta_j": 0.10000000000000053
+      "latency_delta_s": 0.04220079997321591,
+      "energy_delta_j": -9.254
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "selected_observe",
-      "latency_delta_s": 0.052945599978556857,
-      "energy_delta_j": 5.994000000000001
+      "latency_delta_s": 0.04741999998805113,
+      "energy_delta_j": -2.533999999999999
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "always_observe",
-      "latency_delta_s": 0.07072659998084418,
-      "energy_delta_j": 4.978000000000001
+      "latency_delta_s": 0.05378489996655844,
+      "energy_delta_j": -2.0569999999999986
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "bandit",
-      "latency_delta_s": -0.003476000012597069,
-      "energy_delta_j": 0.16900000000000048
+      "latency_delta_s": 0.016033599997172132,
+      "energy_delta_j": -7.683
     },
     {
       "prompt_id": "HumanEval/97",
       "repeat": 0,
       "policy": "adaptive",
-      "latency_delta_s": 0.015120299998670816,
-      "energy_delta_j": -0.6579999999999995
+      "latency_delta_s": -4.660003469325602e-05,
+      "energy_delta_j": 0.8049999999999997
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "fixed",
-      "latency_delta_s": 0.0023495000205002725,
-      "energy_delta_j": -0.013000000000000789
+      "latency_delta_s": 0.0078096000070218,
+      "energy_delta_j": -0.002000000000000668
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "never_observe",
-      "latency_delta_s": -0.019728199986275285,
-      "energy_delta_j": -0.001000000000000334
+      "latency_delta_s": -0.016860299976542592,
+      "energy_delta_j": 0.6679999999999993
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "selected_observe",
-      "latency_delta_s": -0.01570059999357909,
-      "energy_delta_j": -0.017000000000000348
+      "latency_delta_s": -0.012562799965962768,
+      "energy_delta_j": 4.199
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "always_observe",
-      "latency_delta_s": -0.012885200005257502,
-      "energy_delta_j": -4.924
+      "latency_delta_s": -0.010413499985588714,
+      "energy_delta_j": 3.2319999999999993
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "bandit",
-      "latency_delta_s": -0.0014381000073626637,
-      "energy_delta_j": -0.11900000000000066
+      "latency_delta_s": -0.0009677000052761286,
+      "energy_delta_j": 5.462
     },
     {
       "prompt_id": "gsm8k-test-208",
       "repeat": 0,
       "policy": "adaptive",
-      "latency_delta_s": -0.005512299976544455,
-      "energy_delta_j": 0.12399999999999967
+      "latency_delta_s": -0.003485299996100366,
+      "energy_delta_j": -8.689
     }
   ],
+  "mismatches": [],
+  "excluded_configurations": [],
   "feasibility": {
     "best_executed_fixed_by_prompt": {
-      "HumanEval/97": "fixed",
+      "HumanEval/97": "never_observe",
       "gsm8k-test-208": "fixed"
     },
-    "best_fixed_varies_across_prompts": false,
+    "best_fixed_varies_across_prompts": true,
     "observation_overhead": {
       "selected_observe": {
-        "mean_delta_per_request": 2.939,
-        "median_delta_per_request": 2.939,
+        "mean_delta_per_request": 5.125500000000001,
+        "median_delta_per_request": 5.125500000000001,
         "n": 2
       },
       "always_observe": {
-        "mean_delta_per_request": -0.022499999999999964,
-        "median_delta_per_request": -0.022499999999999964,
+        "mean_delta_per_request": 4.8805000000000005,
+        "median_delta_per_request": 4.8805000000000005,
         "n": 2
       }
     },
@@ -202,13 +204,14 @@
     "probe": false,
     "threads": 4,
     "repeats": 1,
-    "objective": "energy",
+    "objective": "auto",
     "observer_pairs": 1,
     "quantize": null,
     "compile_model": false,
     "attn": "auto",
     "adaptive_drafts": false,
     "context_selector": false,
+    "stop_on_mismatch": false,
     "cuda_graph_drafts": false,
     "gpu_clock_mhz": null,
     "gpu_power_limit_w": null
@@ -221,37 +224,37 @@
     "context_costs_per_token": {},
     "executed_costs_per_token": {
       "(0, 0)": {
-        "mean": 2.4655,
-        "n": 1
+        "mean": 2.9901666666666666,
+        "n": 3
       },
       "(4, 1)": {
-        "mean": 1.19575,
+        "mean": 3.588,
         "n": 1
       },
       "(4, 3)": {
-        "mean": 1.184,
+        "mean": 3.45925,
         "n": 1
       },
       "(8, 1)": {
-        "mean": 1.25375,
+        "mean": 3.7775,
         "n": 1
       },
       "(8, 3)": {
-        "mean": 1.2794166666666666,
+        "mean": 3.1819166666666665,
         "n": 3
       },
       "(12, 1)": {
-        "mean": 1.1550625,
-        "n": 4
+        "mean": 1.6425,
+        "n": 2
       },
       "(12, 3)": {
-        "mean": 1.2485,
+        "mean": 3.3335,
         "n": 1
       }
     },
     "observed_request_costs_per_token": {
       "(8, 3)": {
-        "mean": 2.1225,
+        "mean": 4.177125,
         "n": 2
       }
     },
@@ -267,18 +270,18 @@
         "rate": 0.5
       },
       "12": {
-        "matches": 8,
-        "observations": 9,
-        "rate": 0.8888888888888888
+        "matches": 6,
+        "observations": 7,
+        "rate": 0.8571428571428571
       }
     },
     "measured_observer_deltas_per_token": {
       "selected": {
-        "mean": 0.05525000000000002,
+        "mean": 1.6317499999999998,
         "n": 1
       },
       "all": {
-        "mean": 1.7005,
+        "mean": 1.3190000000000002,
         "n": 1
       }
     },
@@ -286,104 +289,111 @@
   },
   "bandit": {
     "(0, 0)": {
-      "mean": 2.4655,
-      "n": 1
+      "mean": 2.240333333333333,
+      "n": 3
     },
     "(4, 1)": {
-      "mean": 1.1985000000000001,
-      "n": 2
+      "mean": 3.588,
+      "n": 1
     },
     "(4, 3)": {
-      "mean": 1.3025,
-      "n": 2
+      "mean": 3.45925,
+      "n": 1
     },
     "(8, 1)": {
-      "mean": 1.25375,
+      "mean": 3.7775,
       "n": 1
     },
     "(8, 3)": {
-      "mean": 1.349,
+      "mean": 4.14225,
       "n": 1
     },
     "(12, 1)": {
-      "mean": 0.971375,
+      "mean": 3.411375,
       "n": 2
     },
     "(12, 3)": {
-      "mean": 1.2485,
+      "mean": 3.3335,
       "n": 1
     }
   },
   "aggregates": {
     "ordinary": {
       "runs": 2,
-      "median_latency_s": 0.09599745000014082,
-      "total_latency_s": 0.19199490000028163,
+      "median_latency_s": 0.0930551000055857,
+      "total_latency_s": 0.1861102000111714,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.023999362500035204,
-      "energy_j": 10.439,
-      "energy_j_per_token": 1.304875,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.023263775001396425,
+      "energy_j": 26.604,
+      "energy_j_per_token": 3.3255,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "fixed": {
       "runs": 2,
-      "median_latency_s": 0.09528505000344012,
-      "total_latency_s": 0.19057010000688024,
+      "median_latency_s": 0.09504999998898711,
+      "total_latency_s": 0.19009999997797422,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.02382126250086003,
-      "energy_j": 4.911,
-      "energy_j_per_token": 0.613875,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.023762499997246778,
+      "energy_j": 19.865000000000002,
+      "energy_j_per_token": 2.4831250000000002,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "never_observe": {
       "runs": 2,
-      "median_latency_s": 0.1128035000001546,
-      "total_latency_s": 0.2256070000003092,
+      "median_latency_s": 0.10572535000392236,
+      "total_latency_s": 0.21145070000784472,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.02820087500003865,
-      "energy_j": 10.538,
-      "energy_j_per_token": 1.31725,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.02643133750098059,
+      "energy_j": 18.018,
+      "energy_j_per_token": 2.25225,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "selected_observe": {
       "runs": 2,
-      "median_latency_s": 0.1146199499926297,
-      "total_latency_s": 0.2292398999852594,
+      "median_latency_s": 0.11048370001662988,
+      "total_latency_s": 0.22096740003325976,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.028654987498157425,
-      "energy_j": 16.416,
-      "energy_j_per_token": 2.052,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.02762092500415747,
+      "energy_j": 28.269,
+      "energy_j_per_token": 3.533625,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "always_observe": {
       "runs": 2,
-      "median_latency_s": 0.12491814998793416,
-      "total_latency_s": 0.24983629997586831,
+      "median_latency_s": 0.11474079999607056,
+      "total_latency_s": 0.22948159999214113,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.03122953749698354,
-      "energy_j": 10.493,
-      "energy_j_per_token": 1.311625,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.02868519999901764,
+      "energy_j": 27.779,
+      "energy_j_per_token": 3.472375,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "bandit": {
       "runs": 2,
-      "median_latency_s": 0.09354039999016095,
-      "total_latency_s": 0.1870807999803219,
+      "median_latency_s": 0.1005880500015337,
+      "total_latency_s": 0.2011761000030674,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.023385099997540237,
-      "energy_j": 10.489,
-      "energy_j_per_token": 1.311125,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.025147012500383426,
+      "energy_j": 24.383,
+      "energy_j_per_token": 3.047875,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     },
     "adaptive": {
       "runs": 2,
-      "median_latency_s": 0.100801450011204,
-      "total_latency_s": 0.201602900022408,
+      "median_latency_s": 0.09128914999018889,
+      "total_latency_s": 0.18257829998037778,
       "total_generated_tokens": 8,
-      "latency_s_per_token": 0.025200362502801,
-      "energy_j": 9.905000000000001,
-      "energy_j_per_token": 1.2381250000000001,
-      "all_greedy_match": true
+      "latency_s_per_token": 0.022822287497547222,
+      "energy_j": 18.72,
+      "energy_j_per_token": 2.34,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
     }
   },
   "rows": [
@@ -404,8 +414,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.11990349998814054,
-      "energy_j": 9.862,
+      "latency_s": 0.1248945000115782,
+      "energy_j": 8.933,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -432,8 +442,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1329459999979008,
-      "energy_j": 4.783,
+      "latency_s": 0.13084260001778603,
+      "energy_j": 14.352,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -460,8 +470,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1264027000288479,
-      "energy_j": 4.736,
+      "latency_s": 0.1269419000018388,
+      "energy_j": 13.837,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -488,8 +498,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1283244999940507,
-      "energy_j": 5.015,
+      "latency_s": 0.10064889999921434,
+      "energy_j": 15.11,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -516,8 +526,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.16067969999858178,
-      "energy_j": 5.396,
+      "latency_s": 0.1137921999907121,
+      "energy_j": 16.569,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -544,8 +554,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.096321099990746,
-      "energy_j": 3.652,
+      "latency_s": 0.09037399999215268,
+      "energy_j": 13.14,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -572,8 +582,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.08523440000135452,
-      "energy_j": 4.994,
+      "latency_s": 0.08761079999385402,
+      "energy_j": 13.334,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -602,8 +612,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.12220630000228994,
-      "energy_j": 5.658,
+      "latency_s": 0.12845009999000467,
+      "energy_j": 22.2,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -630,8 +640,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.11654320001252927,
-      "energy_j": 5.437,
+      "latency_s": 0.11311530001694337,
+      "energy_j": 15.673,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -661,8 +671,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1271646000095643,
-      "energy_j": 11.322,
+      "latency_s": 0.12511669998639263,
+      "energy_j": 11.217,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -689,8 +699,8 @@
         366
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1578991999849677,
-      "energy_j": 4.52,
+      "latency_s": 0.11548170002060942,
+      "energy_j": 5.941,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -707,8 +717,8 @@
       "policy": "adaptive_calibration",
       "repeat": 0,
       "order": 0,
-      "depth": 12,
-      "draft_length": 1,
+      "depth": 0,
+      "draft_length": 0,
       "observed_exits": [],
       "tokens": [
         50002,
@@ -717,15 +727,15 @@
         264
       ],
       "generated_tokens": 4,
-      "latency_s": 0.12348750000819564,
-      "energy_j": 4.924,
+      "latency_s": 0.09391659998800606,
+      "energy_j": 8.229,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
       "valid_feedback": 0,
       "excluded_feedback": 0,
-      "accepted_drafts": 1,
-      "drafted_tokens": 1,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
       "greedy_match": true
     },
     {
@@ -735,8 +745,8 @@
       "policy": "bandit_calibration",
       "repeat": 0,
       "order": 0,
-      "depth": 12,
-      "draft_length": 1,
+      "depth": 0,
+      "draft_length": 0,
       "observed_exits": [],
       "tokens": [
         50002,
@@ -745,15 +755,15 @@
         264
       ],
       "generated_tokens": 4,
-      "latency_s": 0.08969920000527054,
-      "energy_j": 4.119,
+      "latency_s": 0.11079310000059195,
+      "energy_j": 7.719,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
       "valid_feedback": 0,
       "excluded_feedback": 0,
-      "accepted_drafts": 1,
-      "drafted_tokens": 1,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
       "greedy_match": true
     },
     {
@@ -763,8 +773,8 @@
       "policy": "bandit",
       "repeat": 0,
       "order": 0,
-      "depth": 4,
-      "draft_length": 3,
+      "depth": 0,
+      "draft_length": 0,
       "observed_exits": [],
       "tokens": [
         262,
@@ -773,15 +783,15 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09134549999726005,
-      "energy_j": 5.684,
+      "latency_s": 0.11034040001686662,
+      "energy_j": 10.232,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
       "valid_feedback": 0,
       "excluded_feedback": 0,
-      "accepted_drafts": 1,
-      "drafted_tokens": 2,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
       "greedy_match": true
     },
     {
@@ -791,8 +801,8 @@
       "policy": "adaptive",
       "repeat": 0,
       "order": 1,
-      "depth": 12,
-      "draft_length": 1,
+      "depth": 0,
+      "draft_length": 0,
       "observed_exits": [],
       "tokens": [
         262,
@@ -801,15 +811,15 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.10994180000852793,
-      "energy_j": 4.857,
+      "latency_s": 0.09426019998500124,
+      "energy_j": 18.72,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
       "valid_feedback": 0,
       "excluded_feedback": 0,
-      "accepted_drafts": 1,
-      "drafted_tokens": 1,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
       "greedy_match": true
     },
     {
@@ -832,8 +842,8 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.1655480999907013,
-      "energy_j": 10.493,
+      "latency_s": 0.14809169998625293,
+      "energy_j": 15.858,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -862,8 +872,8 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.14776709998841397,
-      "energy_j": 11.509,
+      "latency_s": 0.14172680000774562,
+      "energy_j": 15.381,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -890,8 +900,8 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09104719999595545,
-      "energy_j": 0.0,
+      "latency_s": 0.09048699997947551,
+      "energy_j": 11.178,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -918,8 +928,8 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.14816179999615997,
-      "energy_j": 5.615,
+      "latency_s": 0.1365075999929104,
+      "energy_j": 8.661,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -946,8 +956,8 @@
         2948
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09482150000985712,
-      "energy_j": 5.515,
+      "latency_s": 0.09430680001969449,
+      "energy_j": 17.915,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -964,7 +974,7 @@
       "policy": "bandit",
       "repeat": 0,
       "order": 0,
-      "depth": 4,
+      "depth": 12,
       "draft_length": 1,
       "observed_exits": [],
       "tokens": [
@@ -974,15 +984,15 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09573529998306185,
-      "energy_j": 4.805,
+      "latency_s": 0.09083569998620078,
+      "energy_j": 14.151,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
       "valid_feedback": 0,
       "excluded_feedback": 0,
       "accepted_drafts": 1,
-      "drafted_tokens": 2,
+      "drafted_tokens": 1,
       "greedy_match": true
     },
     {
@@ -1002,8 +1012,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09952290001092479,
-      "energy_j": 4.911,
+      "latency_s": 0.09961299999849871,
+      "energy_j": 8.687,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -1030,8 +1040,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.07744520000414923,
-      "energy_j": 4.923,
+      "latency_s": 0.07494310001493432,
+      "energy_j": 9.357,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -1058,8 +1068,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09717339999042451,
-      "energy_j": 4.924,
+      "latency_s": 0.09180339999147691,
+      "energy_j": 8.689,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -1086,8 +1096,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.09166110001388006,
-      "energy_j": 5.048,
+      "latency_s": 0.08831809999537654,
+      "energy_j": 0.0,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -1117,8 +1127,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.08428819998516701,
-      "energy_j": 0.0,
+      "latency_s": 0.0813899000058882,
+      "energy_j": 11.921,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
@@ -1147,8 +1157,8 @@
         19
       ],
       "generated_tokens": 4,
-      "latency_s": 0.08147279999684542,
-      "energy_j": 4.907,
+      "latency_s": 0.07924060002551414,
+      "energy_j": 12.888,
       "energy_boundary": "nvidia_gpu",
       "energy_source": "NVML cumulative GPU energy counter (mJ)",
       "energy_reason": null,
