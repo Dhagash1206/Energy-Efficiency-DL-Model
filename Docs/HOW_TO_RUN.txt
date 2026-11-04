@@ -1,0 +1,91 @@
+HOW TO RUN - Energy-Efficiency-DL-Model
+Run every command from the repository root.
+
+
+1. SETUP
+--------
+Windows + RTX 3050 (installs CUDA torch 2.6.0, then Requirements.txt):
+  powershell -ExecutionPolicy Bypass -File .\Scripts\Install-CudaEnvironment.ps1
+
+macOS / Linux / CPU:
+  python3.12 -m venv .venv
+  source .venv/bin/activate
+  pip install -r Requirements.txt pytest
+
+Note: transformers must be exactly 4.50.0 (pinned); newer versions break
+the vendored LayerSkip code.
+
+Check the GPU:
+  python -m Layerskip_energy.Check_gpu
+
+
+2. TESTS
+--------
+All tests:
+  python -m pytest -q Layerskip_energy Controller_simulation
+
+One file:
+  python -m pytest -q Layerskip_energy/Tests/test_decoding_engine.py
+
+Expected: 57 passed.
+
+
+3. SYNTHETIC DEMO (no model, fictional numbers)
+-----------------------------------------------
+  python -m Controller_simulation.Demo
+
+
+4. PILOT (mechanics check; writes Results/Pilot/)
+-------------------------------------------------
+Random tiny model, offline:
+  python -B -m Layerskip_energy.Mechanics_pilot --model tiny
+
+SmolLM2-135M (downloads ~270 MB to layerskip/cache):
+  python -B -m Layerskip_energy.Mechanics_pilot --model smollm --prompts 2 --tokens 12 --repeats 3
+
+
+5. MAIN EXPERIMENT (LayerSkip 1B; needs Hugging Face access)
+------------------------------------------------------------
+One-time login and download:
+  hf auth login
+  python -B -m Layerskip_energy.Download_weights
+
+Probe device and energy counter (no model load):
+  python -m Layerskip_energy.Run_experiment --probe --device auto
+
+Smoke run (saved separately so Results/latest.json is kept):
+  python -m Layerskip_energy.Run_experiment --device cuda --precision fp16 --objective energy --calibration 1 --test 1 --tokens 4 --repeats 1 --observer-pairs 1 --output Layerskip_energy/Results/Smoke/my-smoke.json
+
+Full run with the efficiency options:
+  python -m Layerskip_energy.Run_experiment --device cuda --precision fp16 --objective energy --calibration 4 --test 8 --tokens 64 --repeats 3 --adaptive-drafts --context-selector
+
+Fixed-setting energy sweep:
+  python -m Layerskip_energy.Fixed_setting_sweep --device cuda --precision fp16 --test 4 --tokens 16 --repeats 2 --adaptive-drafts --output Layerskip_energy/Results/Fixed-sweep/my-sweep.json
+
+
+6. EFFICIENCY FLAGS (Run_experiment.py / Fixed_setting_sweep.py)
+---------------------------------------
+  --adaptive-drafts        shorten drafts below 50% acceptance, ordinary below 30%
+  --context-selector       per prompt-type selector costs (Run_experiment.py only)
+  --batch-sizes 2 4 8      batched ordinary-decoding baseline (Fixed_setting_sweep.py only)
+  --cuda-graph-drafts      PROTOTYPE static-cache CUDA Graph drafts (CUDA only)
+  --stop-on-mismatch       abort on first greedy mismatch (default: record + exclude)
+
+Diagnose greedy mismatches recorded in a report:
+  python -m Layerskip_energy.Diagnose_mismatch --report path/to/report.json
+
+Larger FP16 run (the one that stopped at depth=4, length=3):
+  python -m Layerskip_energy.Run_experiment --device cuda --precision fp16 --objective energy --calibration 8 --test 16 --tokens 64 --repeats 3 --output Layerskip_energy/Results/Fp16-run/fp16-large.json
+  --gpu-clock-mhz 1500     lock GPU clock (admin/root, CUDA only)
+  --gpu-power-limit-w 50   cap GPU power (admin/root, CUDA only)
+  --quantize int8|int4     bitsandbytes weights (Run_experiment.py, CUDA only)
+  --compile                torch.compile reduce-overhead (Run_experiment.py)
+Details: EFFICIENCY_CHANGES.txt
+
+
+7. DISTILLATION (Qwen3-1.7B -> Qwen3-0.6B)
+------------------------------------------
+Needs models/qwen3-1.7b and models/qwen3-0.6b in the working directory.
+  cd Distillation
+  python Distill.py        # writes models/qwen3-0.6b-distilled
+  python Benchmark_models.py    # speed/memory comparison of student vs teacher
