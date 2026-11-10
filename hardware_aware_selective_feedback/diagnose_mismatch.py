@@ -12,6 +12,7 @@ Usage:
     python -m hardware_aware_selective_feedback.diagnose_mismatch
     python -m hardware_aware_selective_feedback.diagnose_mismatch --report path/to/report.json
 """
+
 import os
 from pathlib import Path
 
@@ -26,15 +27,14 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import argparse
 import json
 import torch
-from transformers import AutoTokenizer, LlamaForCausalLM
 
 from hardware_aware_selective_feedback.run import MAX_PROMPT_TOKENS, load_model, load_prompts
 from hardware_aware_selective_feedback.engine import native_greedy, generate
 
 # ── prompts that diverge ────────────────────────────────────────────────────
 CASES = [
-    {"prompt_id": "gsm8k-test-880",  "mismatch_token": 21,  "depth": 4, "draft": 1},
-    {"prompt_id": "gsm8k-test-411",  "mismatch_token": 93,  "depth": 4, "draft": 1},
+    {"prompt_id": "gsm8k-test-880", "mismatch_token": 21, "depth": 4, "draft": 1},
+    {"prompt_id": "gsm8k-test-411", "mismatch_token": 93, "depth": 4, "draft": 1},
 ]
 TOKEN_LIMIT = 100
 DEFAULT_PROMPT_SET = {"calibration": 1, "test": 4, "seed": 44}  # the sweep that found CASES
@@ -45,51 +45,67 @@ def cases_from_report(report_path: Path) -> tuple[list[dict], dict, int, str]:
     report = json.loads(report_path.read_text(encoding="utf-8"))
     arguments = report["arguments"]
     # sweep.py loads one calibration prompt per dataset; run.py records its own count.
-    prompt_set = {"calibration": arguments.get("calibration", 1),
-                  "test": arguments["test"], "seed": arguments["seed"]}
+    prompt_set = {
+        "calibration": arguments.get("calibration", 1),
+        "test": arguments["test"],
+        "seed": arguments["seed"],
+    }
     unique = {}
     for item in report.get("mismatches", []):
+        if item.get("policy") == "del" or item["depth"] is None or item["draft_length"] is None:
+            raise ValueError(
+                "Dynamic DEL mismatches cannot be replayed as a fixed depth/length. "
+                "Inspect the report's del_cycles and rerun with the recorded DEL settings."
+            )
         key = (item["prompt_id"], item["depth"], item["draft_length"])
-        unique.setdefault(key, {"prompt_id": item["prompt_id"],
-                                "mismatch_token": item["token_index"],
-                                "depth": item["depth"], "draft": item["draft_length"]})
+        unique.setdefault(
+            key,
+            {
+                "prompt_id": item["prompt_id"],
+                "mismatch_token": item["token_index"],
+                "depth": item["depth"],
+                "draft": item["draft_length"],
+            },
+        )
     return list(unique.values()), prompt_set, arguments["tokens"], arguments["precision"]
 
 
 def top2_margin_at(logits_fp32: torch.Tensor, pos: int) -> dict:
     """Return top-1 token, top-2 token, and the gap at position `pos`."""
-    row = logits_fp32[pos]           # [vocab]
+    row = logits_fp32[pos]  # [vocab]
     vals, idxs = row.topk(2)
     return {
-        "top1_id":  idxs[0].item(),
-        "top2_id":  idxs[1].item(),
+        "top1_id": idxs[0].item(),
+        "top2_id": idxs[1].item(),
         "top1_val": vals[0].item(),
         "top2_val": vals[1].item(),
-        "margin":   (vals[0] - vals[1]).item(),
+        "margin": (vals[0] - vals[1]).item(),
     }
 
 
 @torch.inference_mode()
-def run_fp16_with_margins(model, prompt_ids: list, limit: int,
-                           depth: int, draft: int, mismatch_pos: int,
-                           eos) -> dict:
+def run_fp16_with_margins(
+    model, prompt_ids: list, limit: int, depth: int, draft: int, mismatch_pos: int, eos
+) -> dict:
     """Run generate() with log_margins=True and return cycle data."""
     result = generate(
-        model, prompt_ids, limit,
-        depth=depth, drafts=draft,
-        eos=eos, log_margins=True,
+        model,
+        prompt_ids,
+        limit,
+        depth=depth,
+        drafts=draft,
+        eos=eos,
+        log_margins=True,
     )
     tokens = result["tokens"]
 
     # Find which cycle contains the mismatch token position.
     # Tokens are committed cumulatively; track which cycle emitted token[mismatch_pos].
     pos_cursor = 0
-    target_cycle = None
     cycle_margin = None
     for cyc in result["cycles"]:
         n = len(cyc["committed"])
         if pos_cursor + n > mismatch_pos:
-            target_cycle = cyc
             # Position within this cycle's target sequence.
             local = mismatch_pos - pos_cursor
             if cyc.get("top2_margin") is not None:
@@ -98,10 +114,10 @@ def run_fp16_with_margins(model, prompt_ids: list, limit: int,
         pos_cursor += n
 
     return {
-        "tokens":          tokens,
+        "tokens": tokens,
         "mismatch_token_id": tokens[mismatch_pos] if len(tokens) > mismatch_pos else None,
         "cycle_margin_at_mismatch": cycle_margin,
-        "cycles_total":    len(result["cycles"]),
+        "cycles_total": len(result["cycles"]),
     }
 
 
@@ -125,11 +141,15 @@ def run_fp32_reference(model_fp16, prompt_ids: list, limit: int, eos) -> list:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--report", type=Path,
-                        help="run.py or sweep.py JSON report whose mismatches to diagnose")
+    parser.add_argument(
+        "--report", type=Path, help="run.py or sweep.py JSON report whose mismatches to diagnose"
+    )
     args = parser.parse_args()
     if args.report:
-        cases, prompt_set, token_limit, precision = cases_from_report(args.report)
+        try:
+            cases, prompt_set, token_limit, precision = cases_from_report(args.report)
+        except ValueError as error:
+            parser.error(str(error))
         if not cases:
             print(f"No mismatches recorded in {args.report}")
             return
@@ -145,8 +165,9 @@ def main():
     print(f"Model loaded  revision={rev}\n")
 
     # Rebuild the prompt set the mismatching run used (calibration prompts too).
-    calibration, heldout, _ = load_prompts(prompt_set["calibration"], prompt_set["test"],
-                                           prompt_set["seed"])
+    calibration, heldout, _ = load_prompts(
+        prompt_set["calibration"], prompt_set["test"], prompt_set["seed"]
+    )
     prompt_map = {}
     for p in calibration + heldout:
         ids = tokenizer.encode(p["text"], add_special_tokens=True)[:MAX_PROMPT_TOKENS]
@@ -154,8 +175,8 @@ def main():
 
     results = {}
     for case in cases:
-        pid   = case["prompt_id"]
-        mpos  = case["mismatch_token"]
+        pid = case["prompt_id"]
+        mpos = case["mismatch_token"]
         depth = case["depth"]
         draft = case["draft"]
 
@@ -164,7 +185,7 @@ def main():
             continue
 
         prompt_ids = prompt_map[pid]
-        print(f"{'─'*60}")
+        print(f"{'─' * 60}")
         print(f"Prompt: {pid}  |  mismatch at token {mpos}")
         print(f"Prompt length: {len(prompt_ids)} tokens")
 
@@ -173,14 +194,15 @@ def main():
         print(f"  FP16 greedy  token[{mpos}] = {ref_fp16[mpos] if len(ref_fp16) > mpos else 'EOS'}")
 
         # 2. FP16 LayerSkip with margin logging.
-        ls_fp16  = run_fp16_with_margins(model, prompt_ids, token_limit,
-                                          depth, draft, mpos, eos)
-        match_fp16 = (ls_fp16["tokens"][:token_limit] == ref_fp16[:token_limit])
-        print(f"  LayerSkip FP16  token[{mpos}] = {ls_fp16['mismatch_token_id']}  "
-              f"match={match_fp16}")
+        ls_fp16 = run_fp16_with_margins(model, prompt_ids, token_limit, depth, draft, mpos, eos)
+        match_fp16 = ls_fp16["tokens"][:token_limit] == ref_fp16[:token_limit]
+        print(
+            f"  LayerSkip FP16  token[{mpos}] = {ls_fp16['mismatch_token_id']}  match={match_fp16}"
+        )
         if ls_fp16["cycle_margin_at_mismatch"] is not None:
-            print(f"  Top-2 logit margin at token {mpos}: "
-                  f"{ls_fp16['cycle_margin_at_mismatch']:.6f}")
+            print(
+                f"  Top-2 logit margin at token {mpos}: {ls_fp16['cycle_margin_at_mismatch']:.6f}"
+            )
         else:
             print(f"  (margin not captured at token {mpos})")
 
@@ -189,23 +211,23 @@ def main():
         print(f"  FP32 greedy  token[{mpos}] = {ref_fp32[mpos] if len(ref_fp32) > mpos else 'EOS'}")
 
         # 4. Agreement check with FP32 as ground truth.
-        agree_fp16_vs_fp32 = (ref_fp16[:token_limit] == ref_fp32[:token_limit])
-        agree_ls_vs_fp32   = (ls_fp16["tokens"][:token_limit] == ref_fp32[:token_limit])
+        agree_fp16_vs_fp32 = ref_fp16[:token_limit] == ref_fp32[:token_limit]
+        agree_ls_vs_fp32 = ls_fp16["tokens"][:token_limit] == ref_fp32[:token_limit]
         print(f"  FP16-greedy agrees with FP32: {agree_fp16_vs_fp32}")
         print(f"  LayerSkip   agrees with FP32: {agree_ls_vs_fp32}")
 
         results[pid] = {
             "mismatch_token": mpos,
             "ref_fp16_token": ref_fp16[mpos] if len(ref_fp16) > mpos else None,
-            "ls_fp16_token":  ls_fp16["mismatch_token_id"],
+            "ls_fp16_token": ls_fp16["mismatch_token_id"],
             "ref_fp32_token": ref_fp32[mpos] if len(ref_fp32) > mpos else None,
-            "margin":         ls_fp16["cycle_margin_at_mismatch"],
+            "margin": ls_fp16["cycle_margin_at_mismatch"],
             "fp16_greedy_matches_fp32": agree_fp16_vs_fp32,
-            "ls_matches_fp32":          agree_ls_vs_fp32,
+            "ls_matches_fp32": agree_ls_vs_fp32,
         }
         print()
 
-    print(f"{'═'*60}")
+    print(f"{'═' * 60}")
     print("Summary:")
     print(json.dumps(results, indent=2))
 

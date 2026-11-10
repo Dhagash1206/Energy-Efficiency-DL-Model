@@ -1,14 +1,21 @@
-﻿import unittest
+import unittest
 from hardware_aware_selective_feedback.selector import Action, CostBandit, Selector
 
 
 class SelectorTests(unittest.TestCase):
     def test_valid_feedback_only_and_no_counterfactual_cost(self):
         policy = Selector(depths=(1, 2), lengths=(1,))
-        output = {"tokens": [4, 5], "cycles": [{"observations": [
-            {"depth": 2, "valid": True, "match": True},
-            {"depth": 2, "valid": False, "match": None},
-        ]}]}
+        output = {
+            "tokens": [4, 5],
+            "cycles": [
+                {
+                    "observations": [
+                        {"depth": 2, "valid": True, "match": True},
+                        {"depth": 2, "valid": False, "match": None},
+                    ]
+                }
+            ],
+        }
         policy.update(Action(1, 1, (2,)), {"latency_s": 2.0, "energy_j": None}, output)
         self.assertEqual(policy._matches[2], [1, 1])
         self.assertEqual(dict(policy._costs), {})
@@ -20,7 +27,9 @@ class SelectorTests(unittest.TestCase):
         sample = ({"tokens": [1], "cycles": []}, {"latency_s": 1.0, "energy_j": None})
         policy.update(Action(), sample[1], sample[0])
         self.assertEqual(policy.choose(10).key, (1, 1))
-        policy.record_observer_pair(sample, (sample[0], {"latency_s": 1.2, "energy_j": None}), "selected")
+        policy.record_observer_pair(
+            sample, (sample[0], {"latency_s": 1.2, "energy_j": None}), "selected"
+        )
         self.assertAlmostEqual(policy._observer_cost["selected"][0], 0.2)
 
     def test_paid_observation_does_not_bias_base_cost(self):
@@ -34,8 +43,10 @@ class SelectorTests(unittest.TestCase):
 
     def test_executed_draft_only_counts_valid_prefix(self):
         policy = Selector(depths=(1, 2), lengths=(3,))
-        output = {"tokens": [4, 5], "cycles": [{"draft": [8, 9, 10],
-                  "accepted": 1, "observations": []}]}
+        output = {
+            "tokens": [4, 5],
+            "cycles": [{"draft": [8, 9, 10], "accepted": 1, "observations": []}],
+        }
         policy.update(Action(1, 3), {"latency_s": 2.0}, output)
         self.assertEqual(policy._matches[1], [1, 2])
 

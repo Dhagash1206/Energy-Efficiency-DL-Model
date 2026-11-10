@@ -1,1 +1,1 @@
-﻿"""Real-model adaptive self-speculative inference experiment."""
+"""Real-model adaptive self-speculative inference experiment."""

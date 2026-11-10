@@ -1,8 +1,9 @@
-﻿"""Measured request latency and optional cumulative hardware energy counters.
+"""Measured request latency and optional cumulative hardware energy counters.
 
 A counter's scope is explicit. CPU package and GPU energy must not be described
 as whole-device energy, and missing sensors never become estimated joules.
 """
+
 import argparse
 import ctypes
 import json
@@ -15,8 +16,15 @@ import torch
 
 
 class Meter:
-    def __init__(self, device, energy_source="auto", counter_file=None,
-                 counter_unit="joules", energy_scope=None, rapl_root=None):
+    def __init__(
+        self,
+        device,
+        energy_source="auto",
+        counter_file=None,
+        counter_unit="joules",
+        energy_scope=None,
+        rapl_root=None,
+    ):
         self.device = torch.device(device)
         self.backend = None
         self.handle = None
@@ -47,12 +55,15 @@ class Meter:
             self.reason = "Energy measurement disabled"
         elif energy_source == "nvml" or (energy_source == "auto" and self.device.type == "cuda"):
             self._init_nvml()
-        elif energy_source == "rapl" or (energy_source == "auto" and self.device.type == "cpu"
-                                          and platform.system() == "Linux"):
-            self._init_rapl(Path(rapl_root) if rapl_root is not None
-                            else Path("/sys/class/powercap"))
-        elif energy_source == "emi" or (energy_source == "auto" and self.device.type == "cpu"
-                                         and platform.system() == "Windows"):
+        elif energy_source == "rapl" or (
+            energy_source == "auto" and self.device.type == "cpu" and platform.system() == "Linux"
+        ):
+            self._init_rapl(
+                Path(rapl_root) if rapl_root is not None else Path("/sys/class/powercap")
+            )
+        elif energy_source == "emi" or (
+            energy_source == "auto" and self.device.type == "cpu" and platform.system() == "Windows"
+        ):
             self._init_emi()
         else:
             self.reason = "No supported cumulative energy counter for this device/OS"
@@ -80,6 +91,7 @@ class Meter:
             return
         try:
             import pynvml
+
             pynvml.nvmlInit()
             self.nvml = pynvml
             uuid = str(torch.cuda.get_device_properties(self.device).uuid)
@@ -109,7 +121,11 @@ class Meter:
                     energy = zone / "energy_uj"
                     maximum = zone / "max_energy_range_uj"
                     if energy.is_file() and maximum.is_file():
-                        name = (zone / "name").read_text().strip() if (zone / "name").is_file() else zone.name
+                        name = (
+                            (zone / "name").read_text().strip()
+                            if (zone / "name").is_file()
+                            else zone.name
+                        )
                         zones.append((energy, int(maximum.read_text().strip()), name))
             if not zones:
                 raise FileNotFoundError("no readable top-level RAPL package zones")
@@ -136,7 +152,7 @@ class Meter:
             offset += 6
             if unit != 0 or length < 2 or length % 2 or offset + length > len(metadata):
                 raise ValueError("invalid EMI channel")
-            name = metadata[offset:offset + length].decode("utf-16-le").split("\0", 1)[0]
+            name = metadata[offset : offset + length].decode("utf-16-le").split("\0", 1)[0]
             if name.endswith("_PKG"):
                 packages.append((index, name))
             offset += length
@@ -145,8 +161,9 @@ class Meter:
     def _emi_ioctl(self, handle, code, size):
         output = ctypes.create_string_buffer(size)
         returned = ctypes.c_uint32()
-        if not self.emi_kernel.DeviceIoControl(handle, code, None, 0, output, size,
-                                               ctypes.byref(returned), None):
+        if not self.emi_kernel.DeviceIoControl(
+            handle, code, None, 0, output, size, ctypes.byref(returned), None
+        ):
             raise ctypes.WinError(ctypes.get_last_error())
         if returned.value != size:
             raise ValueError("unexpected EMI response size")
@@ -158,19 +175,35 @@ class Meter:
             return
         try:
             import winreg
+
             kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-            kernel.CreateFileW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.c_uint32,
-                                           ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32,
-                                           ctypes.c_void_p]
+            kernel.CreateFileW.argtypes = [
+                ctypes.c_wchar_p,
+                ctypes.c_uint32,
+                ctypes.c_uint32,
+                ctypes.c_void_p,
+                ctypes.c_uint32,
+                ctypes.c_uint32,
+                ctypes.c_void_p,
+            ]
             kernel.CreateFileW.restype = ctypes.c_void_p
-            kernel.DeviceIoControl.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_void_p,
-                                               ctypes.c_uint32, ctypes.c_void_p, ctypes.c_uint32,
-                                               ctypes.POINTER(ctypes.c_uint32), ctypes.c_void_p]
+            kernel.DeviceIoControl.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_uint32,
+                ctypes.c_void_p,
+                ctypes.c_uint32,
+                ctypes.c_void_p,
+                ctypes.c_uint32,
+                ctypes.POINTER(ctypes.c_uint32),
+                ctypes.c_void_p,
+            ]
             kernel.DeviceIoControl.restype = ctypes.c_int
             kernel.CloseHandle.argtypes = [ctypes.c_void_p]
             self.emi_kernel = kernel
-            path = ("SYSTEM\\CurrentControlSet\\Control\\DeviceClasses\\"
-                    "{45bd8344-7ed6-49cf-a440-c276c933b053}")
+            path = (
+                "SYSTEM\\CurrentControlSet\\Control\\DeviceClasses\\"
+                "{45bd8344-7ed6-49cf-a440-c276c933b053}"
+            )
             with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path) as key:
                 names, i = [], 0
                 while True:
@@ -182,8 +215,7 @@ class Meter:
             for name in names:
                 if not name.startswith("##?#"):
                     continue
-                handle = kernel.CreateFileW("\\\\?\\" + name[4:], 0x80000000, 3,
-                                            None, 3, 0, None)
+                handle = kernel.CreateFileW("\\\\?\\" + name[4:], 0x80000000, 3, None, 3, 0, None)
                 if handle in (None, ctypes.c_void_p(-1).value):
                     continue
                 try:
@@ -196,8 +228,9 @@ class Meter:
                     if not packages:
                         continue
                     self._emi_ioctl(handle, 0x22400C, count * 16)
-                    self.emi_channels = tuple((handle, count, index, label)
-                                              for index, label in packages)
+                    self.emi_channels = tuple(
+                        (handle, count, index, label) for index, label in packages
+                    )
                     self.emi_channel_names = tuple(label for _, label in packages)
                     self.backend, self.scope = "emi", "cpu_packages"
                     self.source = "Windows EMI CPU package cumulative energy (pWh)"
@@ -219,8 +252,10 @@ class Meter:
             for handle, count, _, _ in self.emi_channels:
                 if handle not in samples:
                     samples[handle] = self._emi_ioctl(handle, 0x22400C, count * 16)
-            return tuple(struct.unpack_from("<Q", samples[handle], index * 16)[0]
-                         for handle, _, index, _ in self.emi_channels)
+            return tuple(
+                struct.unpack_from("<Q", samples[handle], index * 16)[0]
+                for handle, _, index, _ in self.emi_channels
+            )
         if self.backend == "file":
             value = float(self.counter_file.read_text(encoding="utf-8").strip())
             if not 0 <= value < float("inf"):
@@ -277,11 +312,15 @@ class Meter:
         }
 
     def describe(self):
-        return {"device": str(self.device), "energy_available": self.available,
-                "energy_boundary": self.scope, "energy_source": self.source,
-                "energy_reason": self.reason,
-                "rapl_zones": [name for _, _, name in self.zones],
-                "emi_channels": list(self.emi_channel_names)}
+        return {
+            "device": str(self.device),
+            "energy_available": self.available,
+            "energy_boundary": self.scope,
+            "energy_source": self.source,
+            "energy_reason": self.reason,
+            "rapl_zones": [name for _, _, name in self.zones],
+            "emi_channels": list(self.emi_channel_names),
+        }
 
     def close(self):
         if self.emi_channels:
@@ -294,14 +333,22 @@ class Meter:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Probe available energy measurement without loading a model")
+    parser = argparse.ArgumentParser(
+        description="Probe available energy measurement without loading a model"
+    )
     parser.add_argument("--device", choices=("cpu", "cuda", "xpu", "mps"), default="cpu")
-    parser.add_argument("--energy-source", choices=("auto", "none", "nvml", "rapl", "emi", "file"), default="auto")
+    parser.add_argument(
+        "--energy-source", choices=("auto", "none", "nvml", "rapl", "emi", "file"), default="auto"
+    )
     parser.add_argument("--counter-file")
-    parser.add_argument("--counter-unit", choices=("joules", "millijoules", "microjoules"), default="joules")
+    parser.add_argument(
+        "--counter-unit", choices=("joules", "millijoules", "microjoules"), default="joules"
+    )
     parser.add_argument("--energy-scope")
     args = parser.parse_args()
-    meter = Meter(args.device, args.energy_source, args.counter_file, args.counter_unit, args.energy_scope)
+    meter = Meter(
+        args.device, args.energy_source, args.counter_file, args.counter_unit, args.energy_scope
+    )
     print(json.dumps(meter.describe(), indent=2))
     meter.close()
 

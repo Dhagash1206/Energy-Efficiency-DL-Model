@@ -1,4 +1,4 @@
-﻿import tempfile
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -22,9 +22,11 @@ class MeasurementTests(unittest.TestCase):
             meter = Meter("cpu", energy_source="rapl", rapl_root=root)
             self.assertTrue(meter.available)
             self.assertEqual(meter.describe()["rapl_zones"], ["package-0"])
+
             def work():
                 energy.write_text("100000")
                 return 7
+
             value, measured = meter.run(work)
             self.assertEqual(value, 7)
             self.assertAlmostEqual(measured["energy_j"], 0.15)
@@ -36,10 +38,17 @@ class MeasurementTests(unittest.TestCase):
             path.write_text("1000")
             with self.assertRaises(ValueError):
                 Meter("cpu", energy_source="file", counter_file=path)
-            meter = Meter("cpu", energy_source="file", counter_file=path,
-                          counter_unit="millijoules", energy_scope="whole_device")
+            meter = Meter(
+                "cpu",
+                energy_source="file",
+                counter_file=path,
+                counter_unit="millijoules",
+                energy_scope="whole_device",
+            )
+
             def work():
                 path.write_text("1250")
+
             _, measured = meter.run(work)
             self.assertAlmostEqual(measured["energy_j"], 0.25)
             self.assertEqual(measured["boundary"], "whole_device")

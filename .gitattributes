@@ -1,0 +1,9 @@
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
+*.ps1 text eol=crlf
+
+# Preserve recorded artifacts and vendored files byte for byte.
+**/results/** -text whitespace=cr-at-eol
+hardware_aware_selective_feedback/vendor/** -text

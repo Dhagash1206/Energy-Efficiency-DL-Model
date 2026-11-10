@@ -7,6 +7,7 @@ It learns from executed-cost measurements, not from counterfactual rollouts.
 The CostBandit is an independent-arm lower-confidence-bound baseline that
 uses only executed costs.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -20,6 +21,7 @@ from typing import Optional
 # Action dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class Action:
     """A fully-specified decoding action: depth, draft length, and observer exits.
@@ -28,6 +30,7 @@ class Action:
     depth>0 activates LayerSkip with `length` draft tokens per cycle.
     `observations` lists intermediate layer depths to hook for feedback.
     """
+
     depth: int = 0
     length: int = 0
     observations: tuple[int, ...] = ()
@@ -49,6 +52,7 @@ class Action:
 # ---------------------------------------------------------------------------
 # Selector: cost-aware heuristic with optional observer value-of-information
 # ---------------------------------------------------------------------------
+
 
 class Selector:
     """Cost-aware heuristic action selector with calibrated observer scheduling.
@@ -120,7 +124,7 @@ class Selector:
 
         # Update one-step acceptance statistics from cycle observations.
         for cycle in output["cycles"]:
-            draft    = cycle.get("draft", [])
+            draft = cycle.get("draft", [])
             accepted = cycle.get("accepted", 0)
             if action.depth and draft:
                 bucket = self._matches[action.depth]
@@ -159,8 +163,7 @@ class Selector:
         base_cost, obs_cost = base[1][key], observed[1][key]
         if base_cost is not None and obs_cost is not None:
             self._observer_cost[mode].append(
-                obs_cost / len(observed[0]["tokens"])
-                - base_cost / len(base[0]["tokens"])
+                obs_cost / len(observed[0]["tokens"]) - base_cost / len(base[0]["tokens"])
             )
 
     def choose(self, remaining_requests: int = 1, context: Optional[str] = None) -> Action:
@@ -174,7 +177,7 @@ class Selector:
             return arm
 
         selected_exits = (4,)
-        all_exits      = (4, 12)
+        all_exits = (4, 12)
         if not set(all_exits).issubset(self.depths):
             return arm
 
@@ -184,8 +187,10 @@ class Selector:
             overhead = self._observer_cost[mode]
             if len(overhead) < 3:
                 return False
-            value = best_cost * max(self._uncertainty(d) for d in exits) * min(remaining_requests, 8)
-            cost  = mean(overhead)
+            value = (
+                best_cost * max(self._uncertainty(d) for d in exits) * min(remaining_requests, 8)
+            )
+            cost = mean(overhead)
             return value > max(0.0, cost) * 2 and cost < best_cost * 0.25
 
         if _justified(all_exits, "all"):
@@ -197,28 +202,26 @@ class Selector:
     def summary(self) -> dict:
         """Return a JSON-serialisable summary of accumulated statistics."""
         return {
-            "objective":  self.objective,
-            "decisions":  self.decisions,
+            "objective": self.objective,
+            "decisions": self.decisions,
             "context_aware": self.context_aware,
             "context_costs_per_token": {
                 context: {str(k): {"mean": mean(v), "n": len(v)} for k, v in costs.items() if v}
                 for context, costs in self._context_costs.items()
             },
             "executed_costs_per_token": {
-                str(k): {"mean": mean(v), "n": len(v)}
-                for k, v in self._costs.items() if v
+                str(k): {"mean": mean(v), "n": len(v)} for k, v in self._costs.items() if v
             },
             "observed_request_costs_per_token": {
-                str(k): {"mean": mean(v), "n": len(v)}
-                for k, v in self._observed_costs.items() if v
+                str(k): {"mean": mean(v), "n": len(v)} for k, v in self._observed_costs.items() if v
             },
             "valid_one_step": {
                 str(d): {"matches": m, "observations": n, "rate": m / n}
-                for d, (m, n) in self._matches.items() if n
+                for d, (m, n) in self._matches.items()
+                if n
             },
             "measured_observer_deltas_per_token": {
-                mode: {"mean": mean(v), "n": len(v)}
-                for mode, v in self._observer_cost.items() if v
+                mode: {"mean": mean(v), "n": len(v)} for mode, v in self._observer_cost.items() if v
             },
             "decision_rule": (
                 "Heuristic: minimum observed cost plus uncertainty penalty. "
@@ -246,7 +249,7 @@ class Selector:
             # global costs act as the prior for this context.
             if len(context_values) >= 2:
                 values = context_values
-        avg   = mean(values)
+        avg = mean(values)
         noise = stdev(values) / sqrt(len(values)) if len(values) > 1 else avg * 0.10
         uncertainty_penalty = avg * self._uncertainty(arm.depth) * 0.10 if arm.depth else 0.0
         return avg + noise + uncertainty_penalty
@@ -255,6 +258,7 @@ class Selector:
 # ---------------------------------------------------------------------------
 # CostBandit: independent-arm LCB baseline
 # ---------------------------------------------------------------------------
+
 
 class CostBandit:
     """Lower-confidence-bound bandit over a fixed arm set.

@@ -39,7 +39,9 @@ OUTPUT_FIELDS = {
 
 
 def bucket(context):
-    return next((bound for bound in (64, 128, 256, 512, 1024, 2048, 4096) if context <= bound), 8192)
+    return next(
+        (bound for bound in (64, 128, 256, 512, 1024, 2048, 4096) if context <= bound), 8192
+    )
 
 
 def mean(values):
@@ -59,7 +61,9 @@ def wilson_lower(successes, count, z=1.96):
     if count == 0:
         return 0.0
     p = successes / count
-    return (p + z*z/(2*count) - z * math.sqrt(p*(1-p)/count + z*z/(4*count*count))) / (1 + z*z/count)
+    return (
+        p + z * z / (2 * count) - z * math.sqrt(p * (1 - p) / count + z * z / (4 * count * count))
+    ) / (1 + z * z / count)
 
 
 def limited_prompt(backend, row, max_input_tokens):
@@ -86,29 +90,43 @@ def calibrate(backend, rows, tokens=64, repeats=3, max_input_tokens=256, block_s
                 prefix = prompt + reference[:offset]
                 for action in ACTIONS:
                     if not synthetic:
-                        backend.cycle(prefix, action, max(tokens, action.length + 1))  # warm-up outside measurement
+                        backend.cycle(
+                            prefix, action, max(tokens, action.length + 1)
+                        )  # warm-up outside measurement
                     for repetition in range(repeats):
                         checks, cycle_count, committed_count = [], 0, 0
                         if synthetic:
-                            committed, flags, _, _ = backend.cycle(prefix, action, max(tokens, action.length + 1))
+                            committed, flags, _, _ = backend.cycle(
+                                prefix, action, max(tokens, action.length + 1)
+                            )
                             energy, seconds = backend.cost(action, len(prefix), repetition)
                             checks.extend(flags)
                             cycle_count, committed_count = 1, len(committed)
                         else:
                             start = start_measurement(backend, meter)
-                            while cycle_count == 0 or time.perf_counter() - start[1] < block_seconds:
-                                committed, flags, _, _ = backend.cycle(prefix, action, max(tokens, action.length + 1))
+                            while (
+                                cycle_count == 0 or time.perf_counter() - start[1] < block_seconds
+                            ):
+                                committed, flags, _, _ = backend.cycle(
+                                    prefix, action, max(tokens, action.length + 1)
+                                )
                                 checks.extend(flags)
                                 cycle_count += 1
                                 committed_count += len(committed)
                             energy, seconds = stop_measurement(backend, meter, start)
-                        observation = {"prompt_id": row["id"], "context_tokens": len(prefix),
-                                       "bucket": bucket(len(prefix)), "action": action.name,
-                                       "repetition": repetition, "cycles": cycle_count,
-                                       "energy_j_per_cycle": None if energy is None else energy / cycle_count,
-                                       "seconds_per_cycle": seconds / cycle_count,
-                                       "committed_per_cycle": committed_count / cycle_count,
-                                       "accepted": sum(checks), "verified": len(checks)}
+                        observation = {
+                            "prompt_id": row["id"],
+                            "context_tokens": len(prefix),
+                            "bucket": bucket(len(prefix)),
+                            "action": action.name,
+                            "repetition": repetition,
+                            "cycles": cycle_count,
+                            "energy_j_per_cycle": None if energy is None else energy / cycle_count,
+                            "seconds_per_cycle": seconds / cycle_count,
+                            "committed_per_cycle": committed_count / cycle_count,
+                            "accepted": sum(checks),
+                            "verified": len(checks),
+                        }
                         raw.append(observation)
                         samples[(bucket(len(prefix)), action.name)].append(observation)
     finally:
@@ -119,18 +137,26 @@ def calibrate(backend, rows, tokens=64, repeats=3, max_input_tokens=256, block_s
         energy, margin = summarize_samples([value["energy_j_per_cycle"] for value in values])
         seconds, _ = summarize_samples([value["seconds_per_cycle"] for value in values])
         estimates[f"{context_bucket}:{action}"] = {
-            "energy_j": energy, "energy_margin_j": margin, "seconds": seconds,
+            "energy_j": energy,
+            "energy_margin_j": margin,
+            "seconds": seconds,
             "accepted": sum(value["accepted"] for value in values),
             "verified": sum(value["verified"] for value in values),
             "yield": mean([value["committed_per_cycle"] for value in values]),
-            "sample_count": len(values), "context_min": min(value["context_tokens"] for value in values),
-            "context_max": max(value["context_tokens"] for value in values)}
-    return {"source": backend.source, "backend": backend.metadata,
-            "energy_available": all(value["energy_j"] is not None for value in estimates.values()),
-            "estimates": estimates, "raw_observations": raw,
-            "profiling_wall_seconds": time.perf_counter() - started,
-            "energy_scope": "synthetic total cost" if synthetic else meter.reason,
-            "uncertainty": "Normal-approximation margin with 5% floor; correlated samples and model error mean no formal coverage guarantee."}
+            "sample_count": len(values),
+            "context_min": min(value["context_tokens"] for value in values),
+            "context_max": max(value["context_tokens"] for value in values),
+        }
+    return {
+        "source": backend.source,
+        "backend": backend.metadata,
+        "energy_available": all(value["energy_j"] is not None for value in estimates.values()),
+        "estimates": estimates,
+        "raw_observations": raw,
+        "profiling_wall_seconds": time.perf_counter() - started,
+        "energy_scope": "synthetic total cost" if synthetic else meter.reason,
+        "uncertainty": "Normal-approximation margin with 5% floor; correlated samples and model error mean no formal coverage guarantee.",
+    }
 
 
 def estimate_action(profile, action, context, history, margin_scale=1.0, overhead_j=0):
@@ -150,11 +176,15 @@ def estimate_action(profile, action, context, history, margin_scale=1.0, overhea
     lower_yield = expected_committed_tokens(lower, action.length)
     energy = entry["energy_j"]
     margin = (entry["energy_margin_j"] or 0) * margin_scale
-    return {"action": action, "p": p, "yield": predicted_yield,
-            "latency": entry["seconds"] / predicted_yield,
-            "energy": None if energy is None else (energy + overhead_j) / predicted_yield,
-            "upper": None if energy is None else (energy + margin + overhead_j) / lower_yield,
-            "lower": None if energy is None else max(0, energy - margin) / predicted_yield}
+    return {
+        "action": action,
+        "p": p,
+        "yield": predicted_yield,
+        "latency": entry["seconds"] / predicted_yield,
+        "energy": None if energy is None else (energy + overhead_j) / predicted_yield,
+        "upper": None if energy is None else (energy + margin + overhead_j) / lower_yield,
+        "lower": None if energy is None else max(0, energy - margin) / predicted_yield,
+    }
 
 
 def choose(profile, policy, context, remaining, history, fixed, margin_scale, overhead_j):
@@ -163,9 +193,16 @@ def choose(profile, policy, context, remaining, history, fixed, margin_scale, ov
         return ordinary, "ordinary baseline", None
     if policy == "best_fixed":
         action = next(action for action in ACTIONS if action.name == fixed)
-        return (action if action.length < remaining else ordinary), "selected on calibration prompts", None
-    rows = [estimate_action(profile, action, context, history, margin_scale, overhead_j)
-            for action in ACTIONS if action.length < remaining]
+        return (
+            (action if action.length < remaining else ordinary),
+            "selected on calibration prompts",
+            None,
+        )
+    rows = [
+        estimate_action(profile, action, context, history, margin_scale, overhead_j)
+        for action in ACTIONS
+        if action.length < remaining
+    ]
     rows = [row for row in rows if row is not None]
     baseline = next((row for row in rows if row["action"].length == 0), None)
     if baseline is None:
@@ -174,16 +211,29 @@ def choose(profile, policy, context, remaining, history, fixed, margin_scale, ov
         selected = min(rows, key=lambda row: row["latency"])
         return selected["action"], "lowest predicted seconds per token", selected
     if not profile["energy_available"]:
-        raise RuntimeError("Energy controller unavailable: calibration has no reliable energy measurements")
-    candidates = [row for row in rows if row["action"].length > 0 and row["upper"] < baseline["lower"]]
+        raise RuntimeError(
+            "Energy controller unavailable: calibration has no reliable energy measurements"
+        )
+    candidates = [
+        row for row in rows if row["action"].length > 0 and row["upper"] < baseline["lower"]
+    ]
     if not candidates:
         return ordinary, "ordinary fallback: predicted saving is uncertain or negative", baseline
     selected = min(candidates, key=lambda row: row["upper"])
     return selected["action"], "conservative predicted energy saving", selected
 
 
-def run_request(backend, profile, row, policy, fixed="draft4x2", margin_scale=1.0,
-                tokens=64, max_input_tokens=256, repetition=0):
+def run_request(
+    backend,
+    profile,
+    row,
+    policy,
+    fixed="draft4x2",
+    margin_scale=1.0,
+    tokens=64,
+    max_input_tokens=256,
+    repetition=0,
+):
     prompt, truncated = limited_prompt(backend, row, max_input_tokens)
     output, trace = [], []
     history = defaultdict(lambda: deque(maxlen=32))
@@ -197,8 +247,16 @@ def run_request(backend, profile, row, policy, fixed="draft4x2", margin_scale=1.
             start = start_measurement(backend, meter)
         while len(output) < tokens:
             before = time.perf_counter()
-            action, reason, estimate = choose(profile, policy, len(prompt) + len(output),
-                                             tokens - len(output), history, fixed, margin_scale, overhead_j)
+            action, reason, estimate = choose(
+                profile,
+                policy,
+                len(prompt) + len(output),
+                tokens - len(output),
+                history,
+                fixed,
+                margin_scale,
+                overhead_j,
+            )
             controller_seconds += time.perf_counter() - before
             prefix = prompt + output
             committed, checks, drafted, eos = backend.cycle(prefix, action, tokens - len(output))
@@ -209,11 +267,19 @@ def run_request(backend, profile, row, policy, fixed="draft4x2", margin_scale=1.
                 energy_total += energy + overhead_j
                 seconds_total += seconds + (0.00015 if overhead_j else 0)
             history[action.depth].extend(checks)
-            trace.append({"context_tokens": len(prefix), "action": action.name, "reason": reason,
-                          "drafted": drafted, "accepted": sum(checks), "verified": len(checks),
-                          "committed": len(committed),
-                          "predicted_j_per_token": None if estimate is None else estimate["energy"],
-                          "predicted_acceptance": None if estimate is None else estimate["p"]})
+            trace.append(
+                {
+                    "context_tokens": len(prefix),
+                    "action": action.name,
+                    "reason": reason,
+                    "drafted": drafted,
+                    "accepted": sum(checks),
+                    "verified": len(checks),
+                    "committed": len(committed),
+                    "predicted_j_per_token": None if estimate is None else estimate["energy"],
+                    "predicted_acceptance": None if estimate is None else estimate["p"],
+                }
+            )
             output.extend(committed)
             if eos:
                 break
@@ -221,17 +287,30 @@ def run_request(backend, profile, row, policy, fixed="draft4x2", margin_scale=1.
             energy_total, seconds_total = stop_measurement(backend, meter, start)
         token_count = len(output)
         drafted = sum(cycle["drafted"] for cycle in trace)
-        return {"prompt_id": row["id"], "task": row["task"], "policy": policy,
-                "source": backend.source, "repetition": repetition, "prompt_tokens": len(prompt),
-                "prompt_truncated": truncated, "output_tokens": token_count,
-                "output_text": backend.decode(output), "token_ids": output,
-                "energy_j": energy_total, "j_per_token": None if energy_total is None else energy_total / token_count,
-                "elapsed_seconds": seconds_total, "tokens_per_second": token_count / seconds_total,
-                "controller_wall_seconds": controller_seconds,
-                "draft_acceptance": None if drafted == 0 else sum(cycle["accepted"] for cycle in trace) / drafted,
-                "ordinary_fraction": sum(cycle["action"] == "ordinary" for cycle in trace) / len(trace),
-                "action_counts": dict(Counter(cycle["action"] for cycle in trace)), "trace": trace,
-                "energy_scope": "synthetic total cost" if synthetic else meter.reason}
+        return {
+            "prompt_id": row["id"],
+            "task": row["task"],
+            "policy": policy,
+            "source": backend.source,
+            "repetition": repetition,
+            "prompt_tokens": len(prompt),
+            "prompt_truncated": truncated,
+            "output_tokens": token_count,
+            "output_text": backend.decode(output),
+            "token_ids": output,
+            "energy_j": energy_total,
+            "j_per_token": None if energy_total is None else energy_total / token_count,
+            "elapsed_seconds": seconds_total,
+            "tokens_per_second": token_count / seconds_total,
+            "controller_wall_seconds": controller_seconds,
+            "draft_acceptance": None
+            if drafted == 0
+            else sum(cycle["accepted"] for cycle in trace) / drafted,
+            "ordinary_fraction": sum(cycle["action"] == "ordinary" for cycle in trace) / len(trace),
+            "action_counts": dict(Counter(cycle["action"] for cycle in trace)),
+            "trace": trace,
+            "energy_scope": "synthetic total cost" if synthetic else meter.reason,
+        }
     finally:
         if meter:
             meter.close()
@@ -245,59 +324,116 @@ def aggregate(results):
     for policy, rows in grouped.items():
         token_count = sum(row["output_tokens"] for row in rows)
         seconds = sum(row["elapsed_seconds"] for row in rows)
-        energy = None if any(row["energy_j"] is None for row in rows) else sum(row["energy_j"] for row in rows)
+        energy = (
+            None
+            if any(row["energy_j"] is None for row in rows)
+            else sum(row["energy_j"] for row in rows)
+        )
         per_prompt = defaultdict(list)
         for row in rows:
             if row["j_per_token"] is not None:
                 per_prompt[row["prompt_id"]].append(row["j_per_token"])
         means = [mean(values) for values in per_prompt.values()]
         average, margin = summarize_samples(means)
-        output[policy] = {"requests": len(rows), "tokens": token_count, "total_energy_j": energy,
-                          "j_per_token": None if energy is None else energy / token_count,
-                          "tokens_per_second": token_count / seconds,
-                          "elapsed_seconds": seconds,
-                          "prompt_mean_j_per_token": average, "approx_prompt_mean_margin": margin,
-                          "mismatches": sum(not row.get("matches_ordinary", True) for row in rows),
-                          "ordinary_fraction": mean([row["ordinary_fraction"] for row in rows]),
-                          "controller_wall_seconds": sum(row["controller_wall_seconds"] for row in rows)}
+        output[policy] = {
+            "requests": len(rows),
+            "tokens": token_count,
+            "total_energy_j": energy,
+            "j_per_token": None if energy is None else energy / token_count,
+            "tokens_per_second": token_count / seconds,
+            "elapsed_seconds": seconds,
+            "prompt_mean_j_per_token": average,
+            "approx_prompt_mean_margin": margin,
+            "mismatches": sum(not row.get("matches_ordinary", True) for row in rows),
+            "ordinary_fraction": mean([row["ordinary_fraction"] for row in rows]),
+            "controller_wall_seconds": sum(row["controller_wall_seconds"] for row in rows),
+        }
     baseline = output.get("ordinary", {}).get("j_per_token")
     for row in output.values():
-        row["saving_percent_vs_ordinary"] = (None if baseline is None or row["j_per_token"] is None else
-                                             100 * (1 - row["j_per_token"] / baseline))
+        row["saving_percent_vs_ordinary"] = (
+            None
+            if baseline is None or row["j_per_token"] is None
+            else 100 * (1 - row["j_per_token"] / baseline)
+        )
     return output
 
 
-def experiment(backend, splits, tokens=64, repeats=3, seed=42, max_input_tokens=256, block_seconds=1.0):
-    profile = calibrate(backend, splits["calibration"], tokens, repeats, max_input_tokens, block_seconds)
+def experiment(
+    backend, splits, tokens=64, repeats=3, seed=42, max_input_tokens=256, block_seconds=1.0
+):
+    profile = calibrate(
+        backend, splits["calibration"], tokens, repeats, max_input_tokens, block_seconds
+    )
     # Pick fixed configuration strictly on calibration data, never test results.
     fixed_scores = {}
     for action in ACTIONS[1:]:
         observations = [row for row in profile["raw_observations"] if row["action"] == action.name]
         metric = "energy_j_per_cycle" if profile["energy_available"] else "seconds_per_cycle"
-        fixed_scores[action.name] = sum(row[metric] for row in observations) / sum(row["committed_per_cycle"] for row in observations)
+        fixed_scores[action.name] = sum(row[metric] for row in observations) / sum(
+            row["committed_per_cycle"] for row in observations
+        )
     fixed = min(fixed_scores, key=fixed_scores.get)
     validation, margin_scale = {}, 1.0
     if profile["energy_available"]:
         for margin in (0.5, 1.0, 2.0):
-            rows = [run_request(backend, profile, row, "energy", fixed, margin, tokens, max_input_tokens)
-                    for row in splits["validation"]]
+            rows = [
+                run_request(
+                    backend, profile, row, "energy", fixed, margin, tokens, max_input_tokens
+                )
+                for row in splits["validation"]
+            ]
             if any(row["energy_j"] is None for row in rows):
-                raise RuntimeError("Energy counter did not advance during validation. Increase output length or use a longer valid measurement window.")
-            validation[str(margin)] = sum(row["energy_j"] for row in rows) / sum(row["output_tokens"] for row in rows)
+                raise RuntimeError(
+                    "Energy counter did not advance during validation. Increase output length or use a longer valid measurement window."
+                )
+            validation[str(margin)] = sum(row["energy_j"] for row in rows) / sum(
+                row["output_tokens"] for row in rows
+            )
         margin_scale = float(min(validation, key=validation.get))
     policies = POLICIES if profile["energy_available"] else POLICIES[:-1]
     results = []
-    jobs = [(row, repetition, policy) for row in splits["test"] for repetition in range(repeats) for policy in policies]
+    jobs = [
+        (row, repetition, policy)
+        for row in splits["test"]
+        for repetition in range(repeats)
+        for policy in policies
+    ]
     random.Random(seed).shuffle(jobs)
     for row, repetition, policy in jobs:
-        results.append(run_request(backend, profile, row, policy, fixed, margin_scale,
-                                   tokens, max_input_tokens, repetition))
-    reference = {(row["prompt_id"], row["repetition"]): row["token_ids"] for row in results if row["policy"] == "ordinary"}
+        results.append(
+            run_request(
+                backend,
+                profile,
+                row,
+                policy,
+                fixed,
+                margin_scale,
+                tokens,
+                max_input_tokens,
+                repetition,
+            )
+        )
+    reference = {
+        (row["prompt_id"], row["repetition"]): row["token_ids"]
+        for row in results
+        if row["policy"] == "ordinary"
+    }
     for row in results:
-        row["matches_ordinary"] = row["token_ids"] == reference[(row["prompt_id"], row["repetition"])]
-    return {"source": backend.source, "backend": backend.metadata, "profile": profile,
-            "fixed_action": fixed, "fixed_selection_scores": fixed_scores,
-            "validation_margin_scores": validation, "selected_margin_scale": margin_scale,
-            "test_results": results, "summary": aggregate(results),
-            "correctness_passed": all(row["matches_ordinary"] for row in results),
-            "skipped_policies": [] if profile["energy_available"] else ["energy: no measured energy available"]}
+        row["matches_ordinary"] = (
+            row["token_ids"] == reference[(row["prompt_id"], row["repetition"])]
+        )
+    return {
+        "source": backend.source,
+        "backend": backend.metadata,
+        "profile": profile,
+        "fixed_action": fixed,
+        "fixed_selection_scores": fixed_scores,
+        "validation_margin_scores": validation,
+        "selected_margin_scale": margin_scale,
+        "test_results": results,
+        "summary": aggregate(results),
+        "correctness_passed": all(row["matches_ordinary"] for row in results),
+        "skipped_policies": []
+        if profile["energy_available"]
+        else ["energy: no measured energy available"],
+    }

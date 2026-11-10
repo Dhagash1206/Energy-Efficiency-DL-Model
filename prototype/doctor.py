@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import platform
 import shutil
 import sys
@@ -27,13 +26,17 @@ def check_cuda() -> dict:
     result["torch_version"] = torch.__version__
     result["cuda_available"] = torch.cuda.is_available()
     if not result["cuda_available"]:
-        result["notes"].append("CUDA is not available. Install the CUDA-enabled PyTorch build and an NVIDIA driver.")
+        result["notes"].append(
+            "CUDA is not available. Install the CUDA-enabled PyTorch build and an NVIDIA driver."
+        )
         return result
 
     result["device_count"] = torch.cuda.device_count()
     result["device_name"] = torch.cuda.get_device_name(0)
     result["driver_version"] = torch.version.cuda
-    result["notes"].append("CUDA is available. The project can target NVIDIA GPUs such as the RTX 3050.")
+    result["notes"].append(
+        "CUDA is available. The project can target NVIDIA GPUs such as the RTX 3050."
+    )
     return result
 
 

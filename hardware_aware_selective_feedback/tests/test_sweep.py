@@ -1,4 +1,5 @@
 """Regression checks for valid paired energy comparisons and cleanup."""
+
 import unittest
 from unittest.mock import Mock, patch
 
@@ -8,9 +9,16 @@ from ..sweep import measure_batched, summarize
 
 
 def request(depth=0, length=0, energy=10.0, matched=True):
-    return {"depth": depth, "draft_length": length, "prompt_id": "example",
-            "repeat": 0, "generated_tokens": 5, "energy_j": energy,
-            "latency_s": 1.0, "greedy_match": matched}
+    return {
+        "depth": depth,
+        "draft_length": length,
+        "prompt_id": "example",
+        "repeat": 0,
+        "generated_tokens": 5,
+        "energy_j": energy,
+        "latency_s": 1.0,
+        "greedy_match": matched,
+    }
 
 
 class SweepTests(unittest.TestCase):
@@ -59,10 +67,13 @@ class BatchedBaselineTests(unittest.TestCase):
     references = {"a": [1, 1], "b": [2, 2], "c": [3, 3]}
 
     def _measure(self, decoded, batch_size=2, repeats=1):
-        with patch("hardware_aware_selective_feedback.sweep.batched_greedy",
-                   side_effect=lambda model, ids, limit, eos, pad: [decoded[i[0]] for i in ids]):
-            return measure_batched(None, FakeMeter(), self.prompts, self.references,
-                                   batch_size, 2, (), repeats)
+        with patch(
+            "hardware_aware_selective_feedback.sweep.batched_greedy",
+            side_effect=lambda model, ids, limit, eos, pad: [decoded[i[0]] for i in ids],
+        ):
+            return measure_batched(
+                None, FakeMeter(), self.prompts, self.references, batch_size, 2, (), repeats
+            )
 
     def test_groups_prompts_and_reports_per_token_cost(self):
         result = self._measure({1: [1, 1], 2: [2, 2], 3: [3, 3]}, repeats=2)

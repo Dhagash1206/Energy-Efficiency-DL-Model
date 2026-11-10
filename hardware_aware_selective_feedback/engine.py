@@ -16,6 +16,7 @@ generate(model, prompt, limit, depth, drafts, exits, mode, period, eos,
 Both functions return token ID lists (native_greedy) or a structured dict
 (generate) that includes cycle-level statistics for energy accounting.
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -25,7 +26,6 @@ import torch
 
 from .feedback import LearningState, validate_feedback
 from .vendor.self_speculation.llama_model_utils import (
-    ForwardResult,
     crop_past_key_values,
     forward,
     forward_early,
@@ -37,6 +37,7 @@ from .vendor.self_speculation.llama_model_utils import (
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _check_cache(cache, expected_layers: int, expected_length: int) -> None:
     """Assert the KV cache has exactly the right shape at a cycle boundary.
 
@@ -45,8 +46,7 @@ def _check_cache(cache, expected_layers: int, expected_length: int) -> None:
     differs from `expected_layers`.
     """
     if len(cache) != expected_layers or any(
-        k.shape[2] != expected_length or v.shape[2] != expected_length
-        for k, v in cache
+        k.shape[2] != expected_length or v.shape[2] != expected_length for k, v in cache
     ):
         raise RuntimeError(
             f"Incomplete KV cache: expected {expected_layers} layers × "
@@ -79,29 +79,24 @@ def _observe(
     def _make_hook(depth: int):
         def _hook(module, args, output):
             hidden = output[0] if isinstance(output, tuple) else output
-            normalized = model.model.norm(hidden.float()).to(
-                model.lm_head.weight.dtype
-            )
-            chunks[depth].append(
-                model.lm_head(normalized).argmax(-1)
-            )
+            normalized = model.model.norm(hidden.float()).to(model.lm_head.weight.dtype)
+            chunks[depth].append(model.lm_head(normalized).argmax(-1))
+
         return _hook
 
     try:
         for depth in depths:
-            handles.append(
-                model.model.layers[depth - 1].register_forward_hook(_make_hook(depth))
-            )
+            handles.append(model.model.layers[depth - 1].register_forward_hook(_make_hook(depth)))
         yield chunks
     finally:
         for h in handles:
             h.remove()
 
 
-ADAPTIVE_WINDOW = 4        # cycles in the rolling acceptance window
-SHORTEN_BELOW = 0.5        # recent acceptance below this shortens drafts
-FALLBACK_BELOW = 0.3       # recent acceptance below this switches to ordinary decoding
-PROBE_EVERY = 4            # ordinary cycles between 1-token re-probes while in fallback
+ADAPTIVE_WINDOW = 4  # cycles in the rolling acceptance window
+SHORTEN_BELOW = 0.5  # recent acceptance below this shortens drafts
+FALLBACK_BELOW = 0.3  # recent acceptance below this switches to ordinary decoding
+PROBE_EVERY = 4  # ordinary cycles between 1-token re-probes while in fallback
 
 
 def _adaptive_k(
@@ -136,6 +131,7 @@ def _adaptive_k(
 # ---------------------------------------------------------------------------
 # Public: native greedy decoding (exact-output reference)
 # ---------------------------------------------------------------------------
+
 
 @torch.inference_mode()
 def native_greedy(
@@ -215,8 +211,9 @@ def batched_greedy(
     collected, cache = [], None
 
     for _ in range(limit):
-        out = model(ids, attention_mask=mask, position_ids=positions,
-                    past_key_values=cache, use_cache=True)
+        out = model(
+            ids, attention_mask=mask, position_ids=positions, past_key_values=cache, use_cache=True
+        )
         cache = out.past_key_values
         # float() matches native_greedy's argmax precision on near-ties.
         ids = out.logits[:, -1].float().argmax(-1, keepdim=True)
@@ -230,14 +227,17 @@ def batched_greedy(
 
     rows = torch.cat(collected, dim=1).tolist()
     if eos:
-        rows = [row[: next((i + 1 for i, tok in enumerate(row) if tok in eos), len(row))]
-                for row in rows]
+        rows = [
+            row[: next((i + 1 for i, tok in enumerate(row) if tok in eos), len(row))]
+            for row in rows
+        ]
     return rows
 
 
 # ---------------------------------------------------------------------------
 # Public: speculative generate
 # ---------------------------------------------------------------------------
+
 
 @torch.inference_mode()
 def generate(
@@ -321,13 +321,12 @@ def generate(
 
     eos_t = torch.tensor(list(eos), dtype=torch.long, device=model.device) if eos else None
     accept_window: list[float] = []  # rolling acceptance rates for adaptive_drafts
-    ordinary_streak = 0              # consecutive adaptive fallback cycles
+    ordinary_streak = 0  # consecutive adaptive fallback cycles
 
     # ── Prompt prefill ────────────────────────────────────────────────────
     # Run all layers over the full prompt; keep only the last token's logits
     # to save memory on long prompts.
-    result = forward(model, torch.tensor([prompt], device=model.device), None,
-                     logits_to_keep=1)
+    result = forward(model, torch.tensor([prompt], device=model.device), None, logits_to_keep=1)
     cache = result.past_key_values
     pending = result.logits[:, -1].argmax(-1).reshape(1, 1)
     tokens.append(pending[0, 0].item())
@@ -402,11 +401,10 @@ def generate(
                 break
 
         # ── Feedback and state update ─────────────────────────────────────
-        predictions = {
-            d: torch.cat(parts, dim=1)[0].tolist() for d, parts in collected.items()
-        }
-        feedback = validate_feedback(context, proposed, target, predictions,
-                                     matched, len(committed))
+        predictions = {d: torch.cat(parts, dim=1)[0].tolist() for d, parts in collected.items()}
+        feedback = validate_feedback(
+            context, proposed, target, predictions, matched, len(committed)
+        )
         state.update(feedback)
         tokens.extend(committed)
 
@@ -426,18 +424,20 @@ def generate(
             if len(accept_window) > ADAPTIVE_WINDOW:
                 accept_window.pop(0)
 
-        cycles.append({
-            "context_ids":   context,
-            "draft":         proposed,
-            "target":        target,
-            "accepted":      matched,
-            "committed":     committed,
-            "observations":  feedback,
-            "top2_margin":   margin,
-            "shorter_prefix_acceptance": {
-                str(n): min(n, matched) for n in range(1, len(proposed) + 1)
-            },
-        })
+        cycles.append(
+            {
+                "context_ids": context,
+                "draft": proposed,
+                "target": target,
+                "accepted": matched,
+                "committed": committed,
+                "observations": feedback,
+                "top2_margin": margin,
+                "shorter_prefix_acceptance": {
+                    str(n): min(n, matched) for n in range(1, len(proposed) + 1)
+                },
+            }
+        )
 
     return dict(tokens=tokens, cycles=cycles, feedback_statistics=state.export())
 
@@ -445,6 +445,7 @@ def generate(
 # ---------------------------------------------------------------------------
 # Internal: observer exit resolution
 # ---------------------------------------------------------------------------
+
 
 def _resolve_exits(
     exits: tuple[int, ...],

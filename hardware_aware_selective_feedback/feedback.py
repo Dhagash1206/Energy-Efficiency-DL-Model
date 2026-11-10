@@ -4,6 +4,7 @@ Observations are one-step teacher-forced predictions from an intermediate
 layer.  Only positions that fall within the committed prefix of a cycle are
 valid evidence; rejected or post-stop positions are marked invalid.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -45,18 +46,20 @@ def validate_feedback(
             )
         for position, (prediction, truth) in enumerate(zip(predictions, target)):
             valid = position <= accepted and position < committed_count
-            rows.append({
-                "depth":      depth,
-                "position":   position,
-                "prefix_ids": context + draft[:position],
-                "prediction": prediction,
-                "target":     truth,
-                "valid":      valid,
-                "match":      (prediction == truth) if valid else None,
-                "reason":     "committed_context" if valid else "rejected_or_after_stop",
-                "evidence":   "one_step_only",
-                "counterfactual_energy_j": None,
-            })
+            rows.append(
+                {
+                    "depth": depth,
+                    "position": position,
+                    "prefix_ids": context + draft[:position],
+                    "prediction": prediction,
+                    "target": truth,
+                    "valid": valid,
+                    "match": (prediction == truth) if valid else None,
+                    "reason": "committed_context" if valid else "rejected_or_after_stop",
+                    "evidence": "one_step_only",
+                    "counterfactual_energy_j": None,
+                }
+            )
     return rows
 
 

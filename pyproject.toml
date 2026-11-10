@@ -1,0 +1,19 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+    "layerskip",
+    "models",
+    "**/results/**",
+    "hardware_aware_selective_feedback/vendor",
+]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.lint.per-file-ignores]
+# These entry points set Hugging Face/tokenizer environment variables before imports.
+"hardware_aware_selective_feedback/diagnose_mismatch.py" = ["E402"]
+"hardware_aware_selective_feedback/download_layerskip.py" = ["E402"]
+"hardware_aware_selective_feedback/pilot.py" = ["E402"]
+"hardware_aware_selective_feedback/run.py" = ["E402"]

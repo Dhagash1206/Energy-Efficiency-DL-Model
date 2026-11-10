@@ -17,8 +17,9 @@ class PrototypeTests(unittest.TestCase):
 
     def test_uncertainty_overlap_falls_back(self):
         ordinary = replace(self.actions[0], context_cost=0)
-        speculative = replace(self.actions[1], energy_j=2.9,
-                              acceptance_prior=1, relative_margin=0.10, context_cost=0)
+        speculative = replace(
+            self.actions[1], energy_j=2.9, acceptance_prior=1, relative_margin=0.10, context_cost=0
+        )
         controller = Controller([ordinary, speculative])
         rows = controller.estimates(State(0, 20))
         self.assertLess(rows[1]["energy_per_token"], rows[0]["energy_per_token"])

@@ -17,8 +17,13 @@ class Action:
     acceptance_prior: float
 
     def __post_init__(self):
-        numbers = (self.energy_j, self.latency_ms, self.relative_margin,
-                   self.context_cost, self.acceptance_prior)
+        numbers = (
+            self.energy_j,
+            self.latency_ms,
+            self.relative_margin,
+            self.context_cost,
+            self.acceptance_prior,
+        )
         if not all(math.isfinite(value) for value in numbers):
             raise ValueError("Action parameters must be finite")
         if self.energy_j <= 0 or self.latency_ms <= 0 or self.context_cost < 0:
@@ -59,7 +64,7 @@ def expected_committed_tokens(probability, draft_length):
     """Accepted prefix plus correction/bonus; assumes independent acceptance."""
     if not 0 <= probability <= 1 or draft_length < 0:
         raise ValueError("Invalid acceptance probability or draft length")
-    return sum(probability ** index for index in range(draft_length + 1))
+    return sum(probability**index for index in range(draft_length + 1))
 
 
 class Controller:
@@ -85,15 +90,19 @@ class Controller:
             acceptance = 1.0 if action.ordinary else state.acceptance(action)
             committed = expected_committed_tokens(acceptance, action.draft_length)
             energy, latency = action.cycle_costs(state.context_length)
-            rows.append({
-                "action": action,
-                "acceptance_estimate": acceptance,
-                "expected_committed_tokens": committed,
-                "energy_per_token": (energy + self.overhead_j) / committed,
-                "energy_upper": (energy * (1 + action.relative_margin) + self.overhead_j) / committed,
-                "energy_lower": (energy * (1 - action.relative_margin) + self.overhead_j) / committed,
-                "latency_per_token_ms": (latency + self.overhead_ms) / committed,
-            })
+            rows.append(
+                {
+                    "action": action,
+                    "acceptance_estimate": acceptance,
+                    "expected_committed_tokens": committed,
+                    "energy_per_token": (energy + self.overhead_j) / committed,
+                    "energy_upper": (energy * (1 + action.relative_margin) + self.overhead_j)
+                    / committed,
+                    "energy_lower": (energy * (1 - action.relative_margin) + self.overhead_j)
+                    / committed,
+                    "latency_per_token_ms": (latency + self.overhead_ms) / committed,
+                }
+            )
         return rows
 
     def choose(self, state, objective="energy"):
@@ -104,8 +113,13 @@ class Controller:
             return chosen, "lowest predicted latency per committed token"
         if objective != "energy":
             raise ValueError("Objective must be energy or latency")
-        candidates = [row for row in rows if not row["action"].ordinary
-                      and row["energy_upper"] < ordinary["energy_lower"]]
+        candidates = [
+            row
+            for row in rows
+            if not row["action"].ordinary and row["energy_upper"] < ordinary["energy_lower"]
+        ]
         if not candidates:
             return ordinary, "ordinary fallback: no margin-separated predicted saving"
-        return min(candidates, key=lambda row: row["energy_upper"]), "predicted saving exceeds illustrative energy margin"
+        return min(
+            candidates, key=lambda row: row["energy_upper"]
+        ), "predicted saving exceeds illustrative energy margin"

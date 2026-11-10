@@ -65,6 +65,26 @@ The median paired observer overhead relative to `never_observe` was **21.680 J/r
 
 Hardware variability, small prompt counts, and the absence of task-quality scoring limit interpretation. HumanEval code is neither executed nor scored; greedy agreement checks output equivalence, not answer quality.
 
+## Additional RTX 3050 experiment runs
+
+The saved experiments from the local `ml research` project are included here.
+Its Python source, tests, and dependency file were byte-for-byte identical to
+this project's files at integration; the additional work consists of these
+raw JSON measurements and their generated Markdown reports:
+
+| Run | Report | Raw measurements | Native greedy agreement |
+|---|---|---|---|
+| Smoke | [Smoke report](hardware_aware_selective_feedback/results/smoke/rtx3050-smoke.md) | [JSON](hardware_aware_selective_feedback/results/smoke/rtx3050-smoke.json) | See report |
+| Pilot | [Pilot report](hardware_aware_selective_feedback/results/pilot/rtx3050-pilot.md) | [JSON](hardware_aware_selective_feedback/results/pilot/rtx3050-pilot.json) | 77/77 requests |
+| Held-out evaluation | [Held-out report](hardware_aware_selective_feedback/results/final/rtx3050-heldout.md) | [JSON](hardware_aware_selective_feedback/results/final/rtx3050-heldout.json) | 386/389 requests |
+
+The pilot and held-out evaluation used FP16. The held-out run recorded three
+mismatches for fixed depth 4 / draft length 3, which was excluded from adaptive
+and bandit selection after a mismatch. That run does not establish exact-output
+equivalence for every policy. These reports are separate from the FP32 results
+above; their measurements should not be pooled across different run settings.
+The source project's model-cache link and local caches were not imported.
+
 ## Setup
 
 Run commands from the repository root. Use a virtual environment and install a PyTorch build appropriate for your hardware, followed by the root dependency file:
@@ -144,7 +164,7 @@ python -m hardware_aware_selective_feedback.diagnose_mismatch --report hardware_
 | `--cuda-graph-drafts` | Prototype static-cache draft replay; CUDA only, incompatible with `--compile` and `--quantize`; observer requests use the regular path |
 | `--gpu-clock-mhz`, `--gpu-power-limit-w` | Apply GPU settings during execution and restore them afterward; requires permissions and hardware support |
 
-These options were not benchmarked by the latest command and carry no measured improvement claim here. Recheck greedy agreement after changing precision or execution settings. CUDA Graph capture/performance still needs device validation; see [efficiency implementation notes](EFFICIENCY_CHANGES.txt).
+These options were not benchmarked by the latest command and carry no measured improvement claim here. Recheck greedy agreement after changing precision or execution settings. CUDA Graph capture/performance still needs device validation; see [efficiency implementation notes](docs/efficiency-changes.txt).
 
 To compare a fixed grid without observers, use the paired sweep. Unlike `run.py`, its precision defaults to FP16; this example explicitly uses FP32:
 
@@ -173,15 +193,36 @@ The default sweep covers depths 4/8/12 and draft lengths 1/2/3/4 plus ordinary d
 | `edge_llm_inference/` | Earlier Qwen3 distillation and model timing scripts using local weights; currently select MPS or CPU |
 | `scripts/setup_cuda_3050.ps1` | Windows CUDA environment setup |
 | `requirements.txt` | Shared dependencies |
+| `docs/` | Running guide, research report, project explanation, and archived handoff notes |
+| `pyproject.toml`, `requirements-dev.txt` | Python formatting/lint configuration and development tools |
+
+See the [documentation index](docs/README.md) and [saved results index](hardware_aware_selective_feedback/results/README.md) for a guided list of reports and commands.
 
 ## Checks and synthetic demo
+
+For the DEL baseline plus the missing fixed depth-12 comparison, see
+[DEL baseline and matched energy comparison](hardware_aware_selective_feedback/DEL_BASELINE.md).
+The opt-in `--include-del` mode preserves the existing policies and requires a
+separate report path. It is an independent greedy paper implementation, with
+documented differences from upstream DEL.
 
 Run the unit tests without starting a full benchmark:
 
 ```powershell
-python -m unittest discover -s hardware_aware_selective_feedback/tests -v
+python -m unittest discover -s hardware_aware_selective_feedback/tests -t . -v
 python -m unittest prototype.tests.test_prototype -v
 ```
+
+Install development tools and check formatting and lint:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m ruff format --check .
+python -m ruff check .
+```
+
+Use `python -m ruff format .` to apply consistent Python formatting. Saved
+results, model caches, and vendored code are excluded from formatting.
 
 For a lightweight controller demonstration requiring only Python's standard library:
 

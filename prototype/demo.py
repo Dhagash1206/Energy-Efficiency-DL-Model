@@ -81,8 +81,9 @@ def run_policy(actions, policy, tokens=96, seed=42):
         raise ValueError("Unknown policy")
     model = ToyModel(seed)
     adaptive = policy in ("energy", "latency")
-    controller = Controller(actions, overhead_j=0.025 if adaptive else 0.0,
-                            overhead_ms=0.15 if adaptive else 0.0)
+    controller = Controller(
+        actions, overhead_j=0.025 if adaptive else 0.0, overhead_ms=0.15 if adaptive else 0.0
+    )
     state = State(context_length=0, remaining_tokens=tokens)
     output, trace = [], []
     energy_total = latency_total = 0.0
@@ -94,8 +95,10 @@ def run_policy(actions, policy, tokens=96, seed=42):
         else:
             name = "ordinary" if policy == "ordinary" else "draft4x5"
             eligible = controller.estimates(state)
-            estimate = next((row for row in eligible if row["action"].name == name),
-                            next(row for row in eligible if row["action"].ordinary))
+            estimate = next(
+                (row for row in eligible if row["action"].name == name),
+                next(row for row in eligible if row["action"].ordinary),
+            )
             reason = "fixed policy (ordinary near token limit)"
         action = estimate["action"]
         committed, checks = model.cycle(output, action, state.remaining_tokens)
@@ -105,20 +108,28 @@ def run_policy(actions, policy, tokens=96, seed=42):
         jitter = 0.98 + 0.04 * fraction(seed, len(output), action.name, "energy")
         energy = energy * jitter + controller.overhead_j
         latency += controller.overhead_ms
-        trace.append({
-            "context_length": len(output), "action": action.name,
-            "reason": reason, "accepted_draft_tokens": sum(checks),
-            "verified_draft_tokens": len(checks), "committed_tokens": len(committed),
-            "acceptance_estimate": estimate["acceptance_estimate"],
-            "predicted_energy_per_token": estimate["energy_per_token"],
-            "simulated_energy_j": energy, "simulated_latency_ms": latency,
-        })
+        trace.append(
+            {
+                "context_length": len(output),
+                "action": action.name,
+                "reason": reason,
+                "accepted_draft_tokens": sum(checks),
+                "verified_draft_tokens": len(checks),
+                "committed_tokens": len(committed),
+                "acceptance_estimate": estimate["acceptance_estimate"],
+                "predicted_energy_per_token": estimate["energy_per_token"],
+                "simulated_energy_j": energy,
+                "simulated_latency_ms": latency,
+            }
+        )
         output.extend(committed)
         state.observe(action, checks)
         energy_total += energy
         latency_total += latency
     return {
-        "policy": policy, "tokens": output, "cycles": len(trace),
+        "policy": policy,
+        "tokens": output,
+        "cycles": len(trace),
         "simulated_energy_j": energy_total,
         "simulated_j_per_token": energy_total / tokens,
         "simulated_latency_ms": latency_total,
@@ -138,27 +149,37 @@ def main():
     parser = argparse.ArgumentParser(description=DISCLAIMER)
     parser.add_argument("--tokens", type=positive_int, default=96)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--profile", type=Path, default=Path(__file__).with_name("synthetic_profile.json"))
+    parser.add_argument(
+        "--profile", type=Path, default=Path(__file__).with_name("synthetic_profile.json")
+    )
     parser.add_argument("--output", type=Path, default=Path("prototype/results/demo.json"))
     args = parser.parse_args()
     actions = load_actions(args.profile)
-    results = [run_policy(actions, policy, args.tokens, args.seed)
-               for policy in ("ordinary", "fixed", "latency", "energy")]
+    results = [
+        run_policy(actions, policy, args.tokens, args.seed)
+        for policy in ("ordinary", "fixed", "latency", "energy")
+    ]
     reference = results[0]["tokens"]
     for result in results:
         result["matches_ordinary"] = result["tokens"] == reference
     if not all(result["matches_ordinary"] for result in results):
         raise RuntimeError("Verification failed: output differs from ordinary decoding")
-    report = {"disclaimer": DISCLAIMER, "seed": args.seed,
-              "precision": "one fixed synthetic precision", "results": results}
+    report = {
+        "disclaimer": DISCLAIMER,
+        "seed": args.seed,
+        "precision": "one fixed synthetic precision",
+        "results": results,
+    }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(DISCLAIMER)
     print("\nPolicy       Cycles  Simulated J/token  Simulated ms  Output matches")
     for result in results:
-        print(f"{result['policy']:<12} {result['cycles']:>6}  "
-              f"{result['simulated_j_per_token']:>17.3f}  "
-              f"{result['simulated_latency_ms']:>12.1f}  {result['matches_ordinary']}")
+        print(
+            f"{result['policy']:<12} {result['cycles']:>6}  "
+            f"{result['simulated_j_per_token']:>17.3f}  "
+            f"{result['simulated_latency_ms']:>12.1f}  {result['matches_ordinary']}"
+        )
     adaptive = results[-1]
     print("\nEnergy-controller decisions:", adaptive["action_counts"])
     previous = None

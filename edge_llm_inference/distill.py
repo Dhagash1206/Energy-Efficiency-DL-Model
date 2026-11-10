@@ -19,16 +19,16 @@ MAX_LENGTH = 128
 BATCH_SIZE = 1
 EPOCHS = 1
 LR = 5e-6
-TEMPERATURE = 2.0        # softens teacher probabilities
-ALPHA = 0.5              # weight between distillation loss and normal LM loss
+TEMPERATURE = 2.0  # softens teacher probabilities
+ALPHA = 0.5  # weight between distillation loss and normal LM loss
 SEED = 42
-IGNORE_INDEX = -100     # label value skipped by the loss
+IGNORE_INDEX = -100  # label value skipped by the loss
 
 device = "mps" if torch.backends.mps.is_available() else "cpu"
 torch.manual_seed(SEED)
 print(f"Device: {device}")
 
-#  1. Data 
+#  1. Data
 print("Loading dataset...")
 raw = load_dataset("tatsu-lab/alpaca", split=f"train[:{NUM_EXAMPLES}]")
 
@@ -61,7 +61,7 @@ tokenized = raw.map(tokenize, remove_columns=raw.column_names)
 tokenized.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 loader = DataLoader(tokenized, batch_size=BATCH_SIZE, shuffle=True)
 
-#  2. Models 
+#  2. Models
 print("Loading teacher...")
 teacher = AutoModelForCausalLM.from_pretrained(TEACHER_PATH, torch_dtype=torch.float32).to(device)
 teacher.eval()
@@ -76,7 +76,8 @@ student.train()
 
 optimizer = torch.optim.AdamW(student.parameters(), lr=LR)
 
-#  3. Distillation loss 
+
+#  3. Distillation loss
 def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha):
     # Logits at position t predict token t+1, so drop the last logit and the first label
     student_logits = student_logits[:, :-1, :]
@@ -92,7 +93,7 @@ def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha
     per_token_kl = F.kl_div(
         student_log_probs, teacher_log_probs, reduction="none", log_target=True
     ).sum(dim=-1)
-    soft_loss = (per_token_kl * valid_token_mask).sum() / num_valid_tokens * (temperature ** 2)
+    soft_loss = (per_token_kl * valid_token_mask).sum() / num_valid_tokens * (temperature**2)
 
     # Hard loss: normal next-token prediction against the real labels
     hard_loss = F.cross_entropy(
@@ -103,7 +104,7 @@ def distillation_loss(student_logits, teacher_logits, labels, temperature, alpha
     return alpha * soft_loss + (1 - alpha) * hard_loss
 
 
-#  4. Training loop 
+#  4. Training loop
 print("Starting training...")
 for epoch in range(EPOCHS):
     total_loss = 0.0
@@ -131,11 +132,11 @@ for epoch in range(EPOCHS):
 
         total_loss += loss.item()
         if step % 20 == 0:
-            print(f"Epoch {epoch+1} | Step {step}/{len(loader)} | Loss: {loss.item():.4f}")
+            print(f"Epoch {epoch + 1} | Step {step}/{len(loader)} | Loss: {loss.item():.4f}")
 
-    print(f"Epoch {epoch+1} finished. Avg loss: {total_loss / len(loader):.4f}")
+    print(f"Epoch {epoch + 1} finished. Avg loss: {total_loss / len(loader):.4f}")
 
-#  5. Save 
+#  5. Save
 print(f"Saving distilled student to {OUTPUT_DIR}")
 student.save_pretrained(OUTPUT_DIR)
 tokenizer.save_pretrained(OUTPUT_DIR)

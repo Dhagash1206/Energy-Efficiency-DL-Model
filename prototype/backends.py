@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import hashlib
-import math
 
 from .demo import fraction
 
@@ -14,8 +13,12 @@ class DecodeAction:
     length: int
 
 
-ACTIONS = (DecodeAction("ordinary", 0, 0), DecodeAction("draft4x2", 4, 2),
-           DecodeAction("draft4x5", 4, 5), DecodeAction("draft8x3", 8, 3))
+ACTIONS = (
+    DecodeAction("ordinary", 0, 0),
+    DecodeAction("draft4x2", 4, 2),
+    DecodeAction("draft4x5", 4, 5),
+    DecodeAction("draft8x3", 8, 3),
+)
 
 # These are fictional parameter sets, NOT measured hardware specifications.
 SCENARIOS = {
@@ -33,10 +36,15 @@ class SimulatedBackend:
     def __init__(self, scenario="cpu-demo", precision="fp16", seed=42):
         self.scenario, self.precision, self.seed = scenario, precision, seed
         self.energy_scale, self.time_scale, self.controller_j = SCENARIOS[scenario]
-        self.metadata = {"backend": "simulation", "scenario": scenario,
-                         "precision": precision, "model": "deterministic toy token source",
-                         "measurement_scope": "invented total costs; no device is measured",
-                         "optimized_kv_cache": False, "real_quantization": False}
+        self.metadata = {
+            "backend": "simulation",
+            "scenario": scenario,
+            "precision": precision,
+            "model": "deterministic toy token source",
+            "measurement_scope": "invented total costs; no device is measured",
+            "optimized_kv_cache": False,
+            "real_quantization": False,
+        }
 
     def encode(self, prompt):
         return prompt.split()
@@ -64,7 +72,11 @@ class SimulatedBackend:
             probability = ({4: 0.22, 8: 0.48} if hard else {4: 0.90, 8: 0.97})[action.depth]
             if self.precision == "int4":
                 probability -= 0.04
-            candidates.append(self.next_token(context) if fraction(self.seed, context, action.depth) < probability else "[draft-error]")
+            candidates.append(
+                self.next_token(context)
+                if fraction(self.seed, context, action.depth) < probability
+                else "[draft-error]"
+            )
         committed, checks = [], []
         for candidate in candidates:
             correct = self.next_token(prefix + committed)
@@ -76,15 +88,21 @@ class SimulatedBackend:
         return committed, checks, length, False
 
     def cost(self, action, context, repetition=0):
-        energy, latency = {"ordinary": (1.0, 8.0), "draft4x2": (1.4, 10.0),
-                           "draft4x5": (2.0, 18.0), "draft8x3": (2.3, 14.0)}[action.name]
+        energy, latency = {
+            "ordinary": (1.0, 8.0),
+            "draft4x2": (1.4, 10.0),
+            "draft4x5": (2.0, 18.0),
+            "draft8x3": (2.3, 14.0),
+        }[action.name]
         factor = 1 + context * (0.001 if action.length == 0 else 0.0017)
         # Quantization changes relative verification overhead in this invented model.
         quant = {"fp16": 1.0, "int8": 0.78, "int4": 0.60}[self.precision]
         speculative_overhead = 0.25 * action.length if self.precision == "int4" else 0
         noise = 0.92 + 0.16 * fraction(self.seed, context, action.name, repetition)
-        return ((energy * quant + speculative_overhead) * factor * self.energy_scale * noise,
-                (latency * quant + speculative_overhead * 5) * factor * self.time_scale * noise / 1000)
+        return (
+            (energy * quant + speculative_overhead) * factor * self.energy_scale * noise,
+            (latency * quant + speculative_overhead * 5) * factor * self.time_scale * noise / 1000,
+        )
 
 
 class TransformersBackend:
@@ -104,7 +122,9 @@ class TransformersBackend:
         except ImportError as exc:
             raise RuntimeError("Install requirements.txt with standard CPython first") from exc
         if precision in ("int4", "int8") and device != "cuda":
-            raise ValueError("This prototype enables bitsandbytes int4/int8 only on CUDA; use fp32/fp16 elsewhere")
+            raise ValueError(
+                "This prototype enables bitsandbytes int4/int8 only on CUDA; use fp32/fp16 elsewhere"
+            )
         if precision == "fp16" and device == "cpu":
             raise ValueError("Use fp32 for this CPU reference backend")
         self.torch, self.device = torch, device
@@ -116,23 +136,31 @@ class TransformersBackend:
         load_kwargs["torch_dtype"] = torch.float32 if precision == "fp32" else torch.float16
         if precision in ("int4", "int8"):
             load_kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=precision == "int4", load_in_8bit=precision == "int8")
+                load_in_4bit=precision == "int4", load_in_8bit=precision == "int8"
+            )
             load_kwargs["device_map"] = {"": "cuda:0"}
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
         if precision not in ("int4", "int8"):
             self.model.to(device)
         self.model.eval()
         if self.model.config.model_type != "llama":
-            raise ValueError("The real reference backend currently supports Llama architecture only")
+            raise ValueError(
+                "The real reference backend currently supports Llama architecture only"
+            )
         self.layers = self.model.model.layers
         if len(self.layers) <= 8:
             raise ValueError("Need more than 8 decoder layers for this action grid")
         self.controller_j = None
-        self.metadata = {"backend": device, "model": model_id,
-                         "model_revision": getattr(self.model.config, "_commit_hash", None) or revision,
-                         "precision": precision, "torch": torch.__version__,
-                         "optimized_kv_cache": False, "real_quantization": precision in ("int4", "int8"),
-                         "measurement_scope": "reference execution; no cache reuse; energy only when a valid meter is available"}
+        self.metadata = {
+            "backend": device,
+            "model": model_id,
+            "model_revision": getattr(self.model.config, "_commit_hash", None) or revision,
+            "precision": precision,
+            "torch": torch.__version__,
+            "optimized_kv_cache": False,
+            "real_quantization": precision in ("int4", "int8"),
+            "measurement_scope": "reference execution; no cache reuse; energy only when a valid meter is available",
+        }
         self.eos = self.tokenizer.eos_token_id
 
     def encode(self, prompt):
@@ -174,7 +202,7 @@ class TransformersBackend:
                 break
         # Logit p-1 predicts candidate 0, p predicts candidate 1, and so on.
         logits = self._forward(prefix + candidates)
-        target = logits[len(prefix) - 1:].argmax(dim=-1).tolist()
+        target = logits[len(prefix) - 1 :].argmax(dim=-1).tolist()
         committed, checks = [], []
         for index, candidate in enumerate(candidates):
             correct = target[index]

@@ -16,6 +16,7 @@ the source of truth: ``draft`` copies in positions the buffers do not hold
 yet and returns a tuple cache extended with the drafted positions, exactly
 like repeated ``forward_early`` calls.
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -30,8 +31,9 @@ _WARMUP_STEPS = 3
 class GraphDrafter:
     """Draft tokens through layers ``0..depth-1`` with a fixed-shape KV cache."""
 
-    def __init__(self, model: torch.nn.Module, depth: int, max_len: int,
-                 use_graph: Optional[bool] = None) -> None:
+    def __init__(
+        self, model: torch.nn.Module, depth: int, max_len: int, use_graph: Optional[bool] = None
+    ) -> None:
         layers = model.model.layers
         if not 1 <= depth < len(layers):
             raise ValueError("Draft depth must be in [1, number of layers).")
@@ -56,7 +58,7 @@ class GraphDrafter:
         self.out_hidden = torch.zeros((1, 1, config.hidden_size), dtype=dtype, device=device)
 
         self.graph: Optional[torch.cuda.CUDAGraph] = None
-        self.valid_len = 0     # buffer positions known to equal the engine's cache
+        self.valid_len = 0  # buffer positions known to equal the engine's cache
         self.drafted_until = 0
 
     # ── Engine-facing API ────────────────────────────────────────────────
@@ -74,8 +76,9 @@ class GraphDrafter:
         self.valid_len = min(self.drafted_until, cache_len)
 
     @torch.inference_mode()
-    def draft(self, cache: tuple, pending: torch.Tensor, steps: int,
-              eos_t: Optional[torch.Tensor]) -> tuple[list[torch.Tensor], tuple, torch.Tensor]:
+    def draft(
+        self, cache: tuple, pending: torch.Tensor, steps: int, eos_t: Optional[torch.Tensor]
+    ) -> tuple[list[torch.Tensor], tuple, torch.Tensor]:
         """Run up to ``steps`` draft steps starting from ``pending``.
 
         Returns (proposed token tensors, tuple cache extended with the drafted
@@ -84,8 +87,9 @@ class GraphDrafter:
         """
         start = cache[0][0].shape[2]
         if start + steps > self.max_len:
-            raise ValueError(f"GraphDrafter max_len={self.max_len} is too small for "
-                             f"{start + steps} positions.")
+            raise ValueError(
+                f"GraphDrafter max_len={self.max_len} is too small for {start + steps} positions."
+            )
         self._sync(cache, start)
 
         proposed, hidden_states = [], []
@@ -104,9 +108,12 @@ class GraphDrafter:
         self.drafted_until = start + drafted
         end = start + drafted
         extended = tuple(
-            (torch.cat([k, self.keys[i][:, :, start:end]], dim=2),
-             torch.cat([v, self.values[i][:, :, start:end]], dim=2))
-            if i < self.depth else (k, v)
+            (
+                torch.cat([k, self.keys[i][:, :, start:end]], dim=2),
+                torch.cat([v, self.values[i][:, :, start:end]], dim=2),
+            )
+            if i < self.depth
+            else (k, v)
             for i, (k, v) in enumerate(cache)
         )
         return proposed, extended, torch.cat(hidden_states, dim=1)
@@ -152,7 +159,7 @@ class GraphDrafter:
         visible = (self.slots <= self.position.view(-1)).view(1, 1, 1, -1)
         write_at = self.position.view(-1)
 
-        for i, layer in enumerate(model.model.layers[:self.depth]):
+        for i, layer in enumerate(model.model.layers[: self.depth]):
             attention = layer.self_attn
             residual = hidden
             normed = layer.input_layernorm(hidden)
@@ -166,7 +173,8 @@ class GraphDrafter:
                 query,
                 repeat_kv(self.keys[i], attention.num_key_value_groups),
                 repeat_kv(self.values[i], attention.num_key_value_groups),
-                attn_mask=visible, scale=attention.scaling,
+                attn_mask=visible,
+                scale=attention.scaling,
             )
             attended = attended.transpose(1, 2).reshape(1, 1, -1)
             hidden = residual + attention.o_proj(attended)

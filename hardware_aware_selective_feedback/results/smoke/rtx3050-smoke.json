@@ -1,0 +1,1185 @@
+{
+  "calibration_runs": 13,
+  "observer_pair_prompt_ids": [
+    "HumanEval/139"
+  ],
+  "observer_pair_unique_prompts": 1,
+  "calibration_total_objective": 96.274,
+  "paired_observer_deltas": [
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "mode": "selected_observe",
+      "latency_delta_s": -0.000751899991882965,
+      "energy_delta_j": 0.8019999999999996
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "mode": "always_observe",
+      "latency_delta_s": 0.007307000021683052,
+      "energy_delta_j": 1.4499999999999993
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "mode": "selected_observe",
+      "latency_delta_s": 0.03661160002229735,
+      "energy_delta_j": 3.3100000000000005
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "mode": "always_observe",
+      "latency_delta_s": 0.07019580001360737,
+      "energy_delta_j": 2.5700000000000003
+    }
+  ],
+  "paired_vs_ordinary": [
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "fixed",
+      "latency_delta_s": -0.016350199992302805,
+      "energy_delta_j": -3.4880000000000004
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "never_observe",
+      "latency_delta_s": 0.09420039999531582,
+      "energy_delta_j": 3.471
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "selected_observe",
+      "latency_delta_s": 0.09344850000343286,
+      "energy_delta_j": 4.273
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "always_observe",
+      "latency_delta_s": 0.10150740001699887,
+      "energy_delta_j": 4.920999999999999
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "bandit",
+      "latency_delta_s": -0.00934140000026673,
+      "energy_delta_j": 0.10299999999999976
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "repeat": 0,
+      "policy": "adaptive",
+      "latency_delta_s": -0.013431600003968924,
+      "energy_delta_j": -3.657
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "fixed",
+      "latency_delta_s": 0.009002000006148592,
+      "energy_delta_j": 0.2969999999999997
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "never_observe",
+      "latency_delta_s": -0.04505850002169609,
+      "energy_delta_j": -3.4690000000000003
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "selected_observe",
+      "latency_delta_s": -0.008446899999398738,
+      "energy_delta_j": -0.1589999999999998
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "always_observe",
+      "latency_delta_s": 0.025137299991911277,
+      "energy_delta_j": -0.899
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "bandit",
+      "latency_delta_s": 0.006311499979346991,
+      "energy_delta_j": -0.2320000000000002
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "repeat": 0,
+      "policy": "adaptive",
+      "latency_delta_s": 0.07236560000455938,
+      "energy_delta_j": -0.633
+    }
+  ],
+  "mismatches": [],
+  "excluded_configurations": [],
+  "feasibility": {
+    "best_executed_fixed_by_prompt": {
+      "HumanEval/97": "fixed",
+      "gsm8k-test-208": "never_observe"
+    },
+    "best_fixed_varies_across_prompts": true,
+    "observation_overhead": {
+      "selected_observe": {
+        "mean_delta_per_request": 2.056,
+        "median_delta_per_request": 2.056,
+        "n": 2
+      },
+      "always_observe": {
+        "mean_delta_per_request": 2.01,
+        "median_delta_per_request": 2.01,
+        "n": 2
+      }
+    },
+    "warning": "Descriptive short-run comparisons; repeat on more prompts and hardware."
+  },
+  "model": "facebook/layerskip-llama3.2-1B",
+  "revision": "81deb0f88734409cca506bcefcfb5c6bd2667565",
+  "precision": "fp16",
+  "device": "cuda:0",
+  "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+  "measurement": {
+    "device": "cuda",
+    "energy_available": true,
+    "energy_boundary": "nvidia_gpu",
+    "energy_source": "NVML cumulative GPU energy counter (mJ)",
+    "energy_reason": null,
+    "rapl_zones": [],
+    "emi_channels": []
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu_threads": 4,
+  "accelerator_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+  "torch": "2.6.0+cu124",
+  "transformers": "4.50.0",
+  "objective": "energy",
+  "energy_available": true,
+  "energy_boundary": "nvidia_gpu",
+  "energy_limitation": null,
+  "dataset": {
+    "gsm8k_train": {
+      "source": "https://raw.githubusercontent.com/openai/grade-school-math/3101c7d5072418e28b9008a6636bde82a006892c/grade_school_math/data/train.jsonl",
+      "sha256": "17f347dc51477c50d4efb83959dbb7c56297aba886e5544ee2aaed3024813465",
+      "revision": "3101c7d5072418e28b9008a6636bde82a006892c",
+      "license": "MIT"
+    },
+    "gsm8k_test": {
+      "source": "https://raw.githubusercontent.com/openai/grade-school-math/3101c7d5072418e28b9008a6636bde82a006892c/grade_school_math/data/test.jsonl",
+      "sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
+      "revision": "3101c7d5072418e28b9008a6636bde82a006892c",
+      "license": "MIT"
+    },
+    "humaneval": {
+      "source": "https://raw.githubusercontent.com/openai/human-eval/6d43fb980f9fee3c892a914eda09951f772ad10d/data/HumanEval.jsonl.gz",
+      "sha256": "b796127e635a67f93fb35c04f4cb03cf06f38c8072ee7cee8833d7bee06979ef",
+      "revision": "6d43fb980f9fee3c892a914eda09951f772ad10d",
+      "license": "MIT"
+    },
+    "seed": 42,
+    "split": "disjoint GSM8K train/test; disjoint shuffled HumanEval IDs",
+    "use": "prompt workloads only; no answer or executable-code quality scoring"
+  },
+  "arguments": {
+    "calibration": 1,
+    "test": 1,
+    "tokens": 4,
+    "seed": 42,
+    "device": "cuda",
+    "precision": "fp16",
+    "output": "hardware_aware_selective_feedback\\results\\smoke\\rtx3050-smoke.json",
+    "energy_source": "auto",
+    "counter_file": null,
+    "counter_unit": "joules",
+    "energy_scope": null,
+    "probe": false,
+    "threads": 4,
+    "repeats": 1,
+    "objective": "energy",
+    "observer_pairs": 1,
+    "include_del": false,
+    "del_max_drafts": 18,
+    "del_decay": 0.95,
+    "del_projection_chunk": 32,
+    "quantize": null,
+    "compile_model": false,
+    "attn": "auto",
+    "adaptive_drafts": false,
+    "context_selector": false,
+    "stop_on_mismatch": false,
+    "cuda_graph_drafts": false,
+    "gpu_clock_mhz": null,
+    "gpu_power_limit_w": null
+  },
+  "gpu_pinning": {},
+  "selector": {
+    "objective": "energy",
+    "decisions": 3,
+    "context_aware": false,
+    "context_costs_per_token": {},
+    "executed_costs_per_token": {
+      "(0, 0)": {
+        "mean": 1.572375,
+        "n": 2
+      },
+      "(4, 1)": {
+        "mean": 1.87225,
+        "n": 1
+      },
+      "(4, 3)": {
+        "mean": 1.3845,
+        "n": 3
+      },
+      "(8, 1)": {
+        "mean": 1.53075,
+        "n": 1
+      },
+      "(8, 3)": {
+        "mean": 1.8990833333333332,
+        "n": 3
+      },
+      "(12, 1)": {
+        "mean": 1.8155,
+        "n": 1
+      },
+      "(12, 3)": {
+        "mean": 1.71775,
+        "n": 1
+      }
+    },
+    "observed_request_costs_per_token": {
+      "(8, 3)": {
+        "mean": 3.00725,
+        "n": 2
+      }
+    },
+    "valid_one_step": {
+      "4": {
+        "matches": 2,
+        "observations": 14,
+        "rate": 0.14285714285714285
+      },
+      "8": {
+        "matches": 6,
+        "observations": 12,
+        "rate": 0.5
+      },
+      "12": {
+        "matches": 5,
+        "observations": 6,
+        "rate": 0.8333333333333334
+      }
+    },
+    "measured_observer_deltas_per_token": {
+      "selected": {
+        "mean": 1.1260000000000001,
+        "n": 1
+      },
+      "all": {
+        "mean": 1.0739999999999998,
+        "n": 1
+      }
+    },
+    "decision_rule": "Heuristic: minimum observed cost plus uncertainty penalty. Paid exits scheduled only at depth=8 length=3 after \u22653 calibration pairs. No formal safety guarantee."
+  },
+  "bandit": {
+    "(0, 0)": {
+      "mean": 1.3636666666666666,
+      "n": 3
+    },
+    "(4, 1)": {
+      "mean": 1.87225,
+      "n": 1
+    },
+    "(4, 3)": {
+      "mean": 1.6757499999999999,
+      "n": 2
+    },
+    "(8, 1)": {
+      "mean": 1.53075,
+      "n": 1
+    },
+    "(8, 3)": {
+      "mean": 1.88275,
+      "n": 1
+    },
+    "(12, 1)": {
+      "mean": 1.8155,
+      "n": 1
+    },
+    "(12, 3)": {
+      "mean": 1.71775,
+      "n": 1
+    }
+  },
+  "aggregates": {
+    "ordinary": {
+      "runs": 2,
+      "median_latency_s": 0.1806944999989355,
+      "total_latency_s": 0.361388999997871,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.045173624999733875,
+      "energy_j": 15.652000000000001,
+      "energy_j_per_token": 1.9565000000000001,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "fixed": {
+      "runs": 2,
+      "median_latency_s": 0.1770204000058584,
+      "total_latency_s": 0.3540408000117168,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.0442551000014646,
+      "energy_j": 12.460999999999999,
+      "energy_j_per_token": 1.5576249999999998,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "never_observe": {
+      "runs": 2,
+      "median_latency_s": 0.20526544998574536,
+      "total_latency_s": 0.4105308999714907,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.05131636249643634,
+      "energy_j": 15.654,
+      "energy_j_per_token": 1.95675,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "selected_observe": {
+      "runs": 2,
+      "median_latency_s": 0.22319530000095256,
+      "total_latency_s": 0.4463906000019051,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.05579882500023814,
+      "energy_j": 19.766,
+      "energy_j_per_token": 2.47075,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "always_observe": {
+      "runs": 2,
+      "median_latency_s": 0.24401685000339057,
+      "total_latency_s": 0.48803370000678115,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.06100421250084764,
+      "energy_j": 19.674,
+      "energy_j_per_token": 2.45925,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "bandit": {
+      "runs": 2,
+      "median_latency_s": 0.17917954998847563,
+      "total_latency_s": 0.35835909997695126,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.04479488749711891,
+      "energy_j": 15.523,
+      "energy_j_per_token": 1.940375,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    },
+    "adaptive": {
+      "runs": 2,
+      "median_latency_s": 0.21016149999923073,
+      "total_latency_s": 0.42032299999846146,
+      "total_generated_tokens": 8,
+      "latency_s_per_token": 0.05254037499980768,
+      "energy_j": 11.362,
+      "energy_j_per_token": 1.42025,
+      "all_greedy_match": true,
+      "greedy_mismatches": 0
+    }
+  },
+  "rows": [
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.19531489998917095,
+      "energy_j": 5.144,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2737803000200074,
+      "energy_j": 7.489,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2316380999982357,
+      "energy_j": 5.252,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.1679881000018213,
+      "energy_j": 6.123,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.21868569997604936,
+      "energy_j": 7.531,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 12,
+      "draft_length": 1,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.20172219999949448,
+      "energy_j": 7.262,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 1,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 12,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.20076770000741817,
+      "energy_j": 6.871,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_selected_observed",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2403207999886945,
+      "energy_j": 11.98,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 2,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_selected_base",
+      "repeat": 0,
+      "order": 1,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2300145000044722,
+      "energy_j": 7.476,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_all_observed",
+      "repeat": 0,
+      "order": 0,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.23419580000336282,
+      "energy_j": 12.078,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 4,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/139",
+      "dataset": "humaneval",
+      "split": "calibration",
+      "policy": "calibration_pair_all_base",
+      "repeat": 0,
+      "order": 1,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        422,
+        308,
+        366
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.24054319999413565,
+      "energy_j": 7.782,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-train-1458",
+      "dataset": "gsm8k",
+      "split": "calibration",
+      "policy": "adaptive_calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        50002,
+        5900,
+        311,
+        264
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.175172899995232,
+      "energy_j": 7.435,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-train-1458",
+      "dataset": "gsm8k",
+      "split": "calibration",
+      "policy": "bandit_calibration",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        50002,
+        5900,
+        311,
+        264
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.16489010001532733,
+      "energy_j": 3.851,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "bandit",
+      "repeat": 0,
+      "order": 0,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.1703218999900855,
+      "energy_j": 8.154,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "adaptive",
+      "repeat": 0,
+      "order": 1,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.16623169998638332,
+      "energy_j": 4.394,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "always_observe",
+      "repeat": 0,
+      "order": 2,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2811707000073511,
+      "energy_j": 12.972,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 6,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "selected_observe",
+      "repeat": 0,
+      "order": 3,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.2731117999937851,
+      "energy_j": 12.324,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 3,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "fixed",
+      "repeat": 0,
+      "order": 4,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.16331309999804944,
+      "energy_j": 4.563,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "never_observe",
+      "repeat": 0,
+      "order": 5,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.27386369998566806,
+      "energy_j": 11.522,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "HumanEval/97",
+      "dataset": "humaneval",
+      "split": "test",
+      "policy": "ordinary",
+      "repeat": 0,
+      "order": 6,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        262,
+        471,
+        528,
+        2948
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.17966329999035224,
+      "energy_j": 8.051,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "bandit",
+      "repeat": 0,
+      "order": 0,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.18803719998686574,
+      "energy_j": 7.369,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "fixed",
+      "repeat": 0,
+      "order": 1,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.19072770001366735,
+      "energy_j": 7.898,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "never_observe",
+      "repeat": 0,
+      "order": 2,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.13666719998582266,
+      "energy_j": 4.132,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "ordinary",
+      "repeat": 0,
+      "order": 3,
+      "depth": 0,
+      "draft_length": 0,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.18172570000751875,
+      "energy_j": 7.601,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 0,
+      "drafted_tokens": 0,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "adaptive",
+      "repeat": 0,
+      "order": 4,
+      "depth": 4,
+      "draft_length": 3,
+      "observed_exits": [],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.25409130001207814,
+      "energy_j": 6.968,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 0,
+      "excluded_feedback": 0,
+      "accepted_drafts": 1,
+      "drafted_tokens": 3,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "always_observe",
+      "repeat": 0,
+      "order": 5,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4,
+        12
+      ],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.20686299999943003,
+      "energy_j": 6.702,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 6,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    },
+    {
+      "prompt_id": "gsm8k-test-208",
+      "dataset": "gsm8k",
+      "split": "test",
+      "policy": "selected_observe",
+      "repeat": 0,
+      "order": 6,
+      "depth": 8,
+      "draft_length": 3,
+      "observed_exits": [
+        4
+      ],
+      "tokens": [
+        16344,
+        11021,
+        220,
+        19
+      ],
+      "generated_tokens": 4,
+      "latency_s": 0.17327880000812002,
+      "energy_j": 7.442,
+      "energy_boundary": "nvidia_gpu",
+      "energy_source": "NVML cumulative GPU energy counter (mJ)",
+      "energy_reason": null,
+      "valid_feedback": 3,
+      "excluded_feedback": 0,
+      "accepted_drafts": 2,
+      "drafted_tokens": 2,
+      "greedy_match": true
+    }
+  ],
+  "interpretation": "Measured implementation check; small samples do not establish energy savings, superiority, or novelty.",
+  "limits": [
+    "The implementation uses an attributed LayerSkip inference helper in hardware_aware_selective_feedback.",
+    "The energy selector adapts per request; the optional DEL port adapts within requests.",
+    "Observer overhead uses repeated paired calibration; thermal/order effects remain.",
+    "Fixed depth 4 and no-observation depth 8 are separate predetermined baselines.",
+    "No optimized serving backend; counter scope may omit other hardware components.",
+    "HumanEval supplies prompt diversity; generated code is not executed or scored."
+  ]
+}

@@ -8,6 +8,7 @@ lets a sweep compare energy per token at a fixed operating point.
 Both settings need administrator (Windows) or root (Linux) rights, and some
 laptop GPUs reject them. Settings are always restored on exit, even on error.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -54,12 +55,15 @@ def pinned_gpu(
     clock_locked = False
     try:
         if power_limit_w is not None:
-            original_power_limit_w = float(_nvidia_smi(
-                runner, "-i", index, "--query-gpu=power.limit", "--format=csv,noheader,nounits"
-            ).strip())
+            original_power_limit_w = float(
+                _nvidia_smi(
+                    runner, "-i", index, "--query-gpu=power.limit", "--format=csv,noheader,nounits"
+                ).strip()
+            )
             _nvidia_smi(runner, "-i", index, "-pl", f"{power_limit_w:g}")
-            applied.update(power_limit_w=power_limit_w,
-                           original_power_limit_w=original_power_limit_w)
+            applied.update(
+                power_limit_w=power_limit_w, original_power_limit_w=original_power_limit_w
+            )
         if graphics_clock_mhz is not None:
             _nvidia_smi(runner, "-i", index, "-lgc", f"{graphics_clock_mhz},{graphics_clock_mhz}")
             clock_locked = True

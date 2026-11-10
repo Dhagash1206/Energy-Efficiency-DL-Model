@@ -9,6 +9,7 @@ None of it reaches source control: the root ``.gitignore`` excludes the
 Results stay under this package (``results/pilot/``) because they are small,
 reviewable artifacts that belong with the code that produced them.
 """
+
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parent

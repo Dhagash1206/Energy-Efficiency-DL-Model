@@ -15,20 +15,49 @@ class ReportCaseTests(unittest.TestCase):
 
     def test_run_report_mismatches_are_deduplicated(self):
         mismatch = {"prompt_id": "gsm8k-test-1", "depth": 4, "draft_length": 3, "token_index": 9}
-        cases, prompt_set, limit, precision = self._cases({
-            "arguments": {"calibration": 8, "test": 16, "seed": 42, "tokens": 64, "precision": "fp16"},
-            "mismatches": [mismatch, {**mismatch, "token_index": 12}],
-        })
-        self.assertEqual(cases, [{"prompt_id": "gsm8k-test-1", "mismatch_token": 9, "depth": 4, "draft": 3}])
+        cases, prompt_set, limit, precision = self._cases(
+            {
+                "arguments": {
+                    "calibration": 8,
+                    "test": 16,
+                    "seed": 42,
+                    "tokens": 64,
+                    "precision": "fp16",
+                },
+                "mismatches": [mismatch, {**mismatch, "token_index": 12}],
+            }
+        )
+        self.assertEqual(
+            cases, [{"prompt_id": "gsm8k-test-1", "mismatch_token": 9, "depth": 4, "draft": 3}]
+        )
         self.assertEqual(prompt_set, {"calibration": 8, "test": 16, "seed": 42})
         self.assertEqual((limit, precision), (64, "fp16"))
 
     def test_sweep_report_uses_one_calibration_prompt(self):
-        _, prompt_set, _, _ = self._cases({
-            "arguments": {"test": 4, "seed": 44, "tokens": 16, "precision": "fp16"},
-            "mismatches": [],
-        })
+        _, prompt_set, _, _ = self._cases(
+            {
+                "arguments": {"test": 4, "seed": 44, "tokens": 16, "precision": "fp16"},
+                "mismatches": [],
+            }
+        )
         self.assertEqual(prompt_set["calibration"], 1)
+
+    def test_dynamic_del_is_not_replayed_as_a_fixed_action(self):
+        with self.assertRaisesRegex(ValueError, "Dynamic DEL"):
+            self._cases(
+                {
+                    "arguments": {"test": 1, "seed": 42, "tokens": 8, "precision": "fp32"},
+                    "mismatches": [
+                        {
+                            "policy": "del",
+                            "prompt_id": "p",
+                            "depth": None,
+                            "draft_length": None,
+                            "token_index": 2,
+                        }
+                    ],
+                }
+            )
 
 
 if __name__ == "__main__":

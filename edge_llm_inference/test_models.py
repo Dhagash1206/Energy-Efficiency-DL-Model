@@ -1,4 +1,3 @@
-
 import time
 import gc
 import torch
@@ -42,7 +41,7 @@ def run(name, path):
     elapsed = time.time() - start
 
     new_tokens = output.shape[1] - inputs["input_ids"].shape[1]
-    reply = tokenizer.decode(output[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+    reply = tokenizer.decode(output[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
     mem_gb = torch.mps.current_allocated_memory() / 1e9 if device == "mps" else float("nan")
 
     print(f"=== {name} ===")

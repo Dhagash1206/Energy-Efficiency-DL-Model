@@ -11,10 +11,9 @@ prototype/results/
 # Editor settings
 .vscode/
 
-# LayerSkip checkpoint cache: multi-GB weights and the HF token (was layerskip/.gitignore)
+# LayerSkip checkpoint cache: multi-GB weights and the HF token
 layerskip/
 
 # Tool caches
 .ruff_cache/
 .pytest_cache/
-PROJECT_EXPLANATION.md

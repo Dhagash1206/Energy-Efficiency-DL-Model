@@ -50,22 +50,56 @@ class MismatchHandlingTests(unittest.TestCase):
 
     def _run(self, *extra_args):
         torch.manual_seed(3)
-        model = LlamaForCausalLM(LlamaConfig(
-            vocab_size=32, hidden_size=32, intermediate_size=64, num_hidden_layers=13,
-            num_attention_heads=4, num_key_value_heads=2, max_position_embeddings=512,
-            attn_implementation="eager")).eval()
-        prompts = lambda prefix: [{"id": f"{prefix}-{i}", "dataset": "gsm8k",
-                                   "text": f"question {prefix} {i}"} for i in range(2)]
+        model = LlamaForCausalLM(
+            LlamaConfig(
+                vocab_size=32,
+                hidden_size=32,
+                intermediate_size=64,
+                num_hidden_layers=13,
+                num_attention_heads=4,
+                num_key_value_heads=2,
+                max_position_embeddings=512,
+                attn_implementation="eager",
+            )
+        ).eval()
+
+        def prompts(prefix):
+            return [
+                {"id": f"{prefix}-{i}", "dataset": "gsm8k", "text": f"question {prefix} {i}"}
+                for i in range(2)
+            ]
+
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "report.json"
-            argv = ["run", "--device", "cpu", "--calibration", "1", "--test", "1",
-                    "--tokens", "6", "--observer-pairs", "1", "--energy-source", "none",
-                    "--threads", "1", "--output", str(output), *extra_args]
-            with patch.object(sys, "argv", argv), \
-                 patch.object(run, "load_prompts", return_value=(prompts("cal"), prompts("test"), {})), \
-                 patch.object(run, "load_model", return_value=(model, FakeTokenizer(), "rev")), \
-                 patch.object(run, "generate", side_effect=corrupt_depth4_length3), \
-                 patch("builtins.print"):
+            argv = [
+                "run",
+                "--device",
+                "cpu",
+                "--calibration",
+                "1",
+                "--test",
+                "1",
+                "--tokens",
+                "6",
+                "--observer-pairs",
+                "1",
+                "--energy-source",
+                "none",
+                "--threads",
+                "1",
+                "--output",
+                str(output),
+                *extra_args,
+            ]
+            with (
+                patch.object(sys, "argv", argv),
+                patch.object(
+                    run, "load_prompts", return_value=(prompts("cal"), prompts("test"), {})
+                ),
+                patch.object(run, "load_model", return_value=(model, FakeTokenizer(), "rev")),
+                patch.object(run, "generate", side_effect=corrupt_depth4_length3),
+                patch("builtins.print"),
+            ):
                 run.main()
             return json.loads(output.read_text()), output.with_suffix(".md").read_text()
 
@@ -73,7 +107,9 @@ class MismatchHandlingTests(unittest.TestCase):
         report, markdown = self._run()
         self.assertEqual(report["excluded_configurations"], [[4, 3]])
         self.assertTrue(report["mismatches"])
-        self.assertTrue(all((m["depth"], m["draft_length"]) == (4, 3) for m in report["mismatches"]))
+        self.assertTrue(
+            all((m["depth"], m["draft_length"]) == (4, 3) for m in report["mismatches"])
+        )
         adaptive_rows = [r for r in report["rows"] if r["policy"] in ("adaptive", "bandit")]
         self.assertTrue(adaptive_rows)
         self.assertFalse(any((r["depth"], r["draft_length"]) == (4, 3) for r in adaptive_rows))

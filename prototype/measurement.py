@@ -12,13 +12,16 @@ class EnergyMeter:
             return
         try:
             import pynvml
+
             pynvml.nvmlInit()
             self.nvml = pynvml
             # Match CUDA's visible device by UUID; do not assume NVML index 0 is CUDA index 0.
             props = backend.torch.cuda.get_device_properties(0)
             uuid = getattr(props, "uuid", None)
             if not uuid:
-                raise RuntimeError("CUDA device UUID unavailable; cannot safely select the energy meter")
+                raise RuntimeError(
+                    "CUDA device UUID unavailable; cannot safely select the energy meter"
+                )
             self.handle = pynvml.nvmlDeviceGetHandleByUUID(str(uuid))
             self.read()
             self.reason = "NVML cumulative GPU energy; excludes CPU and the rest of the laptop."

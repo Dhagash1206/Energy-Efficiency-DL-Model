@@ -2,7 +2,12 @@ import unittest
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import (
-    FALLBACK_BELOW, PROBE_EVERY, SHORTEN_BELOW, _adaptive_k, batched_greedy, generate,
+    FALLBACK_BELOW,
+    PROBE_EVERY,
+    SHORTEN_BELOW,
+    _adaptive_k,
+    batched_greedy,
+    generate,
     native_greedy,
 )
 from hardware_aware_selective_feedback.feedback import validate_feedback, LearningState
@@ -14,10 +19,18 @@ class EngineTests(unittest.TestCase):
     def setUpClass(cls):
         torch.set_num_threads(1)
         torch.manual_seed(8)
-        cls.model = LlamaForCausalLM(LlamaConfig(vocab_size=32, hidden_size=32,
-                        intermediate_size=64, num_hidden_layers=4,
-                        num_attention_heads=4, num_key_value_heads=2,
-                        max_position_embeddings=128, attn_implementation="eager")).eval()
+        cls.model = LlamaForCausalLM(
+            LlamaConfig(
+                vocab_size=32,
+                hidden_size=32,
+                intermediate_size=64,
+                num_hidden_layers=4,
+                num_attention_heads=4,
+                num_key_value_heads=2,
+                max_position_embeddings=128,
+                attn_implementation="eager",
+            )
+        ).eval()
 
     def test_native_agreement_and_observer_alignment(self):
         prompt = [1, 3, 5]
@@ -35,9 +48,15 @@ class EngineTests(unittest.TestCase):
                                     ids = torch.tensor([row["prefix_ids"]])
                                     native = self.model(ids, output_hidden_states=True)
                                     hidden = native.hidden_states[row["depth"]][:, -1]
-                                    predicted = self.model.lm_head(self.model.model.norm(hidden)).argmax(-1).item()
+                                    predicted = (
+                                        self.model.lm_head(self.model.model.norm(hidden))
+                                        .argmax(-1)
+                                        .item()
+                                    )
                                 self.assertEqual(row["prediction"], predicted)
-                                self.assertEqual(row["target"], native.logits[:, -1].argmax(-1).item())
+                                self.assertEqual(
+                                    row["target"], native.logits[:, -1].argmax(-1).item()
+                                )
 
     def test_eos(self):
         prompt = [1, 3]
@@ -116,8 +135,10 @@ class EngineTests(unittest.TestCase):
                 self.assertEqual(batched_greedy(self.model, prompts, limit), expected)
         # Rows stop at their own EOS while the rest of the batch continues.
         eos = (native_greedy(self.model, prompts[0], 15)[3],)
-        self.assertEqual(batched_greedy(self.model, prompts, 15, eos),
-                         [native_greedy(self.model, p, 15, eos) for p in prompts])
+        self.assertEqual(
+            batched_greedy(self.model, prompts, 15, eos),
+            [native_greedy(self.model, p, 15, eos) for p in prompts],
+        )
         with self.assertRaises(ValueError):
             batched_greedy(self.model, [[1], []], 4)
 
@@ -138,12 +159,18 @@ class EngineTests(unittest.TestCase):
         different argmax (prompt length 20, 25 generated tokens).
         """
         torch.manual_seed(42)
-        deep_model = LlamaForCausalLM(LlamaConfig(
-            vocab_size=64, hidden_size=64,
-            intermediate_size=128, num_hidden_layers=16,
-            num_attention_heads=4, num_key_value_heads=2,
-            max_position_embeddings=256, attn_implementation="eager",
-        )).eval()
+        deep_model = LlamaForCausalLM(
+            LlamaConfig(
+                vocab_size=64,
+                hidden_size=64,
+                intermediate_size=128,
+                num_hidden_layers=16,
+                num_attention_heads=4,
+                num_key_value_heads=2,
+                max_position_embeddings=256,
+                attn_implementation="eager",
+            )
+        ).eval()
         prompt = list(range(1, 21))  # 20 tokens — long enough to trigger wrong positions
         limit = 25
         reference = native_greedy(deep_model, prompt, limit)
@@ -151,9 +178,12 @@ class EngineTests(unittest.TestCase):
             with self.subTest(depth=depth, length=length):
                 result = generate(deep_model, prompt, limit, depth, length)
                 self.assertEqual(
-                    result["tokens"], reference,
-                    msg=(f"depth={depth} length={length}: token mismatch at index "
-                         f"{next((i for i,(a,b) in enumerate(zip(result['tokens'],reference)) if a!=b), len(reference))}"),
+                    result["tokens"],
+                    reference,
+                    msg=(
+                        f"depth={depth} length={length}: token mismatch at index "
+                        f"{next((i for i, (a, b) in enumerate(zip(result['tokens'], reference)) if a != b), len(reference))}"
+                    ),
                 )
 
 

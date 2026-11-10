@@ -1,0 +1,2 @@
+# Install after requirements.txt; formatting does not change runtime dependencies.
+ruff==0.14.4
