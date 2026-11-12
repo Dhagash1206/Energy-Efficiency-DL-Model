@@ -1,0 +1,428 @@
+{
+  "sampling": "one greedy completion per held-out task, repeat 0 only",
+  "gsm8k_extraction": "upstream strict #### numeric match; missing marker is incorrect",
+  "humaneval_processing": "raw completion, no repair or code-fence stripping",
+  "policies": {
+    "bandit": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "adaptive": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "selected_observe": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "never_observe": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "fixed": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "always_observe": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "fixed_d12_k3": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    },
+    "ordinary": {
+      "details": [
+        {
+          "prompt_id": "gsm8k-test-208",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "76",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/154",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        },
+        {
+          "prompt_id": "gsm8k-test-817",
+          "dataset": "gsm8k",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "predicted": null,
+          "expected": "15",
+          "passed": false
+        },
+        {
+          "prompt_id": "HumanEval/49",
+          "dataset": "humaneval",
+          "greedy_match": true,
+          "hit_token_limit": true,
+          "passed": false,
+          "result": "failed",
+          "exit_code": 1
+        }
+      ],
+      "gsm8k": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "accuracy": 0.0
+      },
+      "humaneval": {
+        "tasks": 2,
+        "evaluated": 2,
+        "passed": 0,
+        "pass@1": 0.0
+      }
+    }
+  },
+  "source_report": "hardware_aware_selective_feedback\\results\\publication\\fp16-m4-quality-pilot.json",
+  "source_sha256": "6f40edea2d4fde33d5ed141ae3d969c8b86f73d58729863c828fe1cf014a42ac",
+  "image": "sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+  "timeout_s": 3.0,
+  "precision": "fp16"
+}

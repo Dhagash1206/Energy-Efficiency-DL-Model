@@ -11,6 +11,24 @@ runner reports; DEL comparison runs are grouped separately.
 
 ## Reports and measurements
 
+New evaluation tools and artifacts are described in the
+[publication guide](../../docs/publication.md). The preserved FP32 reference
+now also has a [calibration-inclusive break-even chart](publication/fp32-historical-break-even.png),
+[PDF](publication/fp32-historical-break-even.pdf),
+[projection table](publication/fp32-historical-break-even.md), and
+[raw projection inputs/results](publication/fp32-historical-break-even.json).
+
+The new [FP16 M=4 pilot](publication/fp16-m4-quality-pilot.md)
+([JSON](publication/fp16-m4-quality-pilot.json)) includes the depth-12 baseline,
+idle-reference energy, and full task prompts. Its
+[executed quality scores](publication/fp16-m4-quality-scores.md)
+([JSON](publication/fp16-m4-quality-scores.json)) are 0/2 on each dataset for
+every policy; all completions hit the output limit. Its
+[calibration-inclusive chart](publication/fp16-m4-break-even.png)
+([PDF](publication/fp16-m4-break-even.pdf), [details](publication/fp16-m4-break-even.md),
+[JSON](publication/fp16-m4-break-even.json)) shows no energy crossing versus
+fixed depth 4. These are workflow-validation results, not publication claims.
+
 | Group | Experiment | Report | Raw measurements |
 |---|---|---|---|
 | benchmark | `rtx3050-fp32-energy-safe` | [Markdown](benchmark/rtx3050-fp32-energy-safe.md) | [JSON](benchmark/rtx3050-fp32-energy-safe.json) |
@@ -42,6 +60,7 @@ runner reports; DEL comparison runs are grouped separately.
 
 ## Preserving results
 
-Use an unused `--output` path for new runs. The main runner writes a JSON file
-and its Markdown companion; its default output overwrites `latest.json` and
-`latest.md`. Formatting tools exclude this directory.
+Use an unused `--output` path for new runs. The main runner requires this path,
+writes JSON and a Markdown companion, and refuses to overwrite either file.
+The plotting and task-quality tools also require unused output paths.
+Formatting tools exclude this directory.

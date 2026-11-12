@@ -28,21 +28,32 @@ import hashlib
 import json
 import random
 import statistics
+import time
 from contextlib import ExitStack
+from dataclasses import asdict
 from urllib.request import Request, urlopen
 
 import torch
 import transformers
-from transformers import AutoTokenizer, LlamaForCausalLM
 from huggingface_hub import snapshot_download
+from transformers import AutoTokenizer, LlamaForCausalLM
 
+from hardware_aware_selective_feedback import (
+    baseline_selection,
+    controller_study,
+    cost_ledger,
+    protocol,
+    publication,
+    quality,
+    run_manifest,
+)
+from hardware_aware_selective_feedback.del_comparison import compare_policies, comparison_markdown
+from hardware_aware_selective_feedback.del_policy import DELConfig, generate_del
 from hardware_aware_selective_feedback.engine import generate, native_greedy
 from hardware_aware_selective_feedback.gpu_clocks import pinned_gpu
 from hardware_aware_selective_feedback.graph_drafter import GraphDrafter
 from hardware_aware_selective_feedback.measurement import Meter
 from hardware_aware_selective_feedback.selector import Action, CostBandit, Selector
-from hardware_aware_selective_feedback.del_policy import DELConfig, generate_del
-from hardware_aware_selective_feedback.del_comparison import compare_policies, comparison_markdown
 
 MODEL = "facebook/layerskip-llama3.2-1B"
 REVISION = "81deb0f88734409cca506bcefcfb5c6bd2667565"
@@ -130,6 +141,7 @@ def load_prompts(calibration, test, seed):
             "id": f"gsm8k-train-{i}",
             "dataset": "gsm8k",
             "text": "Question: " + row["question"] + "\nAnswer:",
+            "answer": row["answer"],
         }
         for i, row in train[:calibration]
     ]
@@ -138,15 +150,28 @@ def load_prompts(calibration, test, seed):
             "id": f"gsm8k-test-{i}",
             "dataset": "gsm8k",
             "text": "Question: " + row["question"] + "\nAnswer:",
+            "answer": row["answer"],
         }
         for i, row in held[:test]
     ]
     calibration_rows += [
-        {"id": row["task_id"], "dataset": "humaneval", "text": row["prompt"]}
+        {
+            "id": row["task_id"],
+            "dataset": "humaneval",
+            "text": row["prompt"],
+            "test": row["test"],
+            "entry_point": row["entry_point"],
+        }
         for row in code[:calibration]
     ]
     test_rows += [
-        {"id": row["task_id"], "dataset": "humaneval", "text": row["prompt"]}
+        {
+            "id": row["task_id"],
+            "dataset": "humaneval",
+            "text": row["prompt"],
+            "test": row["test"],
+            "entry_point": row["entry_point"],
+        }
         for row in code[calibration : calibration + test]
     ]
     rng.shuffle(calibration_rows)
@@ -263,6 +288,7 @@ def run_one(
     adaptive_drafts=False,
     graph_drafters=None,
     stop_on_mismatch=True,
+    observer_period=1,
 ):
     active_exits = tuple(d for d in action.observations if d != action.depth)
     # Observer hooks do not fire inside the graphed draft step, so observed
@@ -280,7 +306,8 @@ def run_one(
             action.depth,
             action.length,
             active_exits,
-            "all" if active_exits else "none",
+            ("periodic" if observer_period > 1 else "all") if active_exits else "none",
+            period=observer_period,
             eos=eos,
             adaptive_drafts=adaptive_drafts,
             graph_drafter=drafter,
@@ -296,7 +323,8 @@ def run_one(
 
 def prompt_context(prompt):
     """Coarse prompt type used to specialise the selector: dataset plus length bucket."""
-    length = "short" if len(prompt["ids"]) < SHORT_PROMPT_TOKENS else "long"
+    features = controller_study.extract_permitted_features(prompt, len(prompt["ids"]))
+    length = "short" if features.prompt_length_tokens < SHORT_PROMPT_TOKENS else "long"
     return f"{prompt['dataset']}:{length}"
 
 
@@ -314,13 +342,19 @@ def row(prompt, policy, action, output, measured, split, repeat=0, order=0):
         "observed_exits": action.observations,
         "tokens": output["tokens"],
         "generated_tokens": len(output["tokens"]),
+        "prompt_tokens": len(prompt["ids"]),
+        "finish_reason": output.get("finish_reason", "length"),
         "latency_s": measured["latency_s"],
         "energy_j": measured["energy_j"],
+        "static_idle_energy_j": measured.get("static_idle_energy_j"),
+        "dynamic_energy_j": measured.get("dynamic_energy_j"),
+        "idle_power_w": measured.get("idle_power_w"),
         "energy_boundary": measured["boundary"],
         "energy_source": measured["source"],
         "energy_reason": measured["energy_reason"],
         "valid_feedback": sum(o["valid"] for o in observations),
         "excluded_feedback": sum(not o["valid"] for o in observations),
+        "observer_probe_cycles": sum(bool(c["observations"]) for c in output["cycles"]),
         "accepted_drafts": sum(c["accepted"] for c in output["cycles"]),
         "drafted_tokens": sum(len(c["draft"]) for c in output["cycles"]),
         "greedy_match": output.get("greedy_match", True),
@@ -335,6 +369,24 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "xpu", "mps"), default="auto")
     parser.add_argument("--precision", choices=("fp32", "fp16"), default="fp32")
+    parser.add_argument(
+        "--observer-period",
+        type=int,
+        default=1,
+        help="Project observer heads every M-th verification cycle, starting at cycle 0",
+    )
+    parser.add_argument(
+        "--idle-seconds",
+        type=float,
+        default=0,
+        help="Idle sample duration after model warmup; 0 disables idle subtraction",
+    )
+    parser.add_argument("--idle-samples", type=int, default=3)
+    parser.add_argument(
+        "--task-quality",
+        action="store_true",
+        help="Keep full prompts, decode completions, score GSM8K, and export HumanEval tasks",
+    )
     parser.add_argument(
         "--output", type=Path, help="JSON report path (Markdown report uses the same name with .md)"
     )
@@ -358,7 +410,7 @@ def main():
     parser.add_argument(
         "--include-del",
         action="store_true",
-        help="Add the independent greedy DEL port and fixed depth-12 baseline; requires --output",
+        help="Add the independent greedy DEL port; requires --output (depth-12 baseline is always included)",
     )
     parser.add_argument("--del-max-drafts", type=int, default=18)
     parser.add_argument("--del-decay", type=float, default=0.95)
@@ -430,7 +482,58 @@ def main():
         default=None,
         help="Cap NVIDIA board power during the run (admin/root).",
     )
+    parser.add_argument(
+        "--split-config",
+        type=Path,
+        default=None,
+        help="Path to JSON split configuration or resolved benchmark splits (Phase P0).",
+    )
+    parser.add_argument(
+        "--gsm8k-calib",
+        type=int,
+        default=None,
+        help="Independent GSM8K calibration prompt count.",
+    )
+    parser.add_argument(
+        "--gsm8k-test",
+        type=int,
+        default=None,
+        help="Independent GSM8K test prompt count.",
+    )
+    parser.add_argument(
+        "--humaneval-calib",
+        type=int,
+        default=None,
+        help="Independent HumanEval calibration prompt count.",
+    )
+    parser.add_argument(
+        "--humaneval-test",
+        type=int,
+        default=None,
+        help="Independent HumanEval test prompt count.",
+    )
+    parser.add_argument(
+        "--frozen-baseline",
+        type=Path,
+        default=None,
+        help="Path to serialized frozen baseline JSON from Phase P4 sweep.",
+    )
+    parser.add_argument(
+        "--controller-study",
+        action="store_true",
+        help="Evaluate equal-information control policies (frozen context, etc.).",
+    )
     args = parser.parse_args()
+    if args.output and args.output.suffix.lower() != ".json":
+        parser.error("--output must end in .json")
+    if not args.probe and not args.output:
+        parser.error("The new eight-policy protocol requires an explicit --output path")
+    if args.output and (args.output.exists() or args.output.with_suffix(".md").exists()):
+        parser.error("Choose unused --output paths to preserve existing results")
+    if args.task_quality and args.cuda_graph_drafts:
+        parser.error(
+            "Full-prompt task-quality evaluation is not supported by the fixed-size CUDA graph cache"
+        )
     try:
         del_config = DELConfig(
             max_drafts=args.del_max_drafts,
@@ -455,10 +558,16 @@ def main():
             args.threads,
             args.observer_pairs,
             args.repeats,
+            args.observer_period,
+            args.idle_samples,
         )
         < 1
     ):
         parser.error("counts must be positive")
+    if not 0 <= args.idle_seconds < float("inf"):
+        parser.error("--idle-seconds must be finite and nonnegative")
+    if (args.task_quality or args.idle_seconds or args.observer_period != 1) and not args.output:
+        parser.error("Publication options require --output to preserve historical reports")
     xpu_available = bool(hasattr(torch, "xpu") and torch.xpu.is_available())
     mps_available = bool(hasattr(torch.backends, "mps") and torch.backends.mps.is_available())
     if args.device == "auto":
@@ -492,11 +601,48 @@ def main():
         return
     if args.objective == "energy" and not meter.available:
         parser.error("Energy requested but no working counter: " + str(meter.reason))
+    if args.idle_seconds and not meter.available:
+        parser.error("Idle calibration requires an available energy counter")
     objective = (
         ("energy" if meter.available else "latency") if args.objective == "auto" else args.objective
     )
     torch.set_num_threads(args.threads)
-    calibration, heldout, dataset_info = load_prompts(args.calibration, args.test, args.seed)
+    if args.split_config:
+        if args.split_config.exists():
+            cfg_data = json.loads(args.split_config.read_text(encoding="utf-8"))
+            if "manifest" in cfg_data and "calibration_prompts" in cfg_data:
+                calibration = cfg_data["calibration_prompts"]
+                heldout = cfg_data["test_prompts"]
+                dataset_info = cfg_data["manifest"]
+            else:
+                cfg = protocol.SplitConfig(**cfg_data)
+                splits = protocol.load_dataset_splits(cfg)
+                calibration = splits["calibration_prompts"]
+                heldout = splits["test_prompts"]
+                dataset_info = splits["manifest"]
+        else:
+            parser.error(f"Split config file {args.split_config} not found")
+    elif any(
+        opt is not None
+        for opt in (args.gsm8k_calib, args.gsm8k_test, args.humaneval_calib, args.humaneval_test)
+    ):
+        cfg = protocol.SplitConfig(
+            seed=args.seed,
+            gsm8k_calibration=args.gsm8k_calib
+            if args.gsm8k_calib is not None
+            else args.calibration,
+            gsm8k_test=args.gsm8k_test if args.gsm8k_test is not None else args.test,
+            humaneval_calibration=args.humaneval_calib
+            if args.humaneval_calib is not None
+            else args.calibration,
+            humaneval_test=args.humaneval_test if args.humaneval_test is not None else args.test,
+        )
+        splits = protocol.load_dataset_splits(cfg)
+        calibration = splits["calibration_prompts"]
+        heldout = splits["test_prompts"]
+        dataset_info = splits["manifest"]
+    else:
+        calibration, heldout, dataset_info = load_prompts(args.calibration, args.test, args.seed)
     model, tokenizer, revision = load_model(
         device,
         args.precision,
@@ -506,9 +652,13 @@ def main():
     )
     eos = (tokenizer.eos_token_id,) if tokenizer.eos_token_id is not None else ()
     for prompt in calibration + heldout:
-        prompt["ids"] = tokenizer.encode(prompt.pop("text"), add_special_tokens=True)[
-            :MAX_PROMPT_TOKENS
-        ]
+        if args.task_quality and prompt["dataset"] == "gsm8k":
+            prompt["text"] = (
+                "Solve the problem. Finish with '#### <numeric answer>'.\n" + prompt["text"]
+            )
+        prompt["ids"] = tokenizer.encode(prompt["text"], add_special_tokens=True)
+        if not args.task_quality:
+            prompt["ids"] = prompt["ids"][:MAX_PROMPT_TOKENS]
     selector = Selector(objective=objective, context_aware=args.context_selector)
     drafters = (
         build_graph_drafters(
@@ -521,20 +671,45 @@ def main():
     rows = []
     mismatches = []
     excluded = set()
+
+    frozen_action = Action(4, 3)
+    frozen_manifest = None
+    if args.frozen_baseline:
+        if args.frozen_baseline.exists():
+            frozen_manifest = baseline_selection.load_frozen_baseline(args.frozen_baseline)
+            winner = frozen_manifest["chosen_fixed_action"]
+            frozen_action = Action(winner["depth"], winner["draft_length"])
+        else:
+            parser.error(f"Frozen baseline file {args.frozen_baseline} not found")
+
+    ledger = cost_ledger.CostLedger()
+
     policy_names = [
         "ordinary",
         "fixed",
+        "fixed_d12_k3",
         "never_observe",
         "selected_observe",
         "always_observe",
         "bandit",
         "adaptive",
     ]
+    if args.controller_study:
+        policy_names.append("frozen_context")
     if args.include_del:
-        policy_names += ["fixed_depth12", "del"]
+        policy_names += ["del"]
+
+    frozen_context_selector = None
+    if args.controller_study:
+        frozen_context_selector = controller_study.FrozenContextSelector(
+            short_action=frozen_action,
+            long_action=Action(8, 3),
+            threshold_tokens=SHORT_PROMPT_TOKENS,
+        )
 
     def execute(prompt, policy, action, reference, split, repeat=0, order=0):
         """Run one request, record its row, and exclude a mismatching configuration."""
+        t_pre = time.perf_counter()
         if policy == "del":
             result = meter.run(
                 lambda: generate_del(model, prompt["ids"], args.tokens, eos, del_config)
@@ -554,8 +729,29 @@ def main():
                 args.adaptive_drafts,
                 drafters,
                 args.stop_on_mismatch,
+                args.observer_period,
             )
+        t_post = time.perf_counter()
+        overhead_s = max(0.0, (t_post - t_pre) - result[1]["latency_s"])
+        ledger.record(
+            request_index=len(rows),
+            prompt_id=prompt["id"],
+            policy=policy,
+            repeat=repeat,
+            generated_tokens=len(result[0]["tokens"]),
+            generation_energy_j=result[1].get("energy_j"),
+            overhead_energy_j=0.0,
+            generation_latency_s=result[1]["latency_s"],
+            overhead_latency_s=overhead_s,
+            greedy_match=result[0].get("greedy_match", True),
+        )
         rows.append(row(prompt, policy, action, *result, split, repeat, order))
+        rows[-1]["observer_period"] = args.observer_period
+        if args.task_quality and split == "test":
+            rows[-1]["completion"] = tokenizer.decode(result[0]["tokens"], skip_special_tokens=True)
+            rows[-1]["hit_token_limit"] = result[0].get("finish_reason") == "length" or (
+                len(result[0]["tokens"]) >= args.tokens and result[0]["tokens"][-1] not in eos
+            )
         if policy == "del":
             rows[-1].update(
                 depth=None,
@@ -605,6 +801,8 @@ def main():
         # with executed same-prompt pairs across distinct calibration prompts.
         first = calibration[0]
         ref = native_greedy(model, first["ids"], args.tokens, eos)
+        if args.idle_seconds:
+            meter.calibrate_idle(args.idle_seconds, args.idle_samples)
         for arm in selector.arms:
             result = execute(first, "calibration", arm, ref, "calibration")
             if result[0]["greedy_match"]:
@@ -675,15 +873,21 @@ def main():
                 bandit_action = bandit.choose()
                 policies = [
                     ("ordinary", Action()),
-                    ("fixed", Action(4, 3)),
+                    ("fixed", frozen_action),
+                    ("fixed_d12_k3", Action(12, 3)),
                     ("never_observe", Action(8, 3)),
                     ("selected_observe", Action(8, 3, (4,))),
                     ("always_observe", Action(8, 3, (4, 12))),
                     ("bandit", bandit_action),
                     ("adaptive", adaptive_action),
                 ]
+                if args.controller_study and frozen_context_selector:
+                    features = controller_study.extract_permitted_features(
+                        prompt, len(prompt["ids"])
+                    )
+                    policies.append(("frozen_context", frozen_context_selector.select(features)))
                 if args.include_del:
-                    policies.extend([("fixed_depth12", Action(12, 3)), ("del", Action())])
+                    policies.append(("del", Action()))
                 rng.shuffle(policies)
                 for order, (name, action) in enumerate(policies):
                     result = execute(prompt, name, action, reference, "test", repeat, order)
@@ -725,6 +929,7 @@ def main():
             "all_greedy_match": all(r["greedy_match"] for r in group),
             "greedy_mismatches": sum(not r["greedy_match"] for r in group),
         }
+        aggregates[name].update(publication.energy_components(group))
     paired_observer_deltas = []
     paired_vs_ordinary = []
     for prompt in heldout:
@@ -769,9 +974,7 @@ def main():
     # Feasibility checks use only executed held-out policies. They are
     # descriptive, not a counterfactual oracle for unexecuted configurations.
     objective_key = "energy_j" if objective == "energy" else "latency_s"
-    fixed_candidates = ("ordinary", "fixed", "never_observe") + (
-        ("fixed_depth12",) if args.include_del else ()
-    )
+    fixed_candidates = ("ordinary", "fixed", "never_observe", "fixed_d12_k3")
     winner_by_prompt = {}
     for prompt in heldout:
         means = {}
@@ -811,6 +1014,7 @@ def main():
     calibration_rows = [r for r in rows if r["split"] == "calibration"]
     objective_key = "energy_j" if objective == "energy" else "latency_s"
     report = {
+        "schema_version": 2,
         "calibration_runs": len(calibration_rows),
         "observer_pair_prompt_ids": pair_prompt_ids,
         "observer_pair_unique_prompts": len(set(pair_prompt_ids)),
@@ -844,7 +1048,7 @@ def main():
         "energy_boundary": meter.scope,
         "energy_limitation": meter.reason,
         "dataset": dataset_info,
-        "arguments": {**vars(args), "output": str(args.output) if args.output else None},
+        "arguments": {k: (str(v) if isinstance(v, Path) else v) for k, v in vars(args).items()},
         "gpu_pinning": gpu_settings,
         "selector": selector.summary(),
         "bandit": bandit.summary(),
@@ -860,6 +1064,45 @@ def main():
             "HumanEval supplies prompt diversity; generated code is not executed or scored.",
         ],
     }
+    report["publication_break_even"] = publication.comparisons(report)
+    report["environment_provenance"] = run_manifest.get_environment_provenance()
+    report["cost_ledger_reconciliation"] = ledger.reconcile()
+    report["cost_ledger"] = [asdict(e) for e in ledger.entries]
+    if frozen_manifest is not None:
+        report["frozen_baseline"] = frozen_manifest
+    try:
+        report["cumulative_trajectories"] = {
+            "adaptive_vs_fixed": ledger.compute_cumulative_trajectory("adaptive", "fixed"),
+            "adaptive_vs_ordinary": ledger.compute_cumulative_trajectory("adaptive", "ordinary"),
+        }
+    except Exception as exc:
+        report["cumulative_trajectories"] = {"status": "uncomputed", "reason": str(exc)}
+    report["observer_sampling"] = {
+        "period": args.observer_period,
+        "unit": "verification cycle, starting with cycle 0; no LM-head observers on skipped cycles",
+        "calibration": "same period used for paired calibration and held-out observation policies",
+    }
+    if args.task_quality:
+        report["quality_tasks"] = [
+            {
+                "id": p["id"],
+                "dataset": p["dataset"],
+                "prompt": p["text"],
+                **(
+                    {"answer": p["answer"]}
+                    if p["dataset"] == "gsm8k"
+                    else {"test": p["test"], "entry_point": p["entry_point"]}
+                ),
+            }
+            for p in heldout
+        ]
+        report["task_quality"] = quality.summarize(rows, report["quality_tasks"])
+        report["dataset"]["use"] = (
+            "full-prompt task quality; GSM8K scored; HumanEval container execution is a separate step"
+        )
+        report["limits"][-1] = (
+            "HumanEval completions saved; pass@1 requires the separate Docker quality evaluator."
+        )
     if args.include_del:
         report["del_baseline"] = {
             "implementation": "independent_greedy_paper_port",
@@ -873,7 +1116,7 @@ def main():
         }
         report["del_comparisons"] = {
             baseline: compare_policies(rows, "adaptive", baseline)
-            for baseline in ("del", "fixed_depth12")
+            for baseline in ("del", "fixed_d12_k3")
         }
         report["source_sha256"] = {
             name: hashlib.sha256((Path(__file__).parent / name).read_bytes()).hexdigest()
@@ -913,8 +1156,10 @@ def main():
             "Policies with mismatches are not valid exact-output comparisons."
         ),
         "",
-        "| Policy | Runs | Latency s/token | Energy J/token | Greedy mismatches |",
-        "|---|---:|---:|---:|---:|",
+        f"Observer projection period: {args.observer_period} verification cycle(s).",
+        "",
+        "| Policy | Runs | Latency s/token | Total J/token | Static idle J/token | Dynamic excess J/token | Greedy mismatches |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for name, result in aggregates.items():
         energy = (
@@ -922,9 +1167,13 @@ def main():
             if result["energy_j_per_token"] is not None
             else "unavailable"
         )
+        components = [
+            f"{result[key]:.6f}" if result[key] is not None else "not measured"
+            for key in ("static_idle_energy_j_per_token", "dynamic_energy_j_per_token")
+        ]
         lines.append(
             f"| {name} | {result['runs']} | {result['latency_s_per_token']:.6f} | {energy} "
-            f"| {result['greedy_mismatches']} |"
+            f"| {components[0]} | {components[1]} | {result['greedy_mismatches']} |"
         )
     lines += [
         "",
@@ -941,6 +1190,14 @@ def main():
         "This is a correctness and feasibility run. Small samples and hardware measurement variability "
         "do not establish a speed or energy advantage, and there is no novelty claim.",
     ]
+    lines += [
+        "",
+        "Idle subtraction is a resident-model reference estimate, not a physical power decomposition.",
+        "Negative dynamic excess values are retained. Selection still optimizes total measured energy.",
+    ]
+    lines += publication.markdown(report["publication_break_even"])
+    if args.task_quality:
+        lines += quality.markdown(report["task_quality"])
     if args.include_del:
         lines += comparison_markdown(report["del_comparisons"])
     output_file.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -1,11 +1,50 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hardware_aware_selective_feedback.measurement import Meter
 
 
 class MeasurementTests(unittest.TestCase):
+    def test_idle_reference_and_negative_excess_are_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "counter.txt"
+            path.write_text("10")
+            meter = Meter("cpu", energy_source="file", counter_file=path, energy_scope="test")
+
+            def idle_sample(_):
+                path.write_text("14")
+
+            with (
+                patch(
+                    "hardware_aware_selective_feedback.measurement.time.sleep",
+                    side_effect=idle_sample,
+                ),
+                patch(
+                    "hardware_aware_selective_feedback.measurement.time.perf_counter",
+                    side_effect=[0, 2],
+                ),
+            ):
+                calibration = meter.calibrate_idle(2, 1)
+            self.assertEqual(calibration["power_w"], 2)
+            with patch(
+                "hardware_aware_selective_feedback.measurement.time.perf_counter",
+                side_effect=[10, 13],
+            ):
+                _, measured = meter.run(lambda: path.write_text("19"))
+            self.assertEqual(measured["energy_j"], 5)
+            self.assertEqual(measured["static_idle_energy_j"], 6)
+            self.assertEqual(measured["dynamic_energy_j"], -1)
+
+    def test_idle_reference_requires_a_sensor_and_valid_duration(self):
+        meter = Meter("cpu", energy_source="none")
+        with self.assertRaises(ValueError):
+            meter.calibrate_idle()
+        for seconds in (0, -1, float("nan"), float("inf")):
+            with self.assertRaises(ValueError):
+                meter.calibrate_idle(seconds)
+
     def test_rapl_package_wrap_and_no_nested_double_count(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

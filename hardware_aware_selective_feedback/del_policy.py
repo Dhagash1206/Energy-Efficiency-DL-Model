@@ -12,6 +12,7 @@ import math
 import torch
 
 from .engine import _check_cache
+from .stopping import StopCriteria, apply_stop_decision_to_block
 from .vendor.self_speculation.llama_model_utils import (
     crop_past_key_values,
     forward,
@@ -138,7 +139,15 @@ def shadow_predictions(model, states, positions, chunk_size):
 
 
 @torch.inference_mode()
-def generate_del(model, prompt, limit=32, eos=(), config=DELConfig()):
+def generate_del(
+    model,
+    prompt,
+    limit=32,
+    eos=(),
+    config=DELConfig(),
+    stop_criteria=None,
+    tokenizer=None,
+):
     """Greedy-only DEL port; controller state resets for every request.
 
     All shadow projections and controller decisions execute inside this call
@@ -151,6 +160,9 @@ def generate_del(model, prompt, limit=32, eos=(), config=DELConfig()):
     tokens, cycles = [], []
     if limit == 0:
         return dict(tokens=tokens, cycles=cycles, feedback_statistics={})
+    criteria = stop_criteria or StopCriteria(eos_token_ids=tuple(eos), max_tokens=limit)
+    stopped = False
+
     ids = torch.tensor([prompt], device=model.device)
     window = min(len(prompt), config.prefill_window)
     with capture_hidden(model, tail=window) as states:
@@ -160,10 +172,19 @@ def generate_del(model, prompt, limit=32, eos=(), config=DELConfig()):
     controller.update(predictions, confidence, target, window)
     cache = result.past_key_values
     pending = result.logits[:, -1].argmax(-1).reshape(1, 1)
-    tokens.append(pending.item())
+    first_token = pending.item()
+    first_step, first_decision = apply_stop_decision_to_block(
+        prior_tokens=[],
+        newly_committed_block=[first_token],
+        criteria=criteria,
+        tokenizer=tokenizer,
+    )
+    tokens.extend(first_step)
     del result, states, predictions, confidence
+    if first_decision.stopped:
+        return dict(tokens=tokens, cycles=cycles, feedback_statistics={})
 
-    while len(tokens) < limit and tokens[-1] not in eos:
+    while len(tokens) < limit and not stopped:
         _check_cache(cache, controller.layers, len(prompt) + len(tokens) - 1)
         depth, tpl_length, tpl = controller.choose()
         threshold = controller.threshold(depth)
@@ -198,11 +219,15 @@ def generate_del(model, prompt, limit=32, eos=(), config=DELConfig()):
         matched = 0
         while matched < len(draft) and draft[matched] == target[matched]:
             matched += 1
-        committed = draft[:matched] + [target[matched]]
-        for index, token in enumerate(committed):
-            if token in eos:
-                committed = committed[: index + 1]
-                break
+        candidate_committed = draft[:matched] + [target[matched]]
+        committed, stop_decision = apply_stop_decision_to_block(
+            prior_tokens=tokens,
+            newly_committed_block=candidate_committed,
+            criteria=criteria,
+            tokenizer=tokenizer,
+        )
+        if stop_decision.stopped:
+            stopped = True
         predictions, confidence = shadow_predictions(
             model,
             states,

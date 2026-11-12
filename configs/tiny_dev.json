@@ -1,0 +1,12 @@
+{
+  "seed": 42,
+  "gsm8k_calibration": 2,
+  "gsm8k_test": 2,
+  "humaneval_calibration": 2,
+  "humaneval_test": 2,
+  "calibration_ids": null,
+  "test_ids": null,
+  "exclude_exposed_from_test": false,
+  "fewshot_k": 0,
+  "strict_disjoint_check": true
+}

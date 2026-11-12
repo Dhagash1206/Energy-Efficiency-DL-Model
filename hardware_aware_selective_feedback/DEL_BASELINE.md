@@ -1,9 +1,12 @@
 # DEL baseline and matched energy comparison
 
-`run.py --include-del` adds `del` and `fixed_depth12` to the existing seven
-policies. All nine execute the same held-out prompts and repeats in randomized
+`run.py --include-del` adds `del` to the eight default policies, which now include
+`fixed_d12_k3`. All nine execute the same held-out prompts and repeats in randomized
 order, using the same model, precision, attention backend, and energy boundary.
 Every output is checked against native greedy token IDs.
+
+Historical reports used the name `fixed_depth12` for this same fixed baseline;
+their files are preserved unchanged. New reports use `fixed_d12_k3`.
 
 This is an **independent, greedy-only implementation of the DEL method on this
 repository's engine**, not the authors' software or a reproduction of their

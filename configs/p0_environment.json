@@ -1,0 +1,60 @@
+{
+  "timestamp_utc": "2026-11-10T15:31:04.420910+00:00",
+  "platform": {
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "python_version": "3.13.2",
+    "python_compiler": "MSC v.1942 64 bit (AMD64)"
+  },
+  "git": {
+    "commit": "98649e911752bc21151c010dc6104a75f963158f",
+    "dirty": true,
+    "diff_sha256": "88fdc475cffd8e3bbb921ae253a42e7855bd35e938a9f8e0aeec48c49ff433c9",
+    "status_summary": [
+      "M README.md",
+      "M docs/README.md",
+      "M docs/running.md",
+      "M hardware_aware_selective_feedback/DEL_BASELINE.md",
+      "M hardware_aware_selective_feedback/README.md",
+      "M hardware_aware_selective_feedback/measurement.py",
+      "M hardware_aware_selective_feedback/results/README.md",
+      "M hardware_aware_selective_feedback/run.py",
+      "M hardware_aware_selective_feedback/tests/test_del.py",
+      "M hardware_aware_selective_feedback/tests/test_engine.py",
+      "M hardware_aware_selective_feedback/tests/test_measurement.py",
+      "M hardware_aware_selective_feedback/tests/test_run.py",
+      "?? configs/",
+      "?? data_splits/",
+      "?? docs/agent-handoff.md",
+      "?? docs/publication-build-plan.md",
+      "?? docs/publication.md",
+      "?? hardware_aware_selective_feedback/protocol.py",
+      "?? hardware_aware_selective_feedback/publication.py",
+      "?? hardware_aware_selective_feedback/quality.py",
+      "?? hardware_aware_selective_feedback/results/publication/",
+      "?? hardware_aware_selective_feedback/run_manifest.py",
+      "?? hardware_aware_selective_feedback/tests/test_publication.py",
+      "?? hardware_aware_selective_feedback/tests/test_quality.py",
+      "?? requirements-analysis.txt"
+    ]
+  },
+  "torch": {
+    "version": "2.6.0+cu124",
+    "cuda_available": true,
+    "cuda_version": "12.4",
+    "device_count": 1,
+    "gpu_device": {
+      "name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+      "total_memory_bytes": 4294443008,
+      "total_memory_mb": 4095.5,
+      "major": 8,
+      "minor": 6,
+      "multi_processor_count": 16
+    }
+  },
+  "transformers": {
+    "version": "4.50.0"
+  }
+}

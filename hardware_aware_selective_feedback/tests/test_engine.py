@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from hardware_aware_selective_feedback.engine import (
@@ -15,6 +16,24 @@ from hardware_aware_selective_feedback.vendor.self_speculation.llama_model_utils
 
 
 class EngineTests(unittest.TestCase):
+    def test_sparse_observers_skip_projection_work_and_keep_greedy_tokens(self):
+        from hardware_aware_selective_feedback import engine
+
+        original = engine._observe
+        requested = []
+
+        def observe(model, depths):
+            requested.append(depths)
+            return original(model, depths)
+
+        with patch.object(engine, "_observe", side_effect=observe):
+            sparse = generate(self.model, [1, 3, 5], 18, 2, 3, (1, 3), "periodic", period=4)
+        self.assertEqual(sparse["tokens"], native_greedy(self.model, [1, 3, 5], 18))
+        self.assertGreater(len(requested), 4)
+        for index, (depths, cycle) in enumerate(zip(requested, sparse["cycles"])):
+            self.assertEqual(bool(depths), index % 4 == 0)
+            self.assertEqual(bool(cycle["observations"]), index % 4 == 0)
+
     @classmethod
     def setUpClass(cls):
         torch.set_num_threads(1)

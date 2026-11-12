@@ -1,0 +1,2 @@
+# Optional plotting tools; install after the runtime dependencies.
+matplotlib==3.10.7

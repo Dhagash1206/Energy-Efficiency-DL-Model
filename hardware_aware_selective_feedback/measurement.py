@@ -7,6 +7,7 @@ as whole-device energy, and missing sensors never become estimated joules.
 import argparse
 import ctypes
 import json
+import math
 import platform
 import struct
 import time
@@ -37,6 +38,8 @@ class Meter:
         self.scope = None
         self.source = None
         self.reason = None
+        self.idle_power_w = None
+        self.idle_calibration = None
         if energy_source not in ("auto", "none", "nvml", "rapl", "emi", "file"):
             raise ValueError("Unknown energy source")
         if energy_source == "file" or counter_file is not None:
@@ -293,6 +296,30 @@ class Meter:
         elif self.device.type == "xpu":
             torch.xpu.synchronize(self.device)
 
+    def calibrate_idle(self, seconds=1.0, samples=3):
+        """Measure a resident-model idle reference with the same energy counter.
+
+        Call after warmup with the model resident and intended GPU settings.
+        Reference subtraction estimates excess energy, not physical chip power.
+        """
+        if not math.isfinite(seconds) or seconds <= 0 or samples < 1:
+            raise ValueError("Idle duration and sample count must be positive and finite")
+        if not self.available:
+            raise ValueError("Idle calibration requires an available energy counter")
+        measurements = [self.run(lambda: time.sleep(seconds))[1] for _ in range(samples)]
+        total_energy = sum(m["energy_j"] for m in measurements)
+        total_time = sum(m["latency_s"] for m in measurements)
+        self.idle_power_w = total_energy / total_time
+        self.idle_calibration = {
+            "power_w": self.idle_power_w,
+            "samples": measurements,
+            "total_energy_j": total_energy,
+            "total_time_s": total_time,
+            "boundary": self.scope,
+            "method": "idle reference; dynamic = total - idle watts * duration; negatives retained",
+        }
+        return self.idle_calibration
+
     def run(self, function):
         self.sync()
         before = self.counter()
@@ -303,9 +330,14 @@ class Meter:
             self.sync()
         elapsed = time.perf_counter() - start
         after = self.counter()
+        energy = self._joules(before, after) if self.available else None
+        idle = self.idle_power_w * elapsed if self.idle_power_w is not None else None
         return result, {
             "latency_s": elapsed,
-            "energy_j": self._joules(before, after) if self.available else None,
+            "energy_j": energy,
+            "static_idle_energy_j": idle if energy is not None else None,
+            "dynamic_energy_j": energy - idle if energy is not None and idle is not None else None,
+            "idle_power_w": self.idle_power_w,
             "boundary": self.scope if self.available else "unavailable",
             "energy_reason": self.reason,
             "source": self.source,
@@ -320,6 +352,7 @@ class Meter:
             "energy_reason": self.reason,
             "rapl_zones": [name for _, _, name in self.zones],
             "emi_channels": list(self.emi_channel_names),
+            "idle_calibration": self.idle_calibration,
         }
 
     def close(self):

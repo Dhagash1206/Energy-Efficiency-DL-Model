@@ -231,7 +231,7 @@ class ComparisonTests(unittest.TestCase):
         report, markdown = self.run_report()
         self.assertEqual(len(report["aggregates"]), 9)
         self.assertTrue(report["del_comparisons"]["del"]["valid"])
-        self.assertTrue(report["del_comparisons"]["fixed_depth12"]["valid"])
+        self.assertTrue(report["del_comparisons"]["fixed_d12_k3"]["valid"])
         del_row = next(r for r in report["rows"] if r["policy"] == "del")
         self.assertIsNone(del_row["depth"])
         self.assertIn("del_cycles", del_row)
@@ -243,7 +243,7 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(report["mismatches"][0]["policy"], "del")
         self.assertIsNone(report["mismatches"][0]["depth"])
         self.assertFalse(report["del_comparisons"]["del"]["valid"])
-        self.assertTrue(report["del_comparisons"]["fixed_depth12"]["valid"])
+        self.assertTrue(report["del_comparisons"]["fixed_d12_k3"]["valid"])
         self.assertIn("Comparison invalid", markdown)
 
 

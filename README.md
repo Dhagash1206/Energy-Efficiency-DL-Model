@@ -2,16 +2,25 @@
 
 This research codebase studies energy-aware adaptive self-speculative decoding on consumer hardware. The main experiment uses pretrained **LayerSkip Llama 3.2 1B** to compare ordinary greedy decoding, fixed speculative settings, observation policies, and request-level adaptive selection using measured energy or latency.
 
-The latest saved CUDA run matched native greedy output on **381/381 measured requests**. Its adaptive policy measured **35.3% lower GPU energy per token** and **42.3% lower latency per token** than ordinary decoding. These are descriptive results from one workload and device, not established general savings.
+The saved FP32 reference run (`results/latest.json`) matched native greedy output on **381/381 measured requests**. Its adaptive policy measured **35.3% lower GPU energy per token** and **42.3% lower latency per token** than ordinary decoding. These are descriptive results from one workload and device, not established general savings.
+
+The current runner includes eight policies, including `fixed_d12_k3`, plus optional
+idle-reference energy accounting, sparse observer probes, and full-prompt task
+quality evaluation. See the [publication evaluation guide](docs/publication.md)
+for the protocol, break-even charts, and evidence still needed.
+
+For the next development steps, use the [publication build plan](docs/publication-build-plan.md)
+and [coding-agent handoff prompts](docs/agent-handoff.md). They separate model-quality
+improvements, decoding correctness, and evidence for an energy-efficiency contribution.
 
 The original Qwen3 distillation work remains in `edge_llm_inference/`. The earlier compression/pruning/CALM pipeline is research background, not the implemented end-to-end pipeline.
 
 ## How the experiment works
 
 1. Load `facebook/layerskip-llama3.2-1B` at pinned revision `81deb0f88734409cca506bcefcfb5c6bd2667565`.
-2. Load pinned GSM8K and HumanEval prompt workloads with disjoint calibration and held-out IDs. Prompts are truncated to 192 tokens.
+2. Load pinned GSM8K and HumanEval workloads with disjoint calibration and held-out IDs. Timing-only prompts are truncated to 192 tokens; `--task-quality` keeps full prompts.
 3. Calibrate ordinary decoding and speculative actions with exit depths 4, 8, and 12 and draft lengths 1 and 3. Measure observer overhead with paired executions.
-4. Run seven policies on the same held-out prompts, randomizing policy order within each prompt/repeat. The adaptive selector and bandit continue learning from their own executed test requests.
+4. Run eight policies on the same held-out prompts, randomizing policy order within each prompt/repeat. The adaptive selector and bandit continue learning from their own executed test requests.
 5. Compare each measured output with native greedy token IDs and save raw measurements, comparisons, and summaries.
 
 Self-speculation drafts with early model layers, verifies with the full model, and rolls back rejected cache entries. Intermediate-exit feedback is used only where it belongs to the committed prefix. The selector chooses a configuration per request; optional `--adaptive-drafts` separately changes draft lengths within a request.
@@ -20,6 +29,7 @@ Self-speculation drafts with early model layers, verifies with the full model, a
 |---|---|
 | `ordinary` | Ordinary full-model greedy decoding |
 | `fixed` | Exit depth 4, draft length 3, no observers |
+| `fixed_d12_k3` | Exit depth 12, draft length 3, no observers; included by default |
 | `never_observe` | Exit depth 8, draft length 3, no observers |
 | `selected_observe` | Exit depth 8, draft length 3, observe exit 4 |
 | `always_observe` | Exit depth 8, draft length 3, observe exits 4 and 12 |
@@ -28,9 +38,12 @@ Self-speculation drafts with early model layers, verifies with the full model, a
 
 Paid observations are available to the adaptive selector only for depth 8 / draft length 3, after sufficient paired calibration. The selector has no formal optimality guarantee.
 
-## Latest CUDA energy results
+## Saved FP32 reference energy results
 
 Sources: [full JSON report](hardware_aware_selective_feedback/results/latest.json) and [generated Markdown report](hardware_aware_selective_feedback/results/latest.md).
+
+This historical run used seven policies. It did not measure a fixed depth-12
+baseline, idle power, or task quality; those values cannot be added retrospectively.
 
 | Setting | Recorded value |
 |---|---|
@@ -63,7 +76,53 @@ Compared with ordinary decoding, adaptive decoding measured 35.3% less GPU energ
 
 The median paired observer overhead relative to `never_observe` was **21.680 J/request** for `selected_observe` and **28.613 J/request** for `always_observe`. The best executed fixed baseline varied across prompts. Calibration consumed **8,991.701 J** separately; that cost is not amortized into the policy table.
 
+Charging all calibration to adaptive gives projected break-even at **97 requests
+versus ordinary**, **1,241 versus fixed depth 4**, and **1,519 versus depth 8**,
+assuming the same future workload and mean costs. This excludes model loading,
+greedy reference generation, and decisions outside the meter. See the
+[cumulative energy chart](hardware_aware_selective_feedback/results/publication/fp32-historical-break-even.png)
+and [projection details](hardware_aware_selective_feedback/results/publication/fp32-historical-break-even.md).
+
 Hardware variability, small prompt counts, and the absence of task-quality scoring limit interpretation. HumanEval code is neither executed nor scored; greedy agreement checks output equivalence, not answer quality.
+
+## FP16 publication-workflow pilot
+
+A new [FP16 pilot](hardware_aware_selective_feedback/results/publication/fp16-m4-quality-pilot.md)
+measured all eight policies on full prompts with M=4 observer cycles, three
+idle samples, and a 256-token output limit. All **57/57** executed requests
+matched native greedy tokens. Estimated resident-model idle power was **10.465 W**;
+the report retains total energy and the idle-reference/dynamic-excess estimates.
+
+Each policy below executed four held-out requests and generated 1,024 tokens.
+Idle and dynamic values are reference-based estimates, not physical component measurements.
+
+| Policy | Latency (ms/token) | Total GPU J/token | Static idle J/token | Dynamic excess J/token | Greedy mismatches |
+|---|---:|---:|---:|---:|---:|
+| `ordinary` | 35.091 | 1.477726 | 0.367210 | 1.110515 | 0 |
+| `fixed` | 22.238 | 0.948633 | 0.232708 | 0.715925 | 0 |
+| `fixed_d12_k3` | 27.993 | 1.205459 | 0.292932 | 0.912527 | 0 |
+| `never_observe` | 25.414 | 1.075541 | 0.265948 | 0.809593 | 0 |
+| `selected_observe` | 26.058 | 1.115130 | 0.272688 | 0.842441 | 0 |
+| `always_observe` | 24.960 | 1.066759 | 0.261196 | 0.805563 | 0 |
+| `bandit` | 28.008 | 1.209877 | 0.293090 | 0.916786 | 0 |
+| `adaptive` | 22.571 | 0.964938 | 0.236194 | 0.728744 | 0 |
+
+The [executed task scores](hardware_aware_selective_feedback/results/publication/fp16-m4-quality-scores.md)
+were **0/2 GSM8K and 0/2 HumanEval for every policy**, including ordinary decoding.
+Every held-out completion hit the 256-token budget. Neither GSM8K completion
+produced the required strict answer marker, so its score also reflects format
+adherence. This four-task pilot validates the workflow, not benchmark quality
+or FP16 quality parity with FP32.
+
+Adaptive measured **0.964938 J/token**, compared with **0.948633** for fixed
+depth 4 and **1.205459** for fixed depth 12. Thus adaptive did not beat the
+strongest executed fixed baseline here. Its calibration-inclusive projected
+break-even was 64 requests versus ordinary and 136 versus fixed depth 12,
+with no crossing versus fixed depth 4. See the [pilot chart](hardware_aware_selective_feedback/results/publication/fp16-m4-break-even.png)
+and [projection details](hardware_aware_selective_feedback/results/publication/fp16-m4-break-even.md).
+Adaptive bought no paid observations in this pilot; sparse observer baselines
+ran, but this does not establish a benefit from paid feedback or a dense/sparse
+energy improvement. Larger matched ablations remain necessary.
 
 ## Additional RTX 3050 experiment runs
 
@@ -125,7 +184,10 @@ python -m hardware_aware_selective_feedback.run `
 
 `--calibration` and `--test` count prompts **per dataset**. `--tokens` is the maximum output length; generation can stop at EOS. PowerShell uses backticks for continuation; other shells can run the command on one line.
 
-Default output paths are `hardware_aware_selective_feedback/results/latest.json` and `latest.md`. Use `--output path/to/run.json` to preserve an existing report; the Markdown report is written beside it.
+The command above records the historical seven-policy protocol. The current
+eight-policy runner requires an unused `--output path/to/run.json` and refuses
+to overwrite existing JSON or Markdown reports. The Markdown companion is
+written beside the JSON report.
 
 Start with a separately saved smoke run on a new environment:
 
@@ -158,6 +220,9 @@ python -m hardware_aware_selective_feedback.diagnose_mismatch --report hardware_
 |---|---|
 | `--adaptive-drafts` | Shorten drafts below 50% recent acceptance; fall back below 30% with periodic probes |
 | `--context-selector` | Use dataset and prompt-length-specific selector costs after enough observations |
+| `--observer-period M` | Project paid observer heads every M-th verification cycle, starting at cycle 0; default 1 |
+| `--idle-seconds S`, `--idle-samples K` | Measure resident-model idle power after warmup; retain total energy and estimate static idle and dynamic excess |
+| `--task-quality` | Keep full prompts, score strict GSM8K accuracy, and save raw HumanEval completions for the separate container evaluator |
 | `--quantize int4` / `int8` | Optional bitsandbytes weight quantization on CUDA |
 | `--compile` | Optional `torch.compile` model wrapper |
 | `--attn` | Choose `auto`, `sdpa`, `eager`, or `flash_attention_2` |
@@ -183,6 +248,8 @@ The default sweep covers depths 4/8/12 and draft lengths 1/2/3/4 plus ordinary d
 | `hardware_aware_selective_feedback/selector.py` | Request-level selector and independent-arm bandit |
 | `hardware_aware_selective_feedback/feedback.py` | Committed-prefix observation validation |
 | `hardware_aware_selective_feedback/measurement.py` | Device synchronization and cumulative energy counters |
+| `hardware_aware_selective_feedback/publication.py` | Calibration-inclusive energy break-even projections and PNG/PDF charts |
+| `hardware_aware_selective_feedback/quality.py` | GSM8K scoring and container-isolated HumanEval pass@1 |
 | `hardware_aware_selective_feedback/sweep.py` | Paired fixed-configuration and batched-baseline measurements |
 | `hardware_aware_selective_feedback/graph_drafter.py`, `gpu_clocks.py` | Optional graph drafting and GPU settings |
 | `hardware_aware_selective_feedback/pilot.py` | Earlier decoding/feedback feasibility matrix |
@@ -200,10 +267,10 @@ See the [documentation index](docs/README.md) and [saved results index](hardware
 
 ## Checks and synthetic demo
 
-For the DEL baseline plus the missing fixed depth-12 comparison, see
+For the optional DEL baseline and matched comparisons, see
 [DEL baseline and matched energy comparison](hardware_aware_selective_feedback/DEL_BASELINE.md).
-The opt-in `--include-del` mode preserves the existing policies and requires a
-separate report path. It is an independent greedy paper implementation, with
+The opt-in `--include-del` mode adds DEL to the eight default policies, including
+`fixed_d12_k3`. It is an independent greedy paper implementation, with
 documented differences from upstream DEL.
 
 Run the unit tests without starting a full benchmark:

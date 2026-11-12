@@ -58,8 +58,8 @@ python -B -m hardware_aware_selective_feedback.download_layerskip
 ```
 
 Choose an unused `--output` filename for each experiment to preserve existing
-results. The main runner otherwise overwrites `results/latest.json` and its
-Markdown companion. These examples explicitly use FP32; FP16 runs have recorded
+results. The main runner requires an unused explicit output path and refuses
+to overwrite either companion file. These examples explicitly use FP32; FP16 runs have recorded
 greedy mismatches. Energy mode requires a supported counter.
 
 ```powershell
@@ -68,9 +68,11 @@ python -m hardware_aware_selective_feedback.run --device cuda --precision fp32 -
 python -m hardware_aware_selective_feedback.sweep --device cuda --precision fp32 --test 4 --tokens 16 --repeats 2 --output hardware_aware_selective_feedback/results/fixed-sweep/local-sweep.json
 ```
 
-The main runner includes ordinary, fixed, never/selected/always-observe, bandit,
-and adaptive policies by default. Add `--include-del` with a separate output
-path for DEL and the fixed depth-12 baseline. See the [DEL guide](../hardware_aware_selective_feedback/DEL_BASELINE.md).
+The main runner includes ordinary, fixed, `fixed_d12_k3`, never/selected/always-observe,
+bandit, and adaptive policies by default. Add `--include-del` for DEL as a ninth
+policy. See the [DEL guide](../hardware_aware_selective_feedback/DEL_BASELINE.md).
+For idle subtraction, observer subsampling, break-even plots, and task-quality
+scores, follow the [publication evaluation guide](publication.md).
 
 ```powershell
 python -m hardware_aware_selective_feedback.diagnose_mismatch --report hardware_aware_selective_feedback/results/latest.json

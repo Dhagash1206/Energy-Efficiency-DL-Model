@@ -20,11 +20,12 @@ Both functions return token ID lists (native_greedy) or a structured dict
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Any, Generator, Optional
 
 import torch
 
 from .feedback import LearningState, validate_feedback
+from .stopping import StopCriteria, apply_stop_decision_to_block
 from .vendor.self_speculation.llama_model_utils import (
     crop_past_key_values,
     forward,
@@ -139,39 +140,43 @@ def native_greedy(
     prompt: list[int],
     limit: int,
     eos: tuple[int, ...] = (),
+    stop_criteria: Optional[StopCriteria] = None,
+    tokenizer: Optional[Any] = None,
 ) -> list[int]:
     """Autoregressively decode up to `limit` tokens using greedy argmax.
 
     Tokens are kept on-device throughout; the CPU sees exactly one sync
-    (the final ``.tolist()``).  EOS checking uses ``torch.isin`` on-device.
-
-    Args:
-        model:  Any HuggingFace causal LM.
-        prompt: List of integer token IDs (not batched).
-        limit:  Maximum number of tokens to generate.
-        eos:    Optional tuple of token IDs that stop generation early.
-
-    Returns:
-        List of generated token IDs (not including the prompt).
+    (the final ``.tolist()``). Stop criteria are evaluated via the unified
+    committed-output stopping contract.
     """
     if limit == 0:
         return []
 
+    criteria = stop_criteria or StopCriteria(eos_token_ids=tuple(eos), max_tokens=limit)
+
     ids = torch.tensor([prompt], device=model.device)
-    eos_t = torch.tensor(list(eos), dtype=torch.long, device=ids.device) if eos else None
-    collected, cache = [], None
+    collected: list[int] = []
+    cache = None
 
     for _ in range(limit):
         out = model(ids, past_key_values=cache, use_cache=True)
         cache = out.past_key_values
         # float() cast ensures argmax matches forward_remainder's FP32 logits,
         # preventing near-tie divergence between reference and speculative paths.
-        ids = out.logits[:, -1].float().argmax(-1).reshape(1, 1)
-        collected.append(ids)
-        if eos_t is not None and torch.isin(ids, eos_t).item():
+        next_id = int(out.logits[:, -1].float().argmax(-1).item())
+        ids = torch.tensor([[next_id]], device=model.device)
+
+        step_tokens, decision = apply_stop_decision_to_block(
+            prior_tokens=collected,
+            newly_committed_block=[next_id],
+            criteria=criteria,
+            tokenizer=tokenizer,
+        )
+        collected.extend(step_tokens)
+        if decision.stopped:
             break
 
-    return torch.cat(collected, dim=1)[0].tolist()
+    return collected
 
 
 @torch.inference_mode()
@@ -253,6 +258,8 @@ def generate(
     adaptive_drafts: bool = False,
     log_margins: bool = False,
     graph_drafter=None,
+    stop_criteria: Optional[StopCriteria] = None,
+    tokenizer: Optional[Any] = None,
 ) -> dict:
     """Generate tokens with optional LayerSkip speculative decoding.
 
@@ -322,6 +329,8 @@ def generate(
     eos_t = torch.tensor(list(eos), dtype=torch.long, device=model.device) if eos else None
     accept_window: list[float] = []  # rolling acceptance rates for adaptive_drafts
     ordinary_streak = 0  # consecutive adaptive fallback cycles
+    criteria = stop_criteria or StopCriteria(eos_token_ids=tuple(eos), max_tokens=limit)
+    stopped = False
 
     # ── Prompt prefill ────────────────────────────────────────────────────
     # Run all layers over the full prompt; keep only the last token's logits
@@ -329,11 +338,20 @@ def generate(
     result = forward(model, torch.tensor([prompt], device=model.device), None, logits_to_keep=1)
     cache = result.past_key_values
     pending = result.logits[:, -1].argmax(-1).reshape(1, 1)
-    tokens.append(pending[0, 0].item())
+    first_token = pending[0, 0].item()
+    first_step, first_decision = apply_stop_decision_to_block(
+        prior_tokens=[],
+        newly_committed_block=[first_token],
+        criteria=criteria,
+        tokenizer=tokenizer,
+    )
+    tokens.extend(first_step)
     del result
+    if first_decision.stopped:
+        return dict(tokens=tokens, cycles=cycles, feedback_statistics={})
 
     # ── Decode loop ───────────────────────────────────────────────────────
-    while len(tokens) < limit and tokens[-1] not in eos:
+    while len(tokens) < limit and not stopped:
         context = prompt + tokens
         _check_cache(cache, layers, len(context) - 1)
 
@@ -393,12 +411,15 @@ def generate(
             matched += 1
 
         # Committed tokens = accepted prefix + first correction.
-        committed = proposed[:matched] + [target[matched]]
-        # Truncate at EOS if present.
-        for i, tok in enumerate(committed):
-            if tok in eos:
-                committed = committed[: i + 1]
-                break
+        candidate_committed = proposed[:matched] + [target[matched]]
+        committed, stop_decision = apply_stop_decision_to_block(
+            prior_tokens=tokens,
+            newly_committed_block=candidate_committed,
+            criteria=criteria,
+            tokenizer=tokenizer,
+        )
+        if stop_decision.stopped:
+            stopped = True
 
         # ── Feedback and state update ─────────────────────────────────────
         predictions = {d: torch.cat(parts, dim=1)[0].tolist() for d, parts in collected.items()}

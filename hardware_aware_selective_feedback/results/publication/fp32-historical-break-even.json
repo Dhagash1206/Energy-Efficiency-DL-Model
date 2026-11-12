@@ -1,0 +1,58 @@
+{
+  "source_report": "hardware_aware_selective_feedback\\results\\latest.json",
+  "source_sha256": "292910913719a53d6ec274a808c256fcfcab91e8c76b9035be6bfde8d0212a68",
+  "max_requests": 1500,
+  "comparisons": {
+    "ordinary": {
+      "candidate": "adaptive",
+      "baseline": "ordinary",
+      "valid": true,
+      "invalid_reason": null,
+      "n_breakeven": 97,
+      "calibration_energy_j": 8991.701000000001,
+      "candidate_mean_energy_j": 170.99010416666667,
+      "baseline_mean_energy_j": 264.2700625,
+      "saving_per_request_j": 93.27995833333333,
+      "measured_requests_per_policy": 48,
+      "no_crossing_reason": null,
+      "energy_boundary": "nvidia_gpu",
+      "formula": "ceil(C / (E_baseline - E_candidate)), when savings are positive",
+      "accounting": "all shared calibration plus idle samples charged to candidate; baseline calibration=0",
+      "limitation": "stationary-workload projection; loading, reference generation, and decisions outside Meter excluded"
+    },
+    "fixed": {
+      "candidate": "adaptive",
+      "baseline": "fixed",
+      "valid": true,
+      "invalid_reason": null,
+      "n_breakeven": 1241,
+      "calibration_energy_j": 8991.701000000001,
+      "candidate_mean_energy_j": 170.99010416666667,
+      "baseline_mean_energy_j": 178.2386875,
+      "saving_per_request_j": 7.248583333333329,
+      "measured_requests_per_policy": 48,
+      "no_crossing_reason": null,
+      "energy_boundary": "nvidia_gpu",
+      "formula": "ceil(C / (E_baseline - E_candidate)), when savings are positive",
+      "accounting": "all shared calibration plus idle samples charged to candidate; baseline calibration=0",
+      "limitation": "stationary-workload projection; loading, reference generation, and decisions outside Meter excluded"
+    },
+    "never_observe": {
+      "candidate": "adaptive",
+      "baseline": "never_observe",
+      "valid": true,
+      "invalid_reason": null,
+      "n_breakeven": 1519,
+      "calibration_energy_j": 8991.701000000001,
+      "candidate_mean_energy_j": 170.99010416666667,
+      "baseline_mean_energy_j": 176.91110416666666,
+      "saving_per_request_j": 5.920999999999992,
+      "measured_requests_per_policy": 48,
+      "no_crossing_reason": null,
+      "energy_boundary": "nvidia_gpu",
+      "formula": "ceil(C / (E_baseline - E_candidate)), when savings are positive",
+      "accounting": "all shared calibration plus idle samples charged to candidate; baseline calibration=0",
+      "limitation": "stationary-workload projection; loading, reference generation, and decisions outside Meter excluded"
+    }
+  }
+}

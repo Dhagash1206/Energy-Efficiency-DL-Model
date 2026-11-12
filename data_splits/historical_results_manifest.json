@@ -1,0 +1,311 @@
+{
+  "generated_at": "2026-11-10T15:30:07.855162+00:00",
+  "root_directory": "C:\\Users\\asus\\Downloads\\Energy-Efficiency-DL-Model\\hardware_aware_selective_feedback\\results",
+  "files": {
+    "benchmark/rtx3050-fp32-energy-safe.json": {
+      "sha256": "e1c7c7a13776d4a48c53c5563ae03d59e2f4caa4673d9aae23fa7340cd17d3b7",
+      "size_bytes": 153003,
+      "extension": ".json"
+    },
+    "benchmark/rtx3050-fp32-energy-safe.md": {
+      "sha256": "e400869ecf9ae8b7a8864c4f83464b4049af1b33ab8f77746fd9a4a8e18948e6",
+      "size_bytes": 1412,
+      "extension": ".md"
+    },
+    "del-comparison/pilot.json": {
+      "sha256": "17ad3bd7bd21b1afc0f710ba408d2ab7b86243c4486e32a543e4312968c794e6",
+      "size_bytes": 203999,
+      "extension": ".json"
+    },
+    "del-comparison/pilot.md": {
+      "sha256": "013abd3773e71c86e23a9e2270cf0fe4ffc0a0e2ffbe7203776ebc4ecd8df4ed",
+      "size_bytes": 2159,
+      "extension": ".md"
+    },
+    "del-comparison/smoke.json": {
+      "sha256": "168baa0ef955fb0471194df455bab34aac808316609e604b47829acc6c36fb86",
+      "size_bytes": 47137,
+      "extension": ".json"
+    },
+    "del-comparison/smoke.md": {
+      "sha256": "f58a6ef2b08fb8051d39f4f7dc34d919e1696e579afc676e5410d98ef623e6a9",
+      "size_bytes": 2158,
+      "extension": ".md"
+    },
+    "engine-optimization/rtx3050-engine-optimization-final.json": {
+      "sha256": "9b3bcf704b2751bf0c172994327eba6c240d90f3335fac6e53e56136e7ac352a",
+      "size_bytes": 65754,
+      "extension": ".json"
+    },
+    "engine-optimization/rtx3050-engine-optimization-final.md": {
+      "sha256": "18cce5135effdba3ef755b60ad5c4ec6f2c4ff9a270d368aa63b62e9b3db5d60",
+      "size_bytes": 1538,
+      "extension": ".md"
+    },
+    "engine-optimization/rtx3050-engine-optimization.json": {
+      "sha256": "cb79fc0b4954011b8dafee76d67480cb30c629f8df346eca4beaabb6cfcdc508",
+      "size_bytes": 44181,
+      "extension": ".json"
+    },
+    "engine-optimization/rtx3050-mismatch-regression.json": {
+      "sha256": "5f1fcc850dc5f75f43fe82348637862cf7fb3d709cec7444d46468812090b83a",
+      "size_bytes": 3773,
+      "extension": ".json"
+    },
+    "final/rtx3050-heldout.json": {
+      "sha256": "b24f1c19dd08df16908bc18929b4e6ddb3fc7d6511b34a2c90ed721c75f45a0f",
+      "size_bytes": 524458,
+      "extension": ".json"
+    },
+    "final/rtx3050-heldout.md": {
+      "sha256": "13d996c53f0a67984c73d4f284b4ee4f5536bef10b83913dd07f9634d98b401e",
+      "size_bytes": 1599,
+      "extension": ".md"
+    },
+    "fixed-sweep/rtx3050-fp16-fixed-confirm.json": {
+      "sha256": "76b2081b3cf8698ddfade809ae9aeabc576cb898772ae85ee6bf01e7894eca5e",
+      "size_bytes": 75942,
+      "extension": ".json"
+    },
+    "fixed-sweep/rtx3050-fp16-fixed-confirm.md": {
+      "sha256": "054fa57eb2a9ca06f252d8bda9436ac0908e26d0cb01c674195655a3966ae565",
+      "size_bytes": 656,
+      "extension": ".md"
+    },
+    "fixed-sweep/rtx3050-fp16-fixed-sweep.json": {
+      "sha256": "257e7501c4b69a2a720e2c5ce6d4922f0df0f9e21b5c80af253b8880bebc9ee3",
+      "size_bytes": 190641,
+      "extension": ".json"
+    },
+    "fixed-sweep/rtx3050-fp16-fixed-sweep.md": {
+      "sha256": "976e2be09388b80782d40bd67e1a8d5b879e09742befce581ddf3a0174936130",
+      "size_bytes": 959,
+      "extension": ".md"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens-confirm.json": {
+      "sha256": "d1509d8a7d79de53f1cdffc88b06e5aa40c27133d5475ce0d674123eb572399f",
+      "size_bytes": 70079,
+      "extension": ".json"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens-confirm.md": {
+      "sha256": "e9e1aec043d07de2cdc2f0d945ecf6512516ff171e8ab3a6717e3d574740a356",
+      "size_bytes": 593,
+      "extension": ".md"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens-efficiency.md": {
+      "sha256": "ab145f1be054ed55b757077a246e9c1f354d9cbc9559e63ee4bf82e85b0dfed9",
+      "size_bytes": 1849,
+      "extension": ".md"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens-fixed.json": {
+      "sha256": "38dce66f5a20ed1ef7b795f0a7b08a245ac4920ad7e6dd22a5b5a46a929a8373",
+      "size_bytes": 70541,
+      "extension": ".json"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens-fixed.md": {
+      "sha256": "5b680266d06956014a692dc115a7c76d20de3c1bb0957a5fa08b9629d767af31",
+      "size_bytes": 593,
+      "extension": ".md"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens.json": {
+      "sha256": "36f14032c22b6544adf3de7aebd2c6e6e67f35cdb9462f8ca9cf28e05c587176",
+      "size_bytes": 69818,
+      "extension": ".json"
+    },
+    "fp16-100tokens/rtx3050-fp16-100tokens.md": {
+      "sha256": "b9e71099e89370bfe9a5c494c28b16e19fac2bf1613d7419d078bd7386d883d7",
+      "size_bytes": 593,
+      "extension": ".md"
+    },
+    "fp16-200tokens/rtx3050-fp16-200tokens-sweep.json": {
+      "sha256": "2474c873e0b6c070dc25704d2c47ab6117daf5b842674c2ebddd03b17d5a8090",
+      "size_bytes": 518299,
+      "extension": ".json"
+    },
+    "fp16-200tokens/rtx3050-fp16-200tokens-sweep.md": {
+      "sha256": "9a06020d1042b772fa6851a836ba9269634d06644a11ef6dea5df37932facc45",
+      "size_bytes": 973,
+      "extension": ".md"
+    },
+    "fp16-200tokens/rtx3050-fp16-200tokens.json": {
+      "sha256": "10082430705f410de528a05c57819d069f9d9509938a1e1cd88eab84d3349ff7",
+      "size_bytes": 115739,
+      "extension": ".json"
+    },
+    "fp16-200tokens/rtx3050-fp16-200tokens.md": {
+      "sha256": "165f4c7f5a289a2a2c9c3fc89ecc89853e137a3e31624d35024a80273f586c90",
+      "size_bytes": 593,
+      "extension": ".md"
+    },
+    "fp16-run/rtx3050-fp16-repeat2.json": {
+      "sha256": "feb3c4e253aa1b2b97ec3e36efc3f2eac0988c96e4a81605d95c1de5aa533d29",
+      "size_bytes": 300210,
+      "extension": ".json"
+    },
+    "fp16-run/rtx3050-fp16-repeat2.md": {
+      "sha256": "f9b5a34fb323464a8154c7e901d28b8e5e506507a108e4327cb1eb4d321f35b9",
+      "size_bytes": 1379,
+      "extension": ".md"
+    },
+    "fp16-run/rtx3050-fp16-repeat3.json": {
+      "sha256": "e6fdadc143e6046eb52f90f6ccb90a958c18f4f020a7d2061baaea253f9a62eb",
+      "size_bytes": 425129,
+      "extension": ".json"
+    },
+    "fp16-run/rtx3050-fp16-repeat3.md": {
+      "sha256": "425b5d3122c005836ca83c98950c2309cc5c5fe3e04b4ec90054df7f102493ee",
+      "size_bytes": 1379,
+      "extension": ".md"
+    },
+    "fp16-run/rtx3050-fp16-run.json": {
+      "sha256": "d4a433432453473f65b01072f4095859e03c6e75ea0200848ed05056dbc62003",
+      "size_bytes": 300108,
+      "extension": ".json"
+    },
+    "fp16-run/rtx3050-fp16-run.md": {
+      "sha256": "91d93d6c0e3f2ffebabdf8d16bd485278b6f2abdf01f0d6d518d93f3498dfa89",
+      "size_bytes": 1379,
+      "extension": ".md"
+    },
+    "latest.json": {
+      "sha256": "292910913719a53d6ec274a808c256fcfcab91e8c76b9035be6bfde8d0212a68",
+      "size_bytes": 689673,
+      "extension": ".json"
+    },
+    "latest.md": {
+      "sha256": "b8816cc95f12f5259da72a11c94ecc2cdccf7f3e755449024c2c05600f1872b0",
+      "size_bytes": 1450,
+      "extension": ".md"
+    },
+    "memory-optimization/rtx3050-memory-optimization.json": {
+      "sha256": "0d9337422c7c9393b93f1b40c19816e97f6a722c011b93f0276b038d831286a6",
+      "size_bytes": 67926,
+      "extension": ".json"
+    },
+    "memory-optimization/rtx3050-memory-optimization.md": {
+      "sha256": "0ad16ae2cb3ae64915e4cd28377fa59119dcd95a6ec91d0ee5cd2e93baa32327",
+      "size_bytes": 1621,
+      "extension": ".md"
+    },
+    "pilot/layerskip-fp32-pilot.json": {
+      "sha256": "9a31df08b15485fa7713826e892423860e5264ee2a5b6be5875729fdc45badf6",
+      "size_bytes": 589758,
+      "extension": ".json"
+    },
+    "pilot/layerskip-fp32-pilot.md": {
+      "sha256": "7728c731bce6dc17ca0c1f34e396bc153309a3194e614fba55db9b402d78cf12",
+      "size_bytes": 2158,
+      "extension": ".md"
+    },
+    "pilot/rtx3050-pilot.json": {
+      "sha256": "fc06b87b1bd68a39e9e450bb1cbe458d5bf790b7b9713e45320467f2712be9c6",
+      "size_bytes": 81945,
+      "extension": ".json"
+    },
+    "pilot/rtx3050-pilot.md": {
+      "sha256": "66d84f23d797ee7577320d770dee92a5e0bd5ed25a6447f4e4f54861b752ba26",
+      "size_bytes": 1445,
+      "extension": ".md"
+    },
+    "pilot/smollm-fp32-pilot.json": {
+      "sha256": "73026299a64083a576fa42058db20fee7b9ff7e229156094605ca950a590816b",
+      "size_bytes": 2673609,
+      "extension": ".json"
+    },
+    "pilot/smollm-fp32-pilot.md": {
+      "sha256": "5306e9063e02e8a4d8f7016efae7c6d97799f0951d67cdad91d118fd5750f578",
+      "size_bytes": 2738,
+      "extension": ".md"
+    },
+    "pilot/validation.json": {
+      "sha256": "c48c370e43a27fe63c691ad840c67fcbf3c4b0f7229e13caef67ce8db1bcc113",
+      "size_bytes": 1856,
+      "extension": ".json"
+    },
+    "publication/fp16-m4-break-even.json": {
+      "sha256": "48328b6a5b4e54b07ffbbca972e4cc1de50e5ce42eb22ff4ed75bdea54206cab",
+      "size_bytes": 3429,
+      "extension": ".json"
+    },
+    "publication/fp16-m4-break-even.md": {
+      "sha256": "6f0814b850c814e28f8ec0a4c94b319f638170b2d4c382404e5b155ef61173d5",
+      "size_bytes": 574,
+      "extension": ".md"
+    },
+    "publication/fp16-m4-break-even.pdf": {
+      "sha256": "eb4595ec36fafff11a33c8ac0d01d1eb2474041fb02114884cb2af8e00305bef",
+      "size_bytes": 20780,
+      "extension": ".pdf"
+    },
+    "publication/fp16-m4-break-even.png": {
+      "sha256": "1fd059293e0656fb1e2fe2a25ad6ecbf56251601f6ce2a4f2df53f7e22493afe",
+      "size_bytes": 233609,
+      "extension": ".png"
+    },
+    "publication/fp16-m4-quality-pilot.json": {
+      "sha256": "6f40edea2d4fde33d5ed141ae3d969c8b86f73d58729863c828fe1cf014a42ac",
+      "size_bytes": 332290,
+      "extension": ".json"
+    },
+    "publication/fp16-m4-quality-pilot.md": {
+      "sha256": "d771b26ad8d1d365b549e4d9a13ff93b49b4c91b6a37047c4462963dfdb893cd",
+      "size_bytes": 3210,
+      "extension": ".md"
+    },
+    "publication/fp16-m4-quality-scores.json": {
+      "sha256": "6d70f52b0b4be95e6ace85bad0fd5e2ce04c865c7cd5c0d9cd38805f8e0fe3ca",
+      "size_bytes": 11063,
+      "extension": ".json"
+    },
+    "publication/fp16-m4-quality-scores.md": {
+      "sha256": "8d3412b462db1e5544e0eb09e774ac1903596f631d711554f9886732c0bcd12b",
+      "size_bytes": 604,
+      "extension": ".md"
+    },
+    "publication/fp32-historical-break-even.json": {
+      "sha256": "76551388c99ecd0e4d6d86682a7995b5775af5828a77f5a36c6ea1061c47a8a3",
+      "size_bytes": 2652,
+      "extension": ".json"
+    },
+    "publication/fp32-historical-break-even.md": {
+      "sha256": "193dac340e888568d75929a0148a22dd52b0a449ce6d1e99aa9e2598678f9c66",
+      "size_bytes": 489,
+      "extension": ".md"
+    },
+    "publication/fp32-historical-break-even.pdf": {
+      "sha256": "501f996397646b7487bd0022056887fd0afacb61149b19898e8dfa8b871e5e54",
+      "size_bytes": 19744,
+      "extension": ".pdf"
+    },
+    "publication/fp32-historical-break-even.png": {
+      "sha256": "271b05742a079d0d588b2959d2aea7a8428305b7ca4b485c062dc3cd5e0c8f85",
+      "size_bytes": 186733,
+      "extension": ".png"
+    },
+    "README.md": {
+      "sha256": "74ec76587b930924ff8c878cf6655e9968809defed41d5a6b8ac9ba0a65a8c03",
+      "size_bytes": 5513,
+      "extension": ".md"
+    },
+    "smoke/rtx3050-fp16-smoke.json": {
+      "sha256": "50d4377047f15d77916e350d155f36525f99d8fef19c7f151026401637dc4ab1",
+      "size_bytes": 31667,
+      "extension": ".json"
+    },
+    "smoke/rtx3050-fp16-smoke.md": {
+      "sha256": "9c0a6b923a60a896552cf7318b866f709a8c0c75d83f98f9e0bb137263741733",
+      "size_bytes": 1450,
+      "extension": ".md"
+    },
+    "smoke/rtx3050-smoke.json": {
+      "sha256": "771923593be828f3e85ca304da989f2f41071da450695108e9f60c2ddfb45041",
+      "size_bytes": 31788,
+      "extension": ".json"
+    },
+    "smoke/rtx3050-smoke.md": {
+      "sha256": "ca0827ff831d41031d83226c2f475ceb0efac0cd9c2e0c06be0e8cf07cace906",
+      "size_bytes": 1445,
+      "extension": ".md"
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "frozen_at_utc": "2026-11-10T16:32:40.183902+00:00",
+  "selection_objective": "energy_j_per_token",
+  "chosen_fixed_action": {
+    "depth": 4,
+    "draft_length": 1,
+    "name": "fixed_d4_k1",
+    "metric_value": 1.16394921875
+  },
+  "development_tuning_cost": {
+    "total_tuning_energy_j": 4620.584,
+    "total_tuning_time_s": 80.37806439987617,
+    "candidates_evaluated": 13
+  },
+  "anchors": {
+    "ordinary": {
+      "depth": 0,
+      "draft_length": 0,
+      "name": "ordinary",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.50434765625,
+      "latency_s_per_token": 0.026273743749698042,
+      "energy_j_per_token": 1.50434765625
+    },
+    "fixed_d4_k3": {
+      "depth": 4,
+      "draft_length": 3,
+      "name": "fixed_d4_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.23982421875,
+      "latency_s_per_token": 0.02104504375029137,
+      "energy_j_per_token": 1.23982421875
+    },
+    "fixed_d8_k3": {
+      "depth": 8,
+      "draft_length": 3,
+      "name": "fixed_d8_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.32581640625,
+      "latency_s_per_token": 0.022528539453105623,
+      "energy_j_per_token": 1.32581640625
+    },
+    "fixed_d12_k3": {
+      "depth": 12,
+      "draft_length": 3,
+      "name": "fixed_d12_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.6066093750000001,
+      "latency_s_per_token": 0.02820666796878868,
+      "energy_j_per_token": 1.6066093750000001
+    }
+  },
+  "all_candidates": [
+    {
+      "depth": 4,
+      "draft_length": 1,
+      "name": "fixed_d4_k1",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.16394921875,
+      "latency_s_per_token": 0.021721599218835763,
+      "energy_j_per_token": 1.16394921875
+    },
+    {
+      "depth": 4,
+      "draft_length": 2,
+      "name": "fixed_d4_k2",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.1667343749999999,
+      "latency_s_per_token": 0.019741243359248983,
+      "energy_j_per_token": 1.1667343749999999
+    },
+    {
+      "depth": 4,
+      "draft_length": 3,
+      "name": "fixed_d4_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.23982421875,
+      "latency_s_per_token": 0.02104504375029137,
+      "energy_j_per_token": 1.23982421875
+    },
+    {
+      "depth": 8,
+      "draft_length": 1,
+      "name": "fixed_d8_k1",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.30259375,
+      "latency_s_per_token": 0.0222518796872464,
+      "energy_j_per_token": 1.30259375
+    },
+    {
+      "depth": 4,
+      "draft_length": 4,
+      "name": "fixed_d4_k4",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.31326953125,
+      "latency_s_per_token": 0.021791545703081283,
+      "energy_j_per_token": 1.31326953125
+    },
+    {
+      "depth": 8,
+      "draft_length": 2,
+      "name": "fixed_d8_k2",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.31597265625,
+      "latency_s_per_token": 0.02307002890597687,
+      "energy_j_per_token": 1.31597265625
+    },
+    {
+      "depth": 8,
+      "draft_length": 3,
+      "name": "fixed_d8_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.32581640625,
+      "latency_s_per_token": 0.022528539453105623,
+      "energy_j_per_token": 1.32581640625
+    },
+    {
+      "depth": 8,
+      "draft_length": 4,
+      "name": "fixed_d8_k4",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.45721484375,
+      "latency_s_per_token": 0.025436859765477493,
+      "energy_j_per_token": 1.45721484375
+    },
+    {
+      "depth": 12,
+      "draft_length": 1,
+      "name": "fixed_d12_k1",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.47609765625,
+      "latency_s_per_token": 0.025964592578247903,
+      "energy_j_per_token": 1.47609765625
+    },
+    {
+      "depth": 0,
+      "draft_length": 0,
+      "name": "ordinary",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.50434765625,
+      "latency_s_per_token": 0.026273743749698042,
+      "energy_j_per_token": 1.50434765625
+    },
+    {
+      "depth": 12,
+      "draft_length": 2,
+      "name": "fixed_d12_k2",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.53814453125,
+      "latency_s_per_token": 0.027305663671995717,
+      "energy_j_per_token": 1.53814453125
+    },
+    {
+      "depth": 12,
+      "draft_length": 3,
+      "name": "fixed_d12_k3",
+      "is_anchor": true,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.6066093750000001,
+      "latency_s_per_token": 0.02820666796878868,
+      "energy_j_per_token": 1.6066093750000001
+    },
+    {
+      "depth": 12,
+      "draft_length": 4,
+      "name": "fixed_d12_k4",
+      "is_anchor": false,
+      "runs": 4,
+      "greedy_mismatches": 0,
+      "all_greedy_match": true,
+      "metric_value": 1.6385820312500001,
+      "latency_s_per_token": 0.028639406250022148,
+      "energy_j_per_token": 1.6385820312500001
+    }
+  ]
+}

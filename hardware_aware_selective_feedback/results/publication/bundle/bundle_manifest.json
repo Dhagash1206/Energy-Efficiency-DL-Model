@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-11-10T16:44:04.064804+00:00",
+  "source_report": {
+    "path": "C:\\Users\\asus\\Downloads\\Energy-Efficiency-DL-Model\\hardware_aware_selective_feedback\\results\\publication\\p5_live_experiment.json",
+    "sha256": "6b05b8712a3ce983d967487c2694d9c5e5be2a6dec22433f3887c9620f8dbcbe",
+    "size_bytes": 228756
+  },
+  "audit": {
+    "passed_all_gates": true,
+    "gates": {
+      "environment_provenance": true,
+      "valid_request_rows": true,
+      "exact_output_validity": true,
+      "calibration_accounted": true,
+      "quality_evaluated": true
+    },
+    "failures": [],
+    "audited_at_utc": "2026-11-10T16:44:04.064786+00:00"
+  }
+}

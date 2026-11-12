@@ -14,8 +14,11 @@ fails; never put a token in Git.
 observations, with an independent-arm bandit comparison. `measurement.py`
 selects a real cumulative energy counter or reports why none is available.
 `run.py` loads pinned GSM8K and HumanEval prompt workloads, checks every
-output against ordinary greedy token IDs, and writes `results/latest.json`
-and `results/latest.md`. `vendor/self_speculation/llama_model_utils.py` is the attributed LayerSkip
+output against ordinary greedy token IDs, and requires an unused `--output`
+path for its JSON and Markdown reports. The eight default policies now include
+`fixed_d12_k3`; see the [publication evaluation guide](../docs/publication.md)
+for idle subtraction, task scores, observer intervals, and break-even plots.
+`vendor/self_speculation/llama_model_utils.py` is the attributed LayerSkip
 helper under `vendor/LICENSE.LayerSkip` (CC BY-NC); retain the license and follow the
 gated checkpoint's terms. `tests/test_*.py` are focused correctness tests.
 
@@ -26,7 +29,7 @@ used for local checks:
 
     .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m unittest hardware_aware_selective_feedback.tests.test_engine hardware_aware_selective_feedback.tests.test_selector hardware_aware_selective_feedback.tests.test_measurement -v
     .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --probe --device auto
-    .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --device cpu --calibration 2 --test 2 --tokens 8 --repeats 1
+    .\hardware_aware_selective_feedback\.runtime\python\python.exe -B -m hardware_aware_selective_feedback.run --device cpu --calibration 2 --test 2 --tokens 8 --repeats 1 --output hardware_aware_selective_feedback/results/smoke/local-cpu.json
 
 With a suitable Python on another machine, replace that interpreter path with
 `python`. `--device auto` chooses CUDA, then Intel XPU, then Mac MPS, then CPU
@@ -113,15 +116,16 @@ Energy is **measured only when a working cumulative counter exists**:
 
 A larger run on an energy-capable device, after the small check, is:
 
-    python -m hardware_aware_selective_feedback.run --device cuda --objective energy --calibration 4 --test 8 --tokens 64 --repeats 3 --observer-pairs 6
+    python -m hardware_aware_selective_feedback.run --device cuda --objective energy --calibration 4 --test 8 --tokens 64 --repeats 3 --observer-pairs 6 --output hardware_aware_selective_feedback/results/benchmark/local-energy.json
 
 Adjust `--device` and sensor flags for your machine. These counts mean prompts
 **per dataset**, so that example has 8 calibration and 16 held-out prompts.
 The data sources, revisions, SHA-256 hashes, item IDs, and disjoint split are
 saved in JSON. GSM8K train and separate HumanEval IDs calibrate; GSM8K test
-and other HumanEval IDs are held out. HumanEval code is never executed or
-scored. Calibration pairs are spread over distinct prompts when available,
-with execution order randomized. Fixed, never/selected/always observe,
+and other HumanEval IDs are held out. Timing-only runs do not score HumanEval;
+full-prompt `--task-quality` runs can be scored by the separate Docker evaluator.
+Calibration pairs are spread over distinct prompts when available,
+with execution order randomized. Fixed depth 4 and 12, never/selected/always observe,
 independent bandit, adaptive, and ordinary policies run on the same held-out
 prompts. The report includes raw runs, paired cost deltas, observer overhead,
 and whether the best **executed** fixed configuration varies by prompt.
@@ -149,7 +153,7 @@ SHA-256 verification. Pilot reports are written to `results/pilot/`.
 
 ## Results layout
 
-`results/latest.*` is the default `run.py` output. Earlier runs are grouped by
+`results/latest.*` preserves the historical FP32 reference run. Other runs are grouped by
 experiment: `smoke/`, `fp16-run/`, `fp16-100tokens/`, `fp16-200tokens/`,
 `fixed-sweep/`, `engine-optimization/`, `memory-optimization/`, `benchmark/`
 and `pilot/`.
